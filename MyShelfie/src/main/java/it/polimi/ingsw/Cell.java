@@ -6,12 +6,20 @@ package it.polimi.ingsw;
  *
  */
 public class Cell {
-
     private Tiles tile;
 
-    public Cell (Tiles t){
-        this.tile=t;
+    public Cell(Tiles t){
+        this.tile = t;
     }
+    /**
+     * Method: assignValue
+     * @author Angelo Di Rosa
+     * @param t1
+     * The method assignValue assigns one of the Enumeration Tiles values to the cell. */
+    public void assignValue(Tiles t1){
+        this.tile = t1;
+    }
+
     /**
      * Method: isValid()
      * @author Angelo Di Rosa
