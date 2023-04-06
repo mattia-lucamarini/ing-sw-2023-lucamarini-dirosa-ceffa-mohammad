@@ -6,7 +6,7 @@ package it.polimi.ingsw;
  * The class contains 6 integer, all initialized at 22 (number of tiles per type).
  */
 public class Bag {
-    int blue = 22, green = 22, purple=22, yellow=22, white=22, lightblue=22;
+    int blue = 22, green = 22, purple=22, yellow=22, white=22, lightblue=22 ;
 
     /**Method: remainingTiles(int tilenumber)
      * @author Angelo Di Rosa

@@ -10,8 +10,8 @@ import java.util.Random;
  * If the game is played by 3 or more players, it is be "prepareBoard" 's job to modify the Board.
  */
 public class Board {
-    private Cell[][] grid;
     private static Board instance;
+    private Cell[][] grid;
     Bag bag= new Bag();
     private Board(){
         for(int i = 0 ; i < 9 ; ++i){
