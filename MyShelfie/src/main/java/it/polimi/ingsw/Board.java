@@ -92,18 +92,19 @@ public class Board {
      * Method : refillBoard
      * @author Angelo Di Rosa
      * refillBoard is used to fill the board with the tiles to start/keep playing the game.
-     * It iterates on the board asking if the single cell has a valid/notvalid value.
-     * If the cell has a "NOTVALID" value, refillBoard won't replace it with another tile (as a matter of fact that cell can't be used for the game).
-     * If the cell has a "VALID" value (which means the cell can be used for the game), refillBoard will replace it with another tile.
-     * This method calls val.nextInt(6) which generates a random number from 0 to 5. This number is stored and used as a parameter for bag.remainingTiles().
+     * It iterates on the board checks if the cell is empty (has a "VALID" value on it).
+     * If the cell has a "NOTVALID" value or any other object tile value, refillBoard won't replace it with another tile (as a matter of fact that cell can't be used for the game/a tile is already in place).
+     * If the cell has a "VALID" value (which means the empty cell can be used for the game), refillBoard will replace it with another tile.
+     * This method calls val.nextInt(6) which generates a random number from 0 to 5. This number is stored and used as a parameter for bag.remainingTiles(r).
      * remainingTiles counts how many tiles of the same type are left. */
 
     public void refillBoard(){
         Random val = new Random();
-        Tiles t = Tiles.NOTVALID;
+        Tiles t;
         for(int i = 0; i < 9 ; ++i){
             for(int j = 0 ; j < 9; ++j){
-                if(grid[i][j].isValid()== true){
+                if(grid[i][j].isEmpty()==true){
+                    t = Tiles.NOTVALID;
                     while(t == Tiles.NOTVALID){
                         int r = val.nextInt(6);
                         t = bag.remainingTiles(r);

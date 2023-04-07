@@ -15,7 +15,8 @@ public class Bag {
      * Depending on the value of tilenumber, remainingTiles subtracts 1 from the total amount of tiles of the same type.
      * For Example: if tilenumber is 0, it's a BLUE tile so we subtract 1 from the variable blue (total amount of blue tiles in the bag).
      * This means that a BLUE tile was taken out from the bag and is now on the board.
-     * If the amount of tiles of the same type is 0, the function returns NOTVALID to signal that there are no more tiles of that type in the bag.*/
+     * If the amount of tiles of the same type is 0, the function returns NOTVALID to signal that there are no more tiles of that type in the bag.
+     * It will be refillBoard's job to generate a new random number from 0 to 5 to solve the problem and chose another tile.*/
 
     public Tiles remainingTiles(int tilenumber){
         if(tilenumber == 0 && blue!=0){

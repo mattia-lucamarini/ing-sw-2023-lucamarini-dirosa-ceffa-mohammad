@@ -35,13 +35,12 @@ public class Cell {
     /**
      * Method: isEmpty()
      * @author Angelo Di Rosa
-     * isEmpty checks if the cell is occupied by a tile or not*/
+     * isEmpty checks if the cell is occupied by a tile or not.
+     * A tile is empty and available for the game when the "VALID" value is on it.*/
     public boolean isEmpty(){
-        for (Tiles t : Tiles.values()){
-            if (tile == t){
-                return false;
-            }
+        if (tile == Tiles.VALID){
+            return true;
         }
-        return true;
+        return false;
     }
 }
