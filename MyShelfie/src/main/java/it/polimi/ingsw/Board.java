@@ -1,19 +1,22 @@
 package it.polimi.ingsw;
+import java.util.ArrayList;
 import java.util.Random;
+import java.util.List;
+
 /**
  * Class: Board
  * @author Angelo Di Rosa
  * This class is an abstraction og the physical board where the game takes place.
  * It consists in a 9x9 matrix of Cells that can available (or not) for the game.
- * The contructor, in fact, inizialize the single Cells by setting a VALID/NOTVALID value depending on if they're used for the game.
- * The constructor inizialize the grid as if it was used for a two player only game.
- * If the game is played by 3 or more players, it is be "prepareBoard" 's job to modify the Board.
  */
 public class Board {
-    private static Board instance;
+
     private Cell[][] grid;
     Bag bag= new Bag();
-    private Board(){
+    /**Method Constructor
+     * The constructor initialize the Board by putting a VALID/NOTVALID value on the cell depending on if the cell is used for the game on not and also
+     * depending on the number of players*/
+    private Board(int numplayers){
         for(int i = 0 ; i < 9 ; ++i){
             for (int j = 0; j < 9 ; ++j){
                 grid[i][j] = new Cell(Tiles.NOTVALID);
@@ -48,14 +51,6 @@ public class Board {
         grid[6][5].assignValue(Tiles.VALID);
         grid[7][4].assignValue(Tiles.VALID);
         grid[7][5].assignValue(Tiles.VALID);
-
-    }
-    /**
-     * Method: prepareBoard
-     * @param numplayers numbers of players
-     * This method adapts the Board for a 3 more players game. It puts the value "VALID" on some of those Cells that weren't initially available for a 2 player game.
-     * */
-    public Board prepareBoard(int numplayers){
         if(numplayers >= 3){
             grid[0][3].assignValue(Tiles.VALID);
             grid[2][2].assignValue(Tiles.VALID);
@@ -76,18 +71,8 @@ public class Board {
                 grid[8][4].assignValue(Tiles.VALID);
             }
         }
-        return instance ;
     }
-    /**Method: getBoard
-     * @author Angelo Di Rosa
-     * this is a getter method. It returns the Board or instantiates a new one. */
 
-    public Board getBoard() {
-        if (instance == null){
-            instance = new Board();
-        }
-        return instance;
-    }
     /**
      * Method : refillBoard
      * @author Angelo Di Rosa
@@ -103,7 +88,7 @@ public class Board {
         Tiles t;
         for(int i = 0; i < 9 ; ++i){
             for(int j = 0 ; j < 9; ++j){
-                if(grid[i][j].isEmpty()==true){
+                if(grid[i][j].isEmpty()){
                     t = Tiles.NOTVALID;
                     while(t == Tiles.NOTVALID){
                         int r = val.nextInt(6);
@@ -113,6 +98,140 @@ public class Board {
                 }
             }
         }
+    }
+    /**
+     * Method : checkStatus
+     * @author Angelo Di Rosa
+     * This method checks how many tiles are left on the board (remainingtiles) and counts how many of them are not surrounded by other tiles.
+     * If those numbers happen to be equal, it means that the board needs to be refilled (the player can take only single tiles).
+     * checkStatus iterates on the board and for every value other than "VALID" and "NOTVALID", calls anyTilesAround()  */
+    public boolean checkStatus() {
+        int singletiles=0, remainingtiles=0;
+        for (int i = 0; i < 9; ++i) {
+            for (int j = 0; j < 9; ++j) {
+                if(!grid[i][j].isEmpty() && !grid[i][j].isNotValid()){
+                    ++remainingtiles;
+                    if (!this.anyTilesAround(i, j)){
+                        ++singletiles;
+                    }
+                }
+            }
+        }
+        if(singletiles == remainingtiles){
+            return true; //The board needs to be refilled.
+        }
+        return false;
+    }
+
+    /**Method: anyTilesAround(int i, int j)
+     * @author Angelo Di Rosa
+     * @param i index1
+     * @param j index2
+     * anyTilesAround checks if the tile is surrounded by other tiles up, down, left and right (north, south, west and east).
+     * In order to do so, anyTilesAround just checks if the cells in the north/south/west/east position have neither a 'VALID' value or a 'NOTVALID' value.
+     * Object tiles surrounded by only NOTVALID tiles are not allowed in the game!*/
+
+    public boolean anyTilesAround(int i, int j){
+        int north, south, east, west, result=0;
+        north = i-1;
+        south = i+1;
+        east= j+1;
+        west = j-1;
+        if(north>=0 && !grid[north][j].isNotValid()){
+            if (!grid[north][j].isEmpty()){
+                return true;
+            }
+
+        }
+        if(south<=8 && !grid[south][j].isNotValid()){
+            if(!grid[south][j].isEmpty()){
+                return true;
+            }
+        }
+        if(west>=0 && !grid[i][west].isNotValid()){
+            if(!grid[i][west].isEmpty()) {
+                return true;
+            }
+        }
+        if(east<=8 && !grid[east][j].isNotValid()){
+            if(!grid[i][east].isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Method takeTiles(List<Pair<Integer, Integer>>)
+     * @author Angelo Di Rosa
+     * @param positions list of positions of the tiles that the player wants to take
+     * @throws NullPointerException if the pair of index is above the limit used for the board (9 x 9)
+     * @throws RuntimeException if the pair of index correspond to a 'NOTVALID' cell.
+     * @throws RuntimeException if the move is not valid.
+     * The method removes the tiles from the board based on the player's move.
+     * It puts a 'VALID' value over the selected cell but firts it checks if the move is valid.
+     * In order to do so, it calls a new method (emptySides()) that returns a List of index of adjacent cells that are empty
+     * (checks how many side of the cell are free from other Tiles).
+     * If the List returned (sides) has length = 1, takeTiles checks if that one position correspond to the latest taken tile in the same turn by the same player.
+     * If so, the move is not valid and the player needs to make a new different move.
+     * If not, the move is valid and the tile is taken (it will be assigned a VALID value to the cell).
+     * It also checks if the players is not taking any tiles diagonally by saving the position of the latest taken tile (latestX, latestY).
+     * If the latest taken tile has as coordinates (x-1, y-1) with (x,y) being the index of the current tile, it means that the player is trying to move diagonally on the board and this is not allowed in the game.
+     * So the method puts again the taken tile on the board and does not allow the player to make the move.
+     * */
+
+    public void takeTiles(List<Pair<Integer, Integer>> positions){
+        int x, y, latestX = -2, latestY= -2;
+        Tiles tilevalue;
+        List<Pair<Integer, Integer>> sides;
+        for(int k = 0; k < positions.size(); ++k){
+            x = positions.get(k).getFirst();
+            y = positions.get(k).getSecond();
+            tilevalue = grid[x][y].getTile();
+            if(x<0 || y>8){
+                throw new NullPointerException("These index are not on the board.");
+            }
+            else if(grid[x][y].isNotValid()){
+                throw new RuntimeException("This cell is not available for the game");
+            }
+            else if(latestX==x-1 && latestY==y-1){
+                grid[latestX][latestY].assignValue(tilevalue);
+                throw new RuntimeException("Move not valid. Do not choose tiles diagonally.");
+            }
+            else {
+                sides = this.emptySides(x,y);
+                if (sides.size()==1 && sides.get(0).getFirst()== latestX && sides.get(0).getSecond()== latestY ){
+                    grid[latestX][latestY].assignValue(tilevalue);
+                    throw new RuntimeException("The move is not valid.");
+                }
+                else{
+                    grid[x][y].assignValue(Tiles.VALID);
+                    latestX = x;
+                    latestY = y;
+                }
+            }
+        }
+    }
+    /**Method : emptySide()
+     * @param i index 1
+     * @param j index 2
+     * This method returns a List of Pair of index of the sides that are not adjacent to an object tile */
+
+    public List<Pair<Integer, Integer>> emptySides(int i, int j){
+        int n=i-1, s=i+1, e=j+1, w=j-1;
+        List<Pair<Integer, Integer>> emptysides = new ArrayList<>();
+        if(n < 0 || grid[n][j].isEmpty() || grid[n][j].isNotValid()){
+            emptysides.add(Pair.of(n,j));
+        }
+        if(s > 8|| grid[s][j].isEmpty() || grid[s][j].isNotValid()){
+            emptysides.add(Pair.of(s,j));
+        }
+        if(e > 8 || grid[i][e].isEmpty() || grid[i][e].isNotValid()){
+            emptysides.add(Pair.of(i,e));
+        }
+        if(w < 0 || grid[i][w].isEmpty() || grid[i][w].isNotValid()){
+            emptysides.add(Pair.of(i,w));
+        }
+        return emptysides;
     }
 
 

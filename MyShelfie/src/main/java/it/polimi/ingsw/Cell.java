@@ -21,16 +21,16 @@ public class Cell {
     }
 
     /**
-     * Method: isValid()
+     * Method: isNotValid()
      * @author Angelo Di Rosa
      * isValid() is used to check if the single cell of the board can be used for the game or not.
      * This because the board available for the game is not a full 9x9 matrix,
      * so with this method we check if we can put a tile on the cell.*/
-    public boolean isValid(){
+    public boolean isNotValid(){
         if (tile == Tiles.NOTVALID){
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
     /**
      * Method: isEmpty()
@@ -42,5 +42,9 @@ public class Cell {
             return true;
         }
         return false;
+    }
+
+    public Tiles getTile(){
+        return tile;
     }
 }
