@@ -16,38 +16,38 @@ public class Board {
     private Board(){
         for(int i = 0 ; i < 9 ; ++i){
             for (int j = 0; j < 9 ; ++j){
-                grid[i][j] = new Cell(Tiles.NOTVALID);
+                grid[i][j] = new Cell(Tile.NOTVALID);
             }
         }
-        grid[1][3].assignValue(Tiles.VALID);
-        grid[1][4].assignValue(Tiles.VALID);
-        grid[2][3].assignValue(Tiles.VALID);
-        grid[2][4].assignValue(Tiles.VALID);
-        grid[2][5].assignValue(Tiles.VALID);
-        grid[3][2].assignValue(Tiles.VALID);
-        grid[3][3].assignValue(Tiles.VALID);
-        grid[3][4].assignValue(Tiles.VALID);
-        grid[3][5].assignValue(Tiles.VALID);
-        grid[3][6].assignValue(Tiles.VALID);
-        grid[3][7].assignValue(Tiles.VALID);
-        grid[4][1].assignValue(Tiles.VALID);
-        grid[4][2].assignValue(Tiles.VALID);
-        grid[4][3].assignValue(Tiles.VALID);
-        grid[4][4].assignValue(Tiles.VALID);
-        grid[4][5].assignValue(Tiles.VALID);
-        grid[4][6].assignValue(Tiles.VALID);
-        grid[4][7].assignValue(Tiles.VALID);
-        grid[5][1].assignValue(Tiles.VALID);
-        grid[5][2].assignValue(Tiles.VALID);
-        grid[5][3].assignValue(Tiles.VALID);
-        grid[5][4].assignValue(Tiles.VALID);
-        grid[5][5].assignValue(Tiles.VALID);
-        grid[5][6].assignValue(Tiles.VALID);
-        grid[6][3].assignValue(Tiles.VALID);
-        grid[6][4].assignValue(Tiles.VALID);
-        grid[6][5].assignValue(Tiles.VALID);
-        grid[7][4].assignValue(Tiles.VALID);
-        grid[7][5].assignValue(Tiles.VALID);
+        grid[1][3].assignValue(Tile.VALID);
+        grid[1][4].assignValue(Tile.VALID);
+        grid[2][3].assignValue(Tile.VALID);
+        grid[2][4].assignValue(Tile.VALID);
+        grid[2][5].assignValue(Tile.VALID);
+        grid[3][2].assignValue(Tile.VALID);
+        grid[3][3].assignValue(Tile.VALID);
+        grid[3][4].assignValue(Tile.VALID);
+        grid[3][5].assignValue(Tile.VALID);
+        grid[3][6].assignValue(Tile.VALID);
+        grid[3][7].assignValue(Tile.VALID);
+        grid[4][1].assignValue(Tile.VALID);
+        grid[4][2].assignValue(Tile.VALID);
+        grid[4][3].assignValue(Tile.VALID);
+        grid[4][4].assignValue(Tile.VALID);
+        grid[4][5].assignValue(Tile.VALID);
+        grid[4][6].assignValue(Tile.VALID);
+        grid[4][7].assignValue(Tile.VALID);
+        grid[5][1].assignValue(Tile.VALID);
+        grid[5][2].assignValue(Tile.VALID);
+        grid[5][3].assignValue(Tile.VALID);
+        grid[5][4].assignValue(Tile.VALID);
+        grid[5][5].assignValue(Tile.VALID);
+        grid[5][6].assignValue(Tile.VALID);
+        grid[6][3].assignValue(Tile.VALID);
+        grid[6][4].assignValue(Tile.VALID);
+        grid[6][5].assignValue(Tile.VALID);
+        grid[7][4].assignValue(Tile.VALID);
+        grid[7][5].assignValue(Tile.VALID);
 
     }
     /**
@@ -57,23 +57,23 @@ public class Board {
      * */
     public Board prepareBoard(int numplayers){
         if(numplayers >= 3){
-            grid[0][3].assignValue(Tiles.VALID);
-            grid[2][2].assignValue(Tiles.VALID);
-            grid[2][6].assignValue(Tiles.VALID);
-            grid[3][8].assignValue(Tiles.VALID);
-            grid[5][0].assignValue(Tiles.VALID);
-            grid[6][2].assignValue(Tiles.VALID);
-            grid[6][6].assignValue(Tiles.VALID);
-            grid[8][5].assignValue(Tiles.VALID);
+            grid[0][3].assignValue(Tile.VALID);
+            grid[2][2].assignValue(Tile.VALID);
+            grid[2][6].assignValue(Tile.VALID);
+            grid[3][8].assignValue(Tile.VALID);
+            grid[5][0].assignValue(Tile.VALID);
+            grid[6][2].assignValue(Tile.VALID);
+            grid[6][6].assignValue(Tile.VALID);
+            grid[8][5].assignValue(Tile.VALID);
             if(numplayers == 4){
-                grid[0][4].assignValue(Tiles.VALID);
-                grid[1][5].assignValue(Tiles.VALID);
-                grid[3][1].assignValue(Tiles.VALID);
-                grid[4][0].assignValue(Tiles.VALID);
-                grid[4][8].assignValue(Tiles.VALID);
-                grid[5][7].assignValue(Tiles.VALID);
-                grid[7][3].assignValue(Tiles.VALID);
-                grid[8][4].assignValue(Tiles.VALID);
+                grid[0][4].assignValue(Tile.VALID);
+                grid[1][5].assignValue(Tile.VALID);
+                grid[3][1].assignValue(Tile.VALID);
+                grid[4][0].assignValue(Tile.VALID);
+                grid[4][8].assignValue(Tile.VALID);
+                grid[5][7].assignValue(Tile.VALID);
+                grid[7][3].assignValue(Tile.VALID);
+                grid[8][4].assignValue(Tile.VALID);
             }
         }
         return instance ;
@@ -100,12 +100,12 @@ public class Board {
 
     public void refillBoard(){
         Random val = new Random();
-        Tiles t;
+        Tile t;
         for(int i = 0; i < 9 ; ++i){
             for(int j = 0 ; j < 9; ++j){
                 if(grid[i][j].isEmpty()==true){
-                    t = Tiles.NOTVALID;
-                    while(t == Tiles.NOTVALID){
+                    t = Tile.NOTVALID;
+                    while(t == Tile.NOTVALID){
                         int r = val.nextInt(6);
                         t = bag.remainingTiles(r);
                     }

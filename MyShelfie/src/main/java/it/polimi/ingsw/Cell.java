@@ -6,9 +6,9 @@ package it.polimi.ingsw;
  *
  */
 public class Cell {
-    private Tiles tile;
+    private Tile tile;
 
-    public Cell(Tiles t){
+    public Cell(Tile t){
         this.tile = t;
     }
     /**
@@ -16,7 +16,7 @@ public class Cell {
      * @author Angelo Di Rosa
      * @param t1
      * The method assignValue assigns one of the Enumeration Tiles values to the cell. */
-    public void assignValue(Tiles t1){
+    public void assignValue(Tile t1){
         this.tile = t1;
     }
 
@@ -27,7 +27,7 @@ public class Cell {
      * This because the board available for the game is not a full 9x9 matrix,
      * so with this method we check if we can put a tile on the cell.*/
     public boolean isValid(){
-        if (tile == Tiles.NOTVALID){
+        if (tile == Tile.NOTVALID){
             return false;
         }
         return true;
@@ -38,7 +38,7 @@ public class Cell {
      * isEmpty checks if the cell is occupied by a tile or not.
      * A tile is empty and available for the game when the "VALID" value is on it.*/
     public boolean isEmpty(){
-        if (tile == Tiles.VALID){
+        if (tile == Tile.VALID){
             return true;
         }
         return false;

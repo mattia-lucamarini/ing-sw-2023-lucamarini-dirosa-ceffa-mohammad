@@ -3,31 +3,30 @@ package it.polimi.ingsw;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ShelfTest {
-    private Shelf purpleShelf1() {
+    public static Shelf purpleShelf1() {
         Shelf shelf = new Shelf();
         shelf.insertTiles(
                 List.of(Pair.of(0, 0), Pair.of(1, 0), Pair.of(2, 0)),
-                List.of(Tiles.PURPLE, Tiles.PURPLE, Tiles.PURPLE)
+                List.of(Tile.PURPLE, Tile.PURPLE, Tile.PURPLE)
         );
         shelf.insertTiles(
                 List.of(Pair.of(0, 1), Pair.of(1, 1)),
-                List.of(Tiles.PURPLE, Tiles.PURPLE)
+                List.of(Tile.PURPLE, Tile.PURPLE)
         );
         shelf.insertTiles(
                 List.of(Pair.of(0, 2)),
-                List.of(Tiles.PURPLE)
+                List.of(Tile.PURPLE)
         );
         return shelf;
     }
 
-    private Shelf shelf2() {
+    public static Shelf shelf2() {
         Shelf shelf = purpleShelf1();
 
-        shelf.insertTiles(List.of(Pair.of(0, 3), Pair.of(1, 3)), List.of(Tiles.BLUE, Tiles.BLUE));
+        shelf.insertTiles(List.of(Pair.of(0, 3), Pair.of(1, 3)), List.of(Tile.BLUE, Tile.BLUE));
 
         return shelf;
     }
@@ -37,7 +36,7 @@ public class ShelfTest {
         Shelf shelf = purpleShelf1();
 
         Assert.assertEquals(
-                List.of(Pair.of(Tiles.PURPLE, 6)),
+                List.of(Pair.of(Tile.PURPLE, 6)),
                 shelf.findTileGroups()
         );
     }
@@ -46,7 +45,7 @@ public class ShelfTest {
         Shelf shelf = shelf2();
 
         Assert.assertEquals(
-                List.of(Pair.of(Tiles.PURPLE, 6), Pair.of(Tiles.BLUE, 2)),
+                List.of(Pair.of(Tile.PURPLE, 6), Pair.of(Tile.BLUE, 2)),
                 shelf.findTileGroups()
         );
     }
