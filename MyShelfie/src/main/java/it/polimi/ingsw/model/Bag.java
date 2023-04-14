@@ -18,31 +18,31 @@ public class Bag {
      * If the amount of tiles of the same type is 0, the function returns NOTVALID to signal that there are no more tiles of that type in the bag.
      * It will be refillBoard's job to generate a new random number from 0 to 5 to solve the problem and chose another tile.*/
 
-    public Tile remainingTiles(int tilenumber){
+    public Tiles remainingTiles(int tilenumber){
         if(tilenumber == 0 && blue!=0){
             --blue;
-            return Tile.BLUE;
+            return Tiles.BLUE;
         }
         if(tilenumber == 1 && green!=0){
             --green;
-            return Tile.GREEN;
+            return Tiles.GREEN;
         }
         if(tilenumber == 2 && purple!=0){
             --purple;
-            return Tile.PURPLE;
+            return Tiles.PURPLE;
         }
         if(tilenumber == 3 && yellow!=0){
             --yellow;
-            return Tile.YELLOW;
+            return Tiles.YELLOW;
         }
         if(tilenumber == 4 && white!=0){
             --white;
-            return Tile.WHITE;
+            return Tiles.WHITE;
         }
         if(tilenumber == 5 && lightblue!=0){
             --lightblue;
-            return Tile.LIGHTBLUE;
+            return Tiles.LIGHTBLUE;
         }
-        return Tile.NOTVALID;
+        return Tiles.NOTVALID;
     }
 }

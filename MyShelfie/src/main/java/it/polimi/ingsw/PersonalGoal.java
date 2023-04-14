@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class PersonalGoal implements Goal {
-    public PersonalGoal(HashMap<Pair<Integer, Integer>, Tile> constraint, List<Integer> points) {
+    public PersonalGoal(HashMap<Pair<Integer, Integer>, Tiles> constraint, List<Integer> points) {
         this.constraint = constraint;
         this.points = points;
     }
@@ -30,6 +30,6 @@ public class PersonalGoal implements Goal {
         return count == 0 ? 0 : points.get(count - 1);
     }
 
-    private final HashMap<Pair<Integer, Integer>, Tile> constraint;
+    private final HashMap<Pair<Integer, Integer>, Tiles> constraint;
     private final List<Integer> points;
 }

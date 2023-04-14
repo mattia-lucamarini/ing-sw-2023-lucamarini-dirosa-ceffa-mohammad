@@ -16,13 +16,13 @@ public class Shelf {
 
     public Shelf() {
         // Initialize matrix. Initially, you can only place tiles in bottom row (0).
-        matrix = new Tile[6][5];
+        matrix = new Tiles[6][5];
         for (int col = 0; col < 5; col++) {
-            matrix[0][col] = Tile.VALID;
+            matrix[0][col] = Tiles.VALID;
         }
         for (int row = 1; row < 6; row++) {
             for (int col = 0; col < 5; col++) {
-                matrix[row][col] = Tile.NOTVALID;
+                matrix[row][col] = Tiles.NOTVALID;
             }
         }
 
@@ -31,11 +31,11 @@ public class Shelf {
     }
 
     public boolean isCellEmpty(int x, int y){
-        return matrix[x][y] == Tile.NOTVALID || matrix[x][y] == Tile.VALID;
+        return matrix[x][y] == Tiles.NOTVALID || matrix[x][y] == Tiles.VALID;
     }
 
     public boolean isCellValid(int x, int y) {
-        return matrix[x][y] == Tile.VALID;
+        return matrix[x][y] == Tiles.VALID;
     }
 
     /**
@@ -45,7 +45,7 @@ public class Shelf {
      * This method places tiles on the shelf. It throws an exception if the tiles aren't placed in a valid cell.
      * It transforms the cells above the tiles that are placed into valid cells.
      * */
-    public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tile> colors) {
+    public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors) {
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
@@ -60,14 +60,14 @@ public class Shelf {
             else {
                 matrix[x][y] = colors.get(i);
                 if (x < 5) {
-                    matrix[x + 1][y] = Tile.VALID;
+                    matrix[x + 1][y] = Tiles.VALID;
                 }
             }
         }
     }
 
-    public List<Pair<Tile, Integer>> findTileGroups() {
-        List<Pair<Tile, Integer>> groups = new ArrayList<>();
+    public List<Pair<Tiles, Integer>> findTileGroups() {
+        List<Pair<Tiles, Integer>> groups = new ArrayList<>();
         boolean[][] visited = new boolean[6][5];
 
         // Init visited matrix to all false
@@ -90,7 +90,7 @@ public class Shelf {
         return groups;
     }
 
-    private int findTileGroup(int r, int c, Tile color, boolean[][] visited) {
+    private int findTileGroup(int r, int c, Tiles color, boolean[][] visited) {
         if (r < 0 || r >= 6) return 0;
         if (c < 0 || c >= 5) return 0;
         if (matrix[r][c] != color) return 0;
@@ -108,11 +108,11 @@ public class Shelf {
         return n;
     }
 
-    public Tile getTile(int r, int c) {
+    public Tiles getTile(int r, int c) {
         return matrix[r][c];
     }
 
-    private Tile[][] matrix;
+    private Tiles[][] matrix;
     private int totalTiles;
 
 }

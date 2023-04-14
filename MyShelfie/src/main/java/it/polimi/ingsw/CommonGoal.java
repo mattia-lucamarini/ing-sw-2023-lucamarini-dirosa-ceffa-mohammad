@@ -33,7 +33,7 @@ public class CommonGoal implements Goal {
         return (Shelf shelf) -> {
             // Count how many groups of "nOfTiles" tiles are there.
             int count = 0;
-            for (Pair<Tile, Integer> group : shelf.findTileGroups()) {
+            for (Pair<Tiles, Integer> group : shelf.findTileGroups()) {
                 if (group.getSecond() == nOfTiles) count++;
             }
 
@@ -82,7 +82,7 @@ public class CommonGoal implements Goal {
         return (Shelf shelf) -> {
             int count = 0;
             for (int row = 0; row < Shelf.ROWS; row++) {
-                var colors = new HashSet<Tile>();
+                var colors = new HashSet<Tiles>();
                 for (int col = 0; col < Shelf.COLUMNS; col++) {
                     colors.add(shelf.getTile(row, col));
                 }
@@ -101,7 +101,7 @@ public class CommonGoal implements Goal {
         return (Shelf shelf) -> {
             int count = 0;
             for (int col = 0; col < Shelf.COLUMNS; col++) {
-                var colors = new HashSet<Tile>();
+                var colors = new HashSet<Tiles>();
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     colors.add(shelf.getTile(row, col));
                 }
@@ -116,7 +116,7 @@ public class CommonGoal implements Goal {
 
     public static Predicate<Shelf> Scatter(int nOfTiles) {
         return (Shelf shelf) -> {
-            var colors = new HashMap<Tile, Integer>();
+            var colors = new HashMap<Tiles, Integer>();
             for (int col = 0; col < Shelf.COLUMNS; col++) {
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     var color = shelf.getTile(row, col);
