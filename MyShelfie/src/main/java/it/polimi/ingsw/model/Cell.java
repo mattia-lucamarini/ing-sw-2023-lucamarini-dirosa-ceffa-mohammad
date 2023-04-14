@@ -1,4 +1,4 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.model;
 /**
  * Class: Cell
  * @author Angelo Di Rosa
