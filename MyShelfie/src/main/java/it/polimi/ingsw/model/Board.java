@@ -17,7 +17,7 @@ public class Board {
     /**Method Constructor
      * The constructor initialize the Board by putting a VALID/NOTVALID value on the cell depending on if the cell is used for the game on not and also
      * depending on the number of players*/
-    private Board(int numplayers){
+    public Board(int numplayers){
         for(int i = 0 ; i < 9 ; ++i){
             for (int j = 0; j < 9 ; ++j){
                 grid[i][j] = new Cell(Tiles.NOTVALID);
