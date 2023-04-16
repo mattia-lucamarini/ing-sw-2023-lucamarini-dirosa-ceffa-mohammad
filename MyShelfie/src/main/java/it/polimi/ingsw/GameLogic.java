@@ -3,9 +3,10 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.network.message.MessageCode;
+import it.polimi.ingsw.network.message.SetPersonalGoal;
 import it.polimi.ingsw.server.ClientHandler;
 
-import java.util.HashMap;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -21,6 +22,7 @@ public class GameLogic implements Runnable{
     private Board board;
     private Bag tiles;
     private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    private List<String> playerOrder;
 
     public GameLogic(HashMap<String, ClientHandler> clientList, int gameID){
         this.clientList = clientList;
@@ -46,13 +48,32 @@ public class GameLogic implements Runnable{
         this.tiles = new Bag();
         //extract common goals TODO: random
         this.CommonGoals = new Pair<>(CommonGoal.FourCorners(), CommonGoal.Stairs());
-        //check shelves
-        //distribute personal goals
+        //distribute personal goals TODO: random
+        for (String username : clientList.keySet()){
+            try {
+                clientList.get(username)
+                        .send(new SetPersonalGoal(username, new PersonalGoal(new HashMap<Pair<Integer, Integer>, Tiles>(), new ArrayList<Integer>())));
+            }
+            catch (Exception e){
+                System.out.println("Couldn't send Personal Goal to " + username);
+            }
+        }
         //distribute tiles
-        //choose first player
+        board.refillBoard();
         System.out.println(" done");
+        //choose first player
+        playerOrder = clientList.keySet().stream().toList();
+        Collections.shuffle(playerOrder);
+        System.out.println("Player order: ");
+        for (String pl : playerOrder)
+            System.out.println(pl);
+        playTurn(playerOrder.get(0));
+    }
+    public boolean isActive() {
+        return isActive;
     }
     public void playTurn(String player){
+        System.out.println(player+", it's your turn.");
         //pick tiles
         //insert tiles
         //check common goals

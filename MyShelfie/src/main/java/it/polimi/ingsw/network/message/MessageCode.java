@@ -9,7 +9,6 @@ public  enum MessageCode {
     LOGIN_REQUEST,
     LOGIN_REPLY,
     NUM_PLAYERS_REQUEST,
-    NUM_PLAYERS_RESPONSE
-
-    // add other ...
+    NUM_PLAYERS_RESPONSE,
+    SET_PERSONAL_GOAL
 }
