@@ -47,7 +47,7 @@ public class GameLogic implements Runnable{
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
-        this.CommonGoals = new Pair<>(CommonGoal.FourCorners(), CommonGoal.Stairs());
+        // TODO: OLD VERSION: this.CommonGoals = new Pair<>(CommonGoal.FourCorners(), CommonGoal.Stairs());
         //distribute personal goals TODO: random
         for (String username : clientList.keySet()){
             try {
