@@ -2,7 +2,7 @@ package it.polimi.ingsw.model;
 
 import java.util.function.Predicate;
 
-// Da considerre se spostare i predicati quì per avere le cose più ordinate.
+// TODO: Da considerre se spostare i predicati quì per avere le cose più ordinate.
 public class CommonGoalPredicates {
     static Predicate<Shelf> Adjacent(int nOfGroups, int nOfTiles) {
         return (Shelf shelf) -> {

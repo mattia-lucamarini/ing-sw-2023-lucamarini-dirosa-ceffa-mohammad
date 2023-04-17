@@ -95,9 +95,17 @@ public class CommonGoal implements Goal {
         };
     }
 
+    /**
+     * Method: Columns
+     * @param minColors minimum number of different colors
+     * @param maxColors maximum number of different colors
+     * @param nOfGroups minimum number of required columns with required color groups to obtain bonus
+     * This method creates a predicate that searches for "nOfGroups" or more columns that contain a number of colors within
+     * "minColors" and "maxColors".
+     * */
     public static Predicate<Shelf> Columns(int minColors, int maxColors, int nOfGroups) {
-        // Cols3Colors -> Columns(3, 6, 4)
-        // ColsAllDiff -> Columns(6, 6, 2)
+        // ColsMax3Colors -> Columns(1, 3, 3)
+        // ColsAllDiff    -> Columns(6, 6, 2)
         return (Shelf shelf) -> {
             int count = 0;
             for (int col = 0; col < Shelf.COLUMNS; col++) {
@@ -114,7 +122,13 @@ public class CommonGoal implements Goal {
         };
     }
 
+    /**
+     * Method: Scatter
+     * @param nOfTiles minimum number of required tiles to obtain bonus
+     * This method creates a predicate that searches for "nOfTiles" or more of the same color within the shelf.
+     * */
     public static Predicate<Shelf> Scatter(int nOfTiles) {
+        // Scatter8 -> Scatter(8)
         return (Shelf shelf) -> {
             var colors = new HashMap<Tiles, Integer>();
             for (int col = 0; col < Shelf.COLUMNS; col++) {
@@ -135,11 +149,24 @@ public class CommonGoal implements Goal {
         };
     }
 
-    public static Predicate<Shelf> Shape(List<Pair<Integer, Integer>> shape, int nOfGroups) {
+
+    /**
+     * Method: Shape
+     * @param shape list of positions that make the shape that is searched
+     * @param width width of the shape
+     * @param height height of the shape
+     * @param nOfGroups minimum number of shapes required for bonus
+     * This method creates a predicate that searches for "nOfGroups" or more of the given shape within the shelf. It
+     * is important to define the shape with (0,0) being the bottom left cell.
+     * */
+    public static Predicate<Shelf> Shape(List<Pair<Integer, Integer>> shape, int width, int height, int nOfGroups) {
+        // TwoSquares -> Shape(List.of(Pair.of(0, 0), Pair.of(0, 1), Pair.of(1, 0), Pair.of(1, 1)), 2, 2, 2)
+        // Cross      -> Shape(List.of((0, 0), (1, 1), (2, 2), (2, 0), (0, 2)), 3, 3, 1)
+        // Diagonals  -> Shape(List.of((0, 0), (1, 1), (2, 2), ...)), 5, 5, 1).or(Shape(List.of((5, 0), ())), 5, 5, 1)
         return (Shelf shelf) -> {
             int count = 0;
-            for (int row = 0; row < Shelf.ROWS; row++) {
-                for (int col = 0; col < Shelf.COLUMNS; col++) {
+            for (int row = 0; row <= Shelf.ROWS - height; row++) {
+                for (int col = 0; col <= Shelf.COLUMNS - width; col++) {
                     var color = shelf.getTile(row, col);
                     boolean shapeFound = false;
                     for (var pos : shape) {

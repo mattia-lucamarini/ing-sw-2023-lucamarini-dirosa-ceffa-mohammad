@@ -81,8 +81,12 @@ public class Shelf {
         for (int r = 0; r < 6; r++) {
             for (int c = 0; c < 5; c++) {
                 if (!visited[r][c] && !isCellEmpty(r, c)){
-                    int groupN = findTileGroup(r, c, matrix[r][c], visited); // call1
-                    groups.add(Pair.of(matrix[r][c], groupN));
+                    Tiles colorOfGroup = matrix[r][c];
+                    int nOfTilesInGroup = 0;
+                    // Start recursive call (flooding)
+                    nOfTilesInGroup = findTileGroup(r, c, colorOfGroup, visited, nOfTilesInGroup);
+                    // Collect group inside list of all groups
+                    groups.add(Pair.of(colorOfGroup, nOfTilesInGroup));
                 }
             }
         }
@@ -90,22 +94,42 @@ public class Shelf {
         return groups;
     }
 
-    private int findTileGroup(int r, int c, Tiles color, boolean[][] visited) {
-        if (r < 0 || r >= 6) return 0;
-        if (c < 0 || c >= 5) return 0;
-        if (matrix[r][c] != color) return 0;
-        if (visited[r][c]) return 0;
+    private int findTileGroup(int r, int c, Tiles groupColor, boolean[][] visited, int count) {
+        // Return number of tiles within the group
+        // Ferma espansione quando usciamo fuori da matrice
+        if (r < 0 || r >= 6){
+            return count;
+        }
+        else if (c < 0 || c >= 5) {
+            return count;
+        }
+        // Ferma espansione quando colore non è del gruppo (di casella iniziale)
+        else if (matrix[r][c] != groupColor) {
+            return count;
+        }
+        // Posizione già visitata (ferma espansione)
+        else if (visited[r][c] == true) {
+            return count;
+        }
+        // Visita + conta + espansione
+        else {
+            // Segna casella come già visitata
+            visited[r][c] = true;
 
-        visited[r][c] = true;
+            // Aggiungiamo 1 al numero di caselle nel gruppo
+            count++;
 
-        int n = 1;
+            // Procedi con espansione a croce (esce anche da matrice ma bloccata sopra)
+            // . # .
+            // # 0 #
+            // . # .
+            count = findTileGroup(r + 1, c, groupColor, visited, count);
+            count = findTileGroup(r, c + 1, groupColor, visited, count);
+            count = findTileGroup(r - 1, c, groupColor, visited, count);
+            count = findTileGroup(r, c - 1, groupColor, visited, count);
 
-        n += findTileGroup(r + 1, c, color, visited);
-        n += findTileGroup(r, c + 1, color, visited);
-        n += findTileGroup(r - 1, c, color, visited);
-        n += findTileGroup(r, c - 1, color, visited);
-
-        return n;
+            return count;
+        }
     }
 
     public Tiles getTile(int r, int c) {

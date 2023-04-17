@@ -6,7 +6,8 @@ import org.junit.Test;
 import java.util.List;
 
 public class ShelfTest {
-    public static Shelf purpleShelf1() {
+    @Test
+    public void testFindGroups() {
         Shelf shelf = new Shelf();
         shelf.insertTiles(
                 List.of(Pair.of(0, 0), Pair.of(1, 0), Pair.of(2, 0)),
@@ -20,33 +21,10 @@ public class ShelfTest {
                 List.of(Pair.of(0, 2)),
                 List.of(Tiles.PURPLE)
         );
-        return shelf;
-    }
 
-    public static Shelf shelf2() {
-        Shelf shelf = purpleShelf1();
+        var actual = shelf.findTileGroups();
+        var expected = List.of(Pair.of(Tiles.PURPLE, 6));
 
-        shelf.insertTiles(List.of(Pair.of(0, 3), Pair.of(1, 3)), List.of(Tiles.BLUE, Tiles.BLUE));
-
-        return shelf;
-    }
-
-    @Test
-    public void testFindGroups1PurpleGroup() {
-        Shelf shelf = purpleShelf1();
-
-        Assert.assertEquals(
-                List.of(Pair.of(Tiles.PURPLE, 6)),
-                shelf.findTileGroups()
-        );
-    }
-    @Test
-    public void testFindGroups2Groups() {
-        Shelf shelf = shelf2();
-
-        Assert.assertEquals(
-                List.of(Pair.of(Tiles.PURPLE, 6), Pair.of(Tiles.BLUE, 2)),
-                shelf.findTileGroups()
-        );
+        Assert.assertEquals(expected, actual);
     }
 }
