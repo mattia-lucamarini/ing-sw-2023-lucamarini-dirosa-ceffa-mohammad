@@ -26,6 +26,11 @@ public class CommonGoal implements Goal {
         }
     }
 
+    /**
+     * Method: all
+     * This method creates and returns all 12 common goals that are present in the game, giving each an independent point
+     * stack and predicate.
+     * */
     public static List<CommonGoal> all() {
         var square = List.of(
                 Pair.of(0, 0), Pair.of(0, 1), Pair.of(1, 0), Pair.of(1, 1)
@@ -41,11 +46,11 @@ public class CommonGoal implements Goal {
         );
 
         var allPredicates = List.of(
-                CommonGoalPredicate.Adjacent(6, 2),
-                CommonGoalPredicate.FourCorners(),
-                CommonGoalPredicate.Adjacent(4, 4),
-                CommonGoalPredicate.Shape(square, 2, 2, 2),
-                CommonGoalPredicate.Columns(1, 3, 3),
+                CommonGoalPredicate.Adjacent(6, 2),                // Adjacent6x2
+                CommonGoalPredicate.FourCorners(),                                 // FourCorners
+                CommonGoalPredicate.Adjacent(4, 4),               // Adjacent4x4
+                CommonGoalPredicate.Shape(square, 2, 2, 2),  // Square
+                CommonGoalPredicate.Columns(1, 3, 3),  // Columns3x3
                 CommonGoalPredicate.Scatter(8),
                 CommonGoalPredicate.Shape(forwardDiagonal, 5, 5, 1)
                         .or(CommonGoalPredicate.Shape(backDiagonal, 5, 5, 1)),

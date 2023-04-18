@@ -35,7 +35,12 @@ public class GameLogic implements Runnable{
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
+
+        // TODO: REMOVE THIS: Example to showcase how to choose random common goal
         this.CommonGoals = CommonGoal.all();
+        var rand = new Random();
+        var randomCommonGoal = this.CommonGoals.get(rand.nextInt(this.CommonGoals.size()));
+
         //distribute personal goals TODO: random
         for (String username : clientList.keySet()){
             try {

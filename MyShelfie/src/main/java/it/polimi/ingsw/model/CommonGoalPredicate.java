@@ -126,7 +126,6 @@ public class CommonGoalPredicate {
         };
     }
 
-
     /**
      * Method: Shape
      * @param shape list of positions that make the shape that is searched
