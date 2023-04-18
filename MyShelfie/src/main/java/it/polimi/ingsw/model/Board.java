@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class Board {
 
-    private Cell[][] grid;
+    private Cell[][] grid = new Cell[9][9];
     Bag bag= new Bag();
     /**Method Constructor
      * The constructor initialize the Board by putting a VALID/NOTVALID value on the cell depending on if the cell is used for the game on not and also
