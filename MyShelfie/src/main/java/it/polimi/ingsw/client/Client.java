@@ -37,8 +37,6 @@ public class Client {
 
             }
             if(message.getMessageType().equals(MessageCode.LOGIN_REPLY)){
-                if (message.getMessageType() == MessageCode.LOGIN_REPLY)
-                    System.out.println(((LoginReply) message).getOutcome());
                 if (((LoginReply) message).getOutcome()) {
                     System.out.println("Client added!!");
                 } else {
@@ -48,6 +46,8 @@ public class Client {
             message = (Message) in.readObject();
             if(message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
                 System.out.println("Received personal goal");
+                System.out.println("Ready to play");
+                return;
             }
             if(message.getMessageType().equals(MessageCode.GENERIC_MESSAGE)){
                 System.out.println("Received generic message");
