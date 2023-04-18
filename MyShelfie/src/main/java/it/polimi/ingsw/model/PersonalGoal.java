@@ -1,9 +1,10 @@
 package it.polimi.ingsw.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
-public class PersonalGoal implements Goal {
+public class PersonalGoal implements Goal, Serializable {
     public PersonalGoal(HashMap<Pair<Integer, Integer>, Tiles> constraint, List<Integer> points) {
         this.constraint = constraint;
         this.points = points;
