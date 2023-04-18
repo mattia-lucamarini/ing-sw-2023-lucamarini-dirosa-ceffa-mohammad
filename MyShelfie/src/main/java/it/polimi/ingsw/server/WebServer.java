@@ -1,6 +1,6 @@
 package it.polimi.ingsw.server;
 
-import it.polimi.ingsw.TestGameLogic;
+import it.polimi.ingsw.GameLogic;
 import it.polimi.ingsw.server.network.ServerNetworkManager;
 import it.polimi.ingsw.server.network.ServerRMINetwork;
 import it.polimi.ingsw.server.network.ServerSocketNetwork;
@@ -23,7 +23,7 @@ public class WebServer {
     public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
     private String type;
     private final ServerNetworkManager mainNetworkManager;
-    private final ConcurrentHashMap<Integer, TestGameLogic> activeGames;
+    private final ConcurrentHashMap<Integer, GameLogic> activeGames;
     private final ConcurrentHashMap<String, Integer> activePlayers;
     private Integer gamesCounter;
 
@@ -88,10 +88,10 @@ public class WebServer {
      *
      */
     private void startNewGame(HashMap<String, ClientHandler> clients){
-        TestGameLogic testGameLogic = new TestGameLogic(clients, this.gamesCounter);
-        Thread thread = new Thread(testGameLogic);
+        GameLogic gameLogic = new GameLogic(clients, this.gamesCounter);
+        Thread thread = new Thread(gameLogic);
         thread.start();
-        this.activeGames.put(this.gamesCounter, testGameLogic);
+        this.activeGames.put(this.gamesCounter, gameLogic);
         for(String username: clients.keySet()){
             this.activePlayers.put(username, this.gamesCounter);
         }
