@@ -1,8 +1,6 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.model.*;
-import it.polimi.ingsw.network.message.Message;
-import it.polimi.ingsw.network.message.MessageCode;
 import it.polimi.ingsw.network.message.SetPersonalGoal;
 import it.polimi.ingsw.server.ClientHandler;
 
@@ -17,7 +15,7 @@ import java.util.function.Predicate;
 public class GameLogic implements Runnable{
     private final HashMap<String, ClientHandler> clientList;
     private final int numPlayers;
-    private int gameID;
+    private final int gameID;
     private boolean isActive;
     private Board board;
     private Bag tiles;
@@ -32,18 +30,7 @@ public class GameLogic implements Runnable{
     }
     @Override
     public void run(){
-        System.out.println("Starting game "+ gameID);
-        for (String username : clientList.keySet()){
-            boolean status = clientList.get(username).send(new Message(username, MessageCode.GENERIC_MESSAGE));
-            if (status){
-                System.out.println(username + " is ready");
-            }
-            else{
-                System.out.println(username + " is not ready");
-                throw new RuntimeException();
-            }
-        }
-        System.out.print("Preparing game " + gameID + "...");
+        System.out.println("Preparing game " + gameID);
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
@@ -53,6 +40,7 @@ public class GameLogic implements Runnable{
             try {
                 clientList.get(username)
                         .send(new SetPersonalGoal(username, new PersonalGoal(new HashMap<Pair<Integer, Integer>, Tiles>(), new ArrayList<Integer>())));
+                System.out.println(username + " is ready");
             }
             catch (Exception e){
                 System.out.println("Couldn't send Personal Goal to " + username);
@@ -60,7 +48,7 @@ public class GameLogic implements Runnable{
         }
         //distribute tiles
         board.refillBoard();
-        System.out.println(" done");
+        System.out.println("Game " + gameID + "is ready");
         //choose first player
         playerOrder = clientList.keySet().stream().toList();
         Collections.shuffle(playerOrder);
