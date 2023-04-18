@@ -30,7 +30,7 @@ public class GameLogic implements Runnable{
     }
     @Override
     public void run(){
-        System.out.println("Preparing game " + gameID);
+        System.out.println("\nPreparing game " + gameID);
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
@@ -48,13 +48,14 @@ public class GameLogic implements Runnable{
         }
         //distribute tiles
         board.refillBoard();
-        System.out.println("Game " + gameID + "is ready");
+        System.out.println("Game " + gameID + " can now start");
         //choose first player
-        playerOrder = clientList.keySet().stream().toList();
+        playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
-        System.out.println("Player order: ");
+        System.out.print("\nPlayer order for game "+gameID+": ");
         for (String pl : playerOrder)
-            System.out.println(pl);
+            System.out.print(pl+" ");
+        System.out.println("");
         playTurn(playerOrder.get(0));
     }
     public boolean isActive() {
