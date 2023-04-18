@@ -19,7 +19,8 @@ public class GameLogic implements Runnable{
     private boolean isActive;
     private Board board;
     private Bag tiles;
-    private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    // TODO private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    private List<CommonGoal> CommonGoals;
     private List<String> playerOrder;
 
     public GameLogic(HashMap<String, ClientHandler> clientList, int gameID){
@@ -34,7 +35,7 @@ public class GameLogic implements Runnable{
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
-        // TODO: OLD VERSION: this.CommonGoals = new Pair<>(CommonGoal.FourCorners(), CommonGoal.Stairs());
+        this.CommonGoals = CommonGoal.all();
         //distribute personal goals TODO: random
         for (String username : clientList.keySet()){
             try {
