@@ -30,15 +30,13 @@ public class Client {
 
             if(message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
                 Scanner t = new Scanner(System.in);
-                //System.out.println("Received "+message.getMessageType());
-                System.out.println("Inserire numero di giocatori: ");
+                System.out.print("Inserire numero di giocatori: ");
                 int num = t.nextInt();
                 out.writeObject(new NumPlayersMessage(player.getUsername(), num));
                 message = (Message) in.readObject();
 
             }
             if(message.getMessageType().equals(MessageCode.LOGIN_REPLY)){
-                //System.out.println("Received "+message.getMessageType());
                 if (message.getMessageType() == MessageCode.LOGIN_REPLY)
                     System.out.println(((LoginReply) message).getOutcome());
                 if (((LoginReply) message).getOutcome()) {
@@ -47,15 +45,16 @@ public class Client {
                     System.out.println("Client refused.");
                 }
             }
+            message = (Message) in.readObject();
             if(message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
-                //System.out.println("Received "+message.getMessageType());
                 System.out.println("Received personal goal");
+            }
+            if(message.getMessageType().equals(MessageCode.GENERIC_MESSAGE)){
+                System.out.println("Received generic message");
             }
             else {
                 System.out.println("Unknown message code received. ("+message.getMessageType()+")");
-                /*if (message.getMessageType() == MessageCode.LOGIN_REPLY)
-                    System.out.println(((LoginReply) message).getOutcome());*/
-                //TODO throw new RuntimeException();
+                throw new RuntimeException();
             }
 
         } catch (Exception e) {
