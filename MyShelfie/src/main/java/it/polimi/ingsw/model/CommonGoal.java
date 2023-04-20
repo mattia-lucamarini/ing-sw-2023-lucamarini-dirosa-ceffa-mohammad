@@ -1,6 +1,5 @@
 package it.polimi.ingsw.model;
 
-import java.sql.Array;
 import java.util.*;
 import java.util.function.Predicate;
 

@@ -1,5 +1,4 @@
 package it.polimi.ingsw.model;
-
 /**
  * Class: Bag
  * @author Angelo Di Rosa

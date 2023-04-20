@@ -177,37 +177,45 @@ public class Board {
      * If not, the move is valid and the tile is taken (it will be assigned a VALID value to the cell).
      * It also checks if the players is not taking any tiles diagonally by saving the position of the latest taken tile (latestX, latestY).
      * If the latest taken tile has as coordinates (x-1, y-1) with (x,y) being the index of the current tile, it means that the player is trying to move diagonally on the board and this is not allowed in the game.
-     * So the method puts again the taken tile on the board and does not allow the player to make the move.
-     * */
+     * So the method puts again the taken tile on the board  by calling putItBack() and does not allow the player to make the move by restoring the board as if the move never happened.
+     * For example: the player wants to take the cells (0,3),(0,4),(1,5). At first takeTiles allowes the player to take the first two tiles and puts a 'VALID' value over the cell.
+     * But when takesTiles realizes that the player is trying to move diagonally by taking the (1,5) tile, the method throws a new RuntimeException and calls putItBack() to restore the board
+     * as if the move had never taken place (by putting the original values over the previously taken cells (0,3) and (0,4)).*/
 
     public void takeTiles(List<Pair<Integer, Integer>> positions){
         int x, y, latestX = -2, latestY= -2;
         Tiles tilevalue;
         List<Pair<Integer, Integer>> sides;
+        List<Tiles> tilevalues = new ArrayList<>();
+
         for(int k = 0; k < positions.size(); ++k){
             x = positions.get(k).getFirst();
             y = positions.get(k).getSecond();
-            tilevalue = grid[x][y].getTile();
             if(x<0 || y>8){
+                this.putItBack(positions, tilevalues);
                 throw new NullPointerException("These index are not on the board.");
             }
-            else if(grid[x][y].isNotValid()){
-                throw new RuntimeException("This cell is not available for the game");
-            }
-            else if(latestX==x-1 && latestY==y-1){
-                grid[latestX][latestY].assignValue(tilevalue);
-                throw new RuntimeException("Move not valid. Do not choose tiles diagonally.");
-            }
-            else {
-                sides = this.emptySides(x,y);
-                if (sides.size()==1 && sides.get(0).getFirst()== latestX && sides.get(0).getSecond()== latestY ){
-                    grid[latestX][latestY].assignValue(tilevalue);
-                    throw new RuntimeException("The move is not valid.");
+            else{
+                tilevalues.add(grid[x][y].getTile());
+                if(grid[x][y].isNotValid()){
+                    this.putItBack(positions, tilevalues);
+                    throw new RuntimeException("This cell is not available for the game");
                 }
-                else{
-                    grid[x][y].assignValue(Tiles.VALID);
-                    latestX = x;
-                    latestY = y;
+                else if(latestX==x-1 && latestY==y-1){
+                    this.putItBack(positions, tilevalues);
+                    throw new RuntimeException("Move not valid. Do not choose tiles diagonally.");
+                }
+                else {
+                    sides = this.emptySides(x,y);
+                    if (sides.size()==1 && sides.get(0).getFirst()== latestX && sides.get(0).getSecond()== latestY ){
+                        this.putItBack(positions, tilevalues);
+                        throw new RuntimeException("The move is not valid.");
+                    }
+                    else{
+                        grid[x][y].assignValue(Tiles.VALID);
+                        latestX = x;
+                        latestY = y;
+                    }
                 }
             }
         }
@@ -233,6 +241,29 @@ public class Board {
             emptysides.add(Pair.of(i,w));
         }
         return emptysides;
+    }
+
+    /**method: putItBack
+     * @param moves the player's move
+     * @param t a List of tile values of the player's selected cells
+     * @author Angelo Di Rosa
+     * This method restore the cells by putting their original tile on it whenever a player makes a wrong move.
+     */
+    public void putItBack(List<Pair<Integer,Integer>> moves, List<Tiles> t){
+        for(int i = 0; i < t.size(); ++i){
+            int x = moves.get(i).getFirst();
+            int y = moves.get(i).getSecond();
+            grid[x][y].assignValue(t.get(i));
+        }
+    }
+
+    public void printBoard(){
+        for(int i = 0 ; i < 9; ++i){
+            for(int j = 0; j < 9; ++j){
+                System.out.println(grid[i][j].getTile());
+            }
+            System.out.println("\n");
+        }
     }
 
 
