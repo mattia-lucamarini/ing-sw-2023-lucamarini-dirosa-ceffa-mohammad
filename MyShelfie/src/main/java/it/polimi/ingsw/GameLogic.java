@@ -5,6 +5,7 @@ import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.SetPersonalGoal;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 /**
@@ -13,16 +14,17 @@ import java.util.function.Predicate;
  * This class implements the game rules and manages the players' turns.
  */
 public class GameLogic implements Runnable{
-    private final HashMap<String, ClientHandler> clientList;
+    private final ConcurrentHashMap<String, ClientHandler> clientList;
     private final int numPlayers;
     private final int gameID;
     private boolean isActive;
     private Board board;
     private Bag tiles;
-    private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    // TODO private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    private List<CommonGoal> CommonGoals;
     private List<String> playerOrder;
 
-    public GameLogic(HashMap<String, ClientHandler> clientList, int gameID){
+    public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
         this.clientList = clientList;
         this.numPlayers = clientList.size();
         this.gameID = gameID;
@@ -34,7 +36,12 @@ public class GameLogic implements Runnable{
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
         //extract common goals TODO: random
-        // TODO: OLD VERSION: this.CommonGoals = new Pair<>(CommonGoal.FourCorners(), CommonGoal.Stairs());
+
+        // TODO: REMOVE THIS: Example to showcase how to choose random common goal
+        this.CommonGoals = CommonGoal.all();
+        var rand = new Random();
+        var randomCommonGoal = this.CommonGoals.get(rand.nextInt(this.CommonGoals.size()));
+
         //distribute personal goals TODO: random
         for (String username : clientList.keySet()){
             try {
