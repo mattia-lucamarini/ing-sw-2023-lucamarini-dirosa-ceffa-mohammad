@@ -1,8 +1,7 @@
 package it.polimi.ingsw.server.network;
 
-import it.polimi.ingsw.server.ClientHandler;
+import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,7 +17,8 @@ public interface ServerNetworkManager {
      * @return the new accepted clients ready for a new game, by a couple of unique username identifier and a
      * ClientHandler object used to manage the communication with the client
      */
-    public HashMap<String, ClientHandler> acceptNewClients(ConcurrentHashMap<String, Integer> activePlayers);
+    public ConcurrentHashMap<String, ClientHandler> acceptNewClients(ConcurrentHashMap<String, Integer> activePlayers,
+                                                           ConcurrentHashMap<String, ClientHandler> clientHandlers);
 
     /**
      * Stop and close the network services of the web server

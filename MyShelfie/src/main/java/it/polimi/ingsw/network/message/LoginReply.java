@@ -10,12 +10,10 @@ public class LoginReply extends Message {
 
     /**
      * Default constructor
-     *
-     * @param username unique username of the Client
      * @param outcome code response status: true Server accepts the login request, false Serve rejects login request
      */
-    public LoginReply(String username, boolean outcome) {
-        super(username, MessageCode.LOGIN_REPLY);
+    public LoginReply(boolean outcome) {
+        super(MessageCode.LOGIN_REPLY);
         this.outcome = outcome;
     }
 

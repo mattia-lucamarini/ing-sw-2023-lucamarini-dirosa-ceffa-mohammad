@@ -1,12 +1,12 @@
 package it.polimi.ingsw.server;
 
-import it.polimi.ingsw.GameLogic;
+import it.polimi.ingsw.TestGameLogic;
+import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.server.network.ServerNetworkManager;
-import it.polimi.ingsw.server.network.ServerRMINetwork;
-import it.polimi.ingsw.server.network.ServerSocketNetwork;
+import it.polimi.ingsw.server.network.ServerSocketAndRmiNetwork;
+
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -21,36 +21,28 @@ public class WebServer {
 
     public final static int MAX_PLAYERS = 4; //spostare nella classe GameLogic
     public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
-    private String type;
     private final ServerNetworkManager mainNetworkManager;
-    private final ConcurrentHashMap<Integer, GameLogic> activeGames;
+    private final ConcurrentHashMap<Integer, TestGameLogic> activeGames;
+    //private final ConcurrentHashMap<Integer, GameLogic> activeGames;
     private final ConcurrentHashMap<String, Integer> activePlayers;
+
+    private final ConcurrentHashMap<String, ClientHandler> clientHandlers;
     private Integer gamesCounter;
 
     /**
      * Default constructor.
      *
-     * @param type specifies the network technology used by the Server between the ones available: [Socket, RMI]
-     * @throws IOException if the ServerSocket it's not correctly instantiated
+     * @throws IOException if the ServerSocket is not correctly instantiated
      */
-    public WebServer(String type) throws IOException {
+    public WebServer() throws IOException {
 
-        this.type = type;
         this.gamesCounter = 0;
         this.activeGames = new ConcurrentHashMap<>();
         this.activePlayers = new ConcurrentHashMap<>();
+        this.clientHandlers = new ConcurrentHashMap<>();
 
-        if(this.type.equals("Socket")) {
-            this.mainNetworkManager = new ServerSocketNetwork(59090);
-        }
-        else{
-            this.mainNetworkManager = new ServerRMINetwork();
-            if(! this.type.equals("RMI")){
-                this.type = "RMI";
-                LOG.warning("Bad network type. Using RMI by default.");
-
-            }
-        }
+        this.mainNetworkManager = new ServerSocketAndRmiNetwork(59090);
+        // to do -> manage RMI clients with a ServerRmiNetwork
     }
 
     /**
@@ -60,15 +52,11 @@ public class WebServer {
      */
     public void launchKernel(){
         try {
-            new Thread(()-> {
-                try {
-                    this.checkAndFinalizeGame();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }).start();
+            new Thread(this::checkAndFinalizeGame).start();
+            new Thread(this::checkClientConnection).start();
             while (true) {
-                HashMap<String, ClientHandler> clients = this.mainNetworkManager.acceptNewClients(this.activePlayers);
+                ConcurrentHashMap<String, ClientHandler> clients = this.mainNetworkManager.acceptNewClients(
+                        this.activePlayers, this.clientHandlers);
                 if (clients != null) {
                     startNewGame(clients);
                     this.gamesCounter += 1;
@@ -87,13 +75,15 @@ public class WebServer {
      * used to communicate with the client-side
      *
      */
-    private void startNewGame(HashMap<String, ClientHandler> clients){
-        GameLogic gameLogic = new GameLogic(clients, this.gamesCounter);
+    private void startNewGame(ConcurrentHashMap<String, ClientHandler> clients){
+        //GameLogic gameLogic = new GameLogic(clients, this.gamesCounter);
+        TestGameLogic gameLogic = new TestGameLogic(clients, this.gamesCounter);
         Thread thread = new Thread(gameLogic);
         thread.start();
         this.activeGames.put(this.gamesCounter, gameLogic);
         for(String username: clients.keySet()){
             this.activePlayers.put(username, this.gamesCounter);
+            this.clientHandlers.put(username, clients.get(username));
         }
     }
 
@@ -101,25 +91,46 @@ public class WebServer {
      * Method to check the status of a game: if a game is classified as finished, then it remove the related game object
      * and all the players
      *
-     * @throws InterruptedException if an error is raised during the waiting time
      */
-    private void checkAndFinalizeGame() throws InterruptedException { //fare code refactoring
+    private void checkAndFinalizeGame() { //fare code refactoring
         while(true){
             System.out.println("Web Server: Active Games: "+this.activeGames.size());
             for(Integer id: this.activeGames.keySet()){
                 if(! this.activeGames.get(id).isActive()){
                     this.activeGames.remove(id);
-                    System.out.print("Web Server: removing Game "+ id);
+                    System.out.println("Web Server: removing Game "+ id);
                     for(String username: this.activePlayers.keySet()){
                         if(this.activePlayers.get(username).equals(id)){
                             this.activePlayers.remove(username);
+                            this.clientHandlers.remove(username);
                         }
                     }
                 }
             }
-            TimeUnit.SECONDS.sleep(10);
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            }catch (InterruptedException e){
+                WebServer.LOG.warning(e.getMessage());
+            }
         }
     }
 
+    /**
+     * Method to check the connection status of all the clients in the system
+     *
+     */
+    private void checkClientConnection() {
+        while(true){
+            for(String username: this.clientHandlers.keySet()) {
+                System.out.println("Web Server: " + username + ": is connected: "
+                        + this.clientHandlers.get(username).isConnected());
+            }
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            }catch(InterruptedException e){
+                WebServer.LOG.warning(e.getMessage());
+            }
+        }
+    }
 
 }

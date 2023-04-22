@@ -1,10 +1,12 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.network.message.MessageCode;
-import it.polimi.ingsw.server.ClientHandler;
+import it.polimi.ingsw.utils.ClientDisconnectedException;
+import it.polimi.ingsw.utils.NoMessageToReadException;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -12,11 +14,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class TestGameLogic implements Runnable{
 
-    private final HashMap<String, ClientHandler> clientList;
-    private int gameID;
+    private final ConcurrentHashMap<String, ClientHandler> clientList;
+    private final int gameID;
     private boolean isActive;
 
-    public TestGameLogic(HashMap<String, ClientHandler> clientList, int gameID) {
+    public TestGameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID) {
         this.clientList = clientList;
         this.gameID = gameID;
         this.isActive = true;
@@ -26,42 +28,52 @@ public class TestGameLogic implements Runnable{
     public void run() {
         System.out.println("Game " + this.gameID + ": Starting ...");
         for (String username : clientList.keySet()){
-            boolean status = clientList.get(username).send(new Message(username, MessageCode.GENERIC_MESSAGE));
-            if (status){
-                System.out.println("Game " + this.gameID + ": Correctly send to: " + username);
-            }
-            else{
-                System.out.println("Game " + this.gameID + ": Error sending to: " + username);
-                throw new RuntimeException();
+            try {
+                boolean status = clientList.get(username).sendingWithRetry(new Message(MessageCode.GENERIC_MESSAGE),
+                        2, 1);
+                if(! status){
+                    System.out.println("Game " + this.gameID + ": Error sending to: " + username);
+                    clientList.remove(username); //we remove this player from the test
+                }
+                else{
+                    System.out.println("Game " + this.gameID + ": Correctly send to: " + username);
+                }
+            }catch(ClientDisconnectedException e){
+                System.out.println("Game " + this.gameID + ": Disconnected: " + username);
+                clientList.remove(username); //we remove this player from the test
             }
         }
+
         try {
             TimeUnit.SECONDS.sleep(1);
         }catch(InterruptedException ignored){
         }
 
-        int testIterations = 0;
-        while (testIterations < 10) {
+        Message message = null;
+        while (clientList.size()>0) {
             for (String username : clientList.keySet()) {
                 try {
-                    Message message = clientList.get(username).receive();
+                    message = clientList.get(username).receive();
                     if(message.getMessageType().equals(MessageCode.GENERIC_MESSAGE)) {
                         System.out.println("Game " + this.gameID + ": Correctly received from: " + username);
                     }
                     else{
                         System.out.println("Game " + this.gameID + ": Bad format message: " + username);
                     }
-                }catch(Exception e){
-                    System.out.println("Game "+this.gameID+": Error occurred during the test with the player: "+username);
+                }catch(NoMessageToReadException e){
+                    System.out.println("Game " + this.gameID + ": No message from: " + username);
+                }catch(ClientDisconnectedException  e){
+                    System.out.println("Game " + this.gameID + ": Disconnected: " + username);
+                    clientList.remove(username); //we remove this player from the test
                 }
             }
-            testIterations += 1;
             try {
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(1);
             }catch(InterruptedException ignored){
             }
 
         }
+
         System.out.println("Game "+this.gameID+": Test Game completed");
         this.isActive = false;
     }

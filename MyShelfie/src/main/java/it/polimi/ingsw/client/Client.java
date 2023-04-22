@@ -32,7 +32,7 @@ public class Client {
                 Scanner t = new Scanner(System.in);
                 System.out.print("Inserire numero di giocatori: ");
                 int num = t.nextInt();
-                out.writeObject(new NumPlayersMessage(player.getUsername(), num));
+                out.writeObject(new NumPlayersMessage(num));
                 message = (Message) in.readObject();
 
             }

@@ -6,9 +6,12 @@ package it.polimi.ingsw.network.message;
  */
 public  enum MessageCode {
     GENERIC_MESSAGE,
+    PING_MESSAGE,
     LOGIN_REQUEST,
     LOGIN_REPLY,
     NUM_PLAYERS_REQUEST,
     NUM_PLAYERS_RESPONSE,
-    SET_PERSONAL_GOAL
+    SET_PERSONAL_GOAL,
+
+    BAD_RESPONSE;
 }

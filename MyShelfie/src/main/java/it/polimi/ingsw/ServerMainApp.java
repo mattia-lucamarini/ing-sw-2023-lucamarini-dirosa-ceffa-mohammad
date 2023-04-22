@@ -12,7 +12,7 @@ public class ServerMainApp {
     {
         System.out.println( "Starting application!" );
         try {
-            WebServer webServer = new WebServer("Socket");
+            WebServer webServer = new WebServer();
             webServer.launchKernel();
         }
         catch(Exception a){

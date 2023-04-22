@@ -1,8 +1,8 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.model.*;
+import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.SetPersonalGoal;
-import it.polimi.ingsw.server.ClientHandler;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -39,7 +39,7 @@ public class GameLogic implements Runnable{
         for (String username : clientList.keySet()){
             try {
                 clientList.get(username)
-                        .send(new SetPersonalGoal(username, new PersonalGoal(new HashMap<Pair<Integer, Integer>, Tiles>(), new ArrayList<Integer>())));
+                        .send(new SetPersonalGoal(new PersonalGoal(new HashMap<Pair<Integer, Integer>, Tiles>(), new ArrayList<Integer>())));
                 System.out.println(username + " is ready");
             }
             catch (Exception e){

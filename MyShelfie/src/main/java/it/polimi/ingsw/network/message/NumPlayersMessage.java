@@ -10,12 +10,10 @@ public class NumPlayersMessage extends Message {
 
     /**
      * Default constructor
-     *
-     * @param username unique username of the Client
      * @param numPlayers valid number of players inserted by the Client
      */
-    public NumPlayersMessage(String username, Integer numPlayers) {
-        super(username, MessageCode.NUM_PLAYERS_RESPONSE);
+    public NumPlayersMessage(Integer numPlayers) {
+        super(MessageCode.NUM_PLAYERS_RESPONSE);
         this.numPlayers = numPlayers;
     }
 

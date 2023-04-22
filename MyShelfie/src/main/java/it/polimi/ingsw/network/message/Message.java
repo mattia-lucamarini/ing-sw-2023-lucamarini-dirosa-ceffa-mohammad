@@ -9,22 +9,14 @@ import java.io.Serializable;
  * @author Paolo Ceffa
  */
 public class Message implements Serializable {
-    private final String username;
     private final MessageCode messageType;
 
     /**
      * Default constructor
-     *
-     * @param username unique username of the client
      * @param messageType identification code of the type of message
      */
-    public Message(String username, MessageCode messageType) {
-        this.username = username;
+    public Message(MessageCode messageType) {
         this.messageType = messageType;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public MessageCode getMessageType() {

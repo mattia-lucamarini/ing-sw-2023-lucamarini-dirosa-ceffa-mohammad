@@ -9,8 +9,8 @@ import it.polimi.ingsw.model.PersonalGoal;
  */
 public class SetPersonalGoal extends Message {
     private PersonalGoal goal;
-    public SetPersonalGoal(String username, PersonalGoal pg) {
-        super(username, MessageCode.SET_PERSONAL_GOAL);
+    public SetPersonalGoal(PersonalGoal pg) {
+        super(MessageCode.SET_PERSONAL_GOAL);
         this.goal = pg;
     }
     public PersonalGoal getPersonalGoal(){

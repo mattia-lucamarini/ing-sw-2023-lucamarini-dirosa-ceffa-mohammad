@@ -8,7 +8,12 @@ package it.polimi.ingsw.network.message;
  */
 public class LoginRequest extends Message {
 
+    private final String username;
     public LoginRequest(String username) {
-        super(username, MessageCode.LOGIN_REQUEST);
+        super(MessageCode.LOGIN_REQUEST);
+        this.username = username;
+    }
+    public String getUsername() {
+        return username;
     }
 }
