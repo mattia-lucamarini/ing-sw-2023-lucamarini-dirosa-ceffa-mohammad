@@ -1,5 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.model.logic;
 
+import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.network.message.MessageCode;
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Test Class to test the communication between the WebServer and the Clients
  */
-public class TestGameLogic implements Runnable{
+public class TestGameLogic implements Runnable, Logic {
 
     private final ConcurrentHashMap<String, ClientHandler> clientList;
     private final int gameID;
@@ -77,6 +78,7 @@ public class TestGameLogic implements Runnable{
         System.out.println("Game "+this.gameID+": Test Game completed");
         this.isActive = false;
     }
+    @Override
     public boolean isActive() {
         return isActive;
     }

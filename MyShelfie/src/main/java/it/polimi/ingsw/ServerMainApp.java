@@ -12,11 +12,11 @@ public class ServerMainApp {
     {
         System.out.println( "Starting application!" );
         try {
-            WebServer webServer = new WebServer();
+            WebServer webServer = new WebServer("test");
             webServer.launchKernel();
         }
         catch(Exception a){
-            System.out.println("Fatal Error!");
+            System.out.println("Fatal Error! Unknown error occurred running web server.");
         }
     }
 }

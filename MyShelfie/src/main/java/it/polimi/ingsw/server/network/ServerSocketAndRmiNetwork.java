@@ -34,6 +34,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     public ServerSocketAndRmiNetwork(int port) throws IOException {
         this.port = port;
         this.listener = new ServerSocket(this.port);
+        // to do -> manage RMI clients
     }
 
     /**
@@ -59,8 +60,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                     socketClientHandler.pingKernel();
                     LoginRequest message = null;
                     try{
-                        message = (LoginRequest) socketClientHandler.receivingWithRetry(2,
-                                1);
+                        message = (LoginRequest) socketClientHandler.receivingWithRetry(2, 1);
                     }catch(NoMessageToReadException e){
                         throw new ClientDisconnectedException();
                     }

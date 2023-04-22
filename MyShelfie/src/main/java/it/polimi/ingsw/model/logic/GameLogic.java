@@ -1,19 +1,19 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.model.logic;
 
 import it.polimi.ingsw.model.*;
+import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.SetPersonalGoal;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 
 /**
  * Class: GameLogic
  * @author Mattia Lucamarini
  * This class implements the game rules and manages the players' turns.
  */
-public class GameLogic implements Runnable{
+public class GameLogic implements Runnable, Logic {
     private final ConcurrentHashMap<String, ClientHandler> clientList;
     private final int numPlayers;
     private final int gameID;
@@ -65,6 +65,7 @@ public class GameLogic implements Runnable{
         System.out.println("");
         playTurn(playerOrder.get(0));
     }
+    @Override
     public boolean isActive() {
         return isActive;
     }

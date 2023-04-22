@@ -1,6 +1,8 @@
 package it.polimi.ingsw.server;
 
-import it.polimi.ingsw.TestGameLogic;
+import it.polimi.ingsw.model.logic.GameLogic;
+import it.polimi.ingsw.model.logic.Logic;
+import it.polimi.ingsw.model.logic.TestGameLogic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.server.network.ServerNetworkManager;
 import it.polimi.ingsw.server.network.ServerSocketAndRmiNetwork;
@@ -22,27 +24,32 @@ public class WebServer {
     public final static int MAX_PLAYERS = 4; //spostare nella classe GameLogic
     public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
     private final ServerNetworkManager mainNetworkManager;
-    private final ConcurrentHashMap<Integer, TestGameLogic> activeGames;
-    //private final ConcurrentHashMap<Integer, GameLogic> activeGames;
+    private final ConcurrentHashMap<Integer, Logic> activeGames;
     private final ConcurrentHashMap<String, Integer> activePlayers;
 
     private final ConcurrentHashMap<String, ClientHandler> clientHandlers;
     private Integer gamesCounter;
+    private final String executionMode; //it defines the execution of the  web server: test or production
 
     /**
      * Default constructor.
      *
      * @throws IOException if the ServerSocket is not correctly instantiated
      */
-    public WebServer() throws IOException {
+    public WebServer(String executionMode) throws IOException {
 
         this.gamesCounter = 0;
         this.activeGames = new ConcurrentHashMap<>();
         this.activePlayers = new ConcurrentHashMap<>();
         this.clientHandlers = new ConcurrentHashMap<>();
-
         this.mainNetworkManager = new ServerSocketAndRmiNetwork(59090);
-        // to do -> manage RMI clients with a ServerRmiNetwork
+        if (!executionMode.equals("test") && !executionMode.equals("production")){
+            System.out.println("Web Server: bad selected mode. Using test by default.");
+            this.executionMode = "test";
+        }
+        else {
+            this.executionMode = executionMode;
+        }
     }
 
     /**
@@ -76,9 +83,14 @@ public class WebServer {
      *
      */
     private void startNewGame(ConcurrentHashMap<String, ClientHandler> clients){
-        //GameLogic gameLogic = new GameLogic(clients, this.gamesCounter);
-        TestGameLogic gameLogic = new TestGameLogic(clients, this.gamesCounter);
-        Thread thread = new Thread(gameLogic);
+        Logic gameLogic;
+        if(this.executionMode.equals("test")) {
+            gameLogic = new TestGameLogic(clients, this.gamesCounter);
+        }
+        else{
+            gameLogic = new GameLogic(clients, this.gamesCounter);
+        }
+        Thread thread = new Thread((Runnable) gameLogic);
         thread.start();
         this.activeGames.put(this.gamesCounter, gameLogic);
         for(String username: clients.keySet()){
