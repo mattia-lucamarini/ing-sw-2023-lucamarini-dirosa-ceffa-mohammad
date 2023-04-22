@@ -14,6 +14,10 @@ public class Shelf {
     public static final int ROWS = 6;
     public static final int COLUMNS = 5;
 
+    /**
+     * Method: Shelf
+     * Construct an empty shelf, validating the bottom row for tile placement.
+     * */
     public Shelf() {
         // Initialize matrix. Initially, you can only place tiles in bottom row (0).
         matrix = new Tiles[6][5];
@@ -66,6 +70,11 @@ public class Shelf {
         }
     }
 
+    /**
+     * Method: findTileGroups
+     * Returns a list of all groups of adjacent tiles of the same color (specifying color and number of tiles for each
+     * group). Uses a flooding algorithm.
+     * */
     public List<Pair<Tiles, Integer>> findTileGroups() {
         List<Pair<Tiles, Integer>> groups = new ArrayList<>();
         boolean[][] visited = new boolean[6][5];
@@ -94,6 +103,18 @@ public class Shelf {
         return groups;
     }
 
+    /**
+     * Method: findTileGroup
+     * @param r current row.
+     * @param c current column.
+     * @param groupColor color of group that is currently being flooded.
+     * @param visited matrix of place that have already been visited by flooding (both current and previous).
+     * @param count counter keeping track of flooded in-group tiles.
+     * Helper function used in "findTileGroups" to start tile floodings. Floods by recursively expanding in a cross pattern.
+     * Stops when: different color is encountered or out bounds or tile has already been visited. Meanwhile, records the
+     * number of flooded tiles across recursive calls in "count". At the end of recursion, this number will correspond
+     * with the number of tiles in the group that contains the tile given to the initial call.
+     */
     private int findTileGroup(int r, int c, Tiles groupColor, boolean[][] visited, int count) {
         // Return number of tiles within the group
         // Ferma espansione quando usciamo fuori da matrice

@@ -6,6 +6,12 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class CommonGoalPredicate {
+    /**
+     * Method: Adjacent
+     * @param nOfGroups minimum number of required columns with required color groups to obtain bonus
+     * This method creates a predicate that searches for at least "nOfGroups" groups of adjacent tiles of the
+     * same color that all contain at least "nOfTiles" tiles.
+     * */
     public static Predicate<Shelf> Adjacent(int nOfGroups, int nOfTiles) {
         return (Shelf shelf) -> {
             // Count how many groups of "nOfTiles" tiles are there.
@@ -19,6 +25,10 @@ public class CommonGoalPredicate {
         };
     }
 
+    /**
+     * Method: FourCorners
+     * This method creates a predicate that searches the four corners of the shelf.
+     * */
     public static Predicate<Shelf> FourCorners() {
         return (Shelf shelf) -> {
             return shelf.getTile(0, 0) == shelf.getTile(0, Shelf.COLUMNS) &&
@@ -27,6 +37,10 @@ public class CommonGoalPredicate {
         };
     }
 
+    /**
+     * Method: Stairs
+     * This method creates a predicate that searches for a shape of ascending or descending stairs.
+     * */
     public static Predicate<Shelf> Stairs() {
         Predicate<Shelf> isDescending = (Shelf shelf) -> {
             for (int col = 0; col < Shelf.COLUMNS; col++) {
@@ -53,6 +67,14 @@ public class CommonGoalPredicate {
         return isDescending.or(isAscending);
     }
 
+    /**
+     * Method: Columns
+     * @param minColors minimum number of different colors
+     * @param maxColors maximum number of different colors
+     * @param nOfGroups minimum number of required columns with required color groups to obtain bonus
+     * This method creates a predicate that searches for "nOfGroups" or more rows that contain a number of colors within
+     * "minColors" and "maxColors".
+     * */
     public static Predicate<Shelf> Rows(int minColors, int maxColors, int nOfGroups) {
         // Rows3Colors -> Rows(3, 6, 4)
         // RowsAllDiff -> Rows(6, 6, 2)
@@ -105,7 +127,6 @@ public class CommonGoalPredicate {
      * This method creates a predicate that searches for "nOfTiles" or more of the same color within the shelf.
      * */
     public static Predicate<Shelf> Scatter(int nOfTiles) {
-        // Scatter8 -> Scatter(8)
         return (Shelf shelf) -> {
             var colors = new HashMap<Tiles, Integer>();
             for (int col = 0; col < Shelf.COLUMNS; col++) {
@@ -136,9 +157,6 @@ public class CommonGoalPredicate {
      * is important to define the shape with (0,0) being the bottom left cell.
      * */
     public static Predicate<Shelf> Shape(List<Pair<Integer, Integer>> shape, int width, int height, int nOfGroups) {
-        // TwoSquares -> Shape(List.of(Pair.of(0, 0), Pair.of(0, 1), Pair.of(1, 0), Pair.of(1, 1)), 2, 2, 2)
-        // Cross      -> Shape(List.of((0, 0), (1, 1), (2, 2), (2, 0), (0, 2)), 3, 3, 1)
-        // Diagonals  -> Shape(List.of((0, 0), (1, 1), (2, 2), ...)), 5, 5, 1).or(Shape(List.of((5, 0), ())), 5, 5, 1)
         return (Shelf shelf) -> {
             int count = 0;
             for (int row = 0; row <= Shelf.ROWS - height; row++) {
