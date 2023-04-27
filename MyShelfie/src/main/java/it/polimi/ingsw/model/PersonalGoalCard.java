@@ -10,7 +10,7 @@ import java.util.Random;
 
 public class PersonalGoalCard extends Card {
     private PersonalGoal goal;
-    List<PersonalGoal> personalpointer;
+    static List<PersonalGoal> personalpointer;
 
     /** Method: getGoal()
      * @author Angelo Di Rosa
@@ -23,6 +23,7 @@ public class PersonalGoalCard extends Card {
         personalpointer = goal.all();
         int t = rand.nextInt(personalpointer.size());
         goal = personalpointer.get(t);
+        personalpointer.remove(t);
 
         return goal;
     }

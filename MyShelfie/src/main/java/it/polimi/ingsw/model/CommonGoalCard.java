@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class CommonGoalCard extends Card {
     private CommonGoal goal;
-    List<CommonGoal> commonpointer;
+    static List<CommonGoal> commonpointer;
 /**
  * Method: getGoal()
  * @author Angelo Di Rosa
@@ -23,6 +23,7 @@ public class CommonGoalCard extends Card {
         commonpointer = goal.all();
         int t =  val.nextInt(commonpointer.size());
         goal = commonpointer.get(t);
+        commonpointer.remove(t);
         return goal;
     }
 
