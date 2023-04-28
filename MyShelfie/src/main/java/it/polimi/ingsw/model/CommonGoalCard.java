@@ -9,14 +9,15 @@ import java.util.Random;
 
 public class CommonGoalCard extends Card {
     private CommonGoal goal;
-    static List<CommonGoal> commonpointer = CommonGoal.all();
+    static List<CommonGoal> commonpointer;
 /**
  * Method: getGoal()
  * @author Angelo Di Rosa
  * This method overrides the superclass method. It is used to choose a Random common goal for the game from a common goal list.*/
-    public CommonGoalCard(){
+    public CommonGoalCard(int numPlayers){
         Random val = new Random();
         goal = new CommonGoal(null, null);
+        commonpointer = CommonGoal.all(numPlayers);
         int t =  val.nextInt(commonpointer.size());
         goal = commonpointer.get(t);
         commonpointer.remove(t);

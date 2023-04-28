@@ -48,7 +48,7 @@ public class CommonGoal implements Goal {
      * This method creates and returns all 12 common goals that are present in the game, giving each an independent point
      * stack and predicate.
      * */
-    public static List<CommonGoal> all() {
+    public static List<CommonGoal> all(int numPlayers) {
         var square = List.of(
                 Pair.of(0, 0), Pair.of(0, 1), Pair.of(1, 0), Pair.of(1, 1)
         );
@@ -91,11 +91,15 @@ public class CommonGoal implements Goal {
         );
 
         // Associate all goal predicates with a stack of points.
-        // TODO: Vary w/ number of players
         var ret = new ArrayList<CommonGoal>(); // empty
         for (var pred : allPredicates) {
             var stack = new Stack<Integer>();
-            stack.addAll(List.of(8, 6, 4));
+            switch (numPlayers) {
+                case 2 -> stack.addAll(List.of(4, 8));
+                case 3 -> stack.addAll(List.of(4, 6, 8));
+                case 4 -> stack.addAll(List.of(2, 4, 6, 8));
+                default -> stack.add(0);    //for testing
+            }
             ret.add(new CommonGoal(pred, stack));
         }
 
