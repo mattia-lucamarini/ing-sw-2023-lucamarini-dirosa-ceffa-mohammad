@@ -106,8 +106,8 @@ public class Client {
                     return;
                 }
                 try{
-                    System.out.println("Receiving personal goal..");
-                    message = clientHandler.receivingWithRetry(100, 5);
+                    //System.out.println("Receiving personal goal..");
+                    message = clientHandler.receivingWithRetry(10, 5);
                 } catch (NoMessageToReadException e) {
                     System.out.println("No message received after sending the num player message");
                     clientHandler.stopConnection();
@@ -126,7 +126,7 @@ public class Client {
             //PROCESS PERSONAL GOAL
             if (message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)){
                 int goalNumber = ((SetPersonalGoal) message).getGoalNumber();
-                System.out.println("Received goal "+ goalNumber);
+                System.out.println("Received Personal Goal "+ goalNumber);
                 clientHandler.sendingWithRetry(new SetPersonalGoal(), 1, 1);
                 goalCard = new PersonalGoalCard(goalNumber);
                 /*for (Map.Entry<Pair<Integer, Integer>, Tiles> i : goalCard.getGoal().getConstraint().entrySet())

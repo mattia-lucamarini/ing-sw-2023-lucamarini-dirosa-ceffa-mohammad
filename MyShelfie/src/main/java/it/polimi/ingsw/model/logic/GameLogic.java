@@ -24,8 +24,8 @@ public class GameLogic implements Runnable, Logic {
     private boolean isActive;
     private Board board;
     private Bag tiles;
-    private ArrayList<Integer> personalGoals;
-    private List<CommonGoal> CommonGoals;
+    private ArrayList<Integer> personalGoalIndexes;
+    private List<CommonGoalCard> commonGoals;
     private List<String> playerOrder;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
@@ -33,46 +33,45 @@ public class GameLogic implements Runnable, Logic {
         this.numPlayers = clientList.size();
         this.gameID = gameID;
         this.isActive = true;
-        this.personalGoals = new ArrayList<Integer>(List.of(0,1,2,3,4,5,6,7,8,9,10,11,12));
+        this.personalGoalIndexes = new ArrayList<Integer>(List.of(0,1,2,3,4,5,6,7,8,9,10,11,12));
+        this.commonGoals = new ArrayList<CommonGoalCard>();
     }
     @Override
     public void run(){
         System.out.println("\nPreparing game " + gameID);
         this.board = new Board(numPlayers);
         this.tiles = new Bag();
-        //extract common goals TODO: random
 
-        // TODO: REMOVE THIS: Example to showcase how to choose random common goal
-        this.CommonGoals = CommonGoal.all();
-        var rand = new Random();
-        var randomCommonGoal = this.CommonGoals.get(rand.nextInt(this.CommonGoals.size()));
+        //EXTRACT COMMON GOALS
+        commonGoals.add(new CommonGoalCard(numPlayers));
+        commonGoals.add(new CommonGoalCard(numPlayers));
+        System.out.println("Extracted Common Goals");
 
         //SEND PERSONAL GOALS
         for (String username : clientList.keySet()){
+            Random rand = new Random();
             try {
                 System.out.println("Sending Personal goal to " + username);
                 int goalNumber = rand.nextInt(TOTAL_GOALS);
                 clientList.get(username)
                         .sendingWithRetry(new SetPersonalGoal(goalNumber), 100, 1);
-                personalGoals.remove(goalNumber);
+                personalGoalIndexes.remove(goalNumber);
                 //System.out.println("Sent Personal goal to " + username);
             }
             catch (ClientDisconnectedException e){
                 System.out.println("Couldn't send Personal Goal to " + username);
             }
             try {
-                Thread.sleep(2000);
-                Message reply = clientList.get(username).receive();
+                Message reply = clientList.get(username).receivingWithRetry(10, 5);
                 if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
                     throw new NoMessageToReadException();
                 else
-                    System.out.println(username + " received his personal goal");
+                    System.out.println(username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
                 System.out.println("No Personal Goal confirmation was received");
-            } catch (InterruptedException ignored){}
-            System.out.println(username + " is ready");
+            }
         }
         //DISTRIBUTE TILES
         board.refillBoard();
