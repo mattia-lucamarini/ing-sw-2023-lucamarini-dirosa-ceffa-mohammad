@@ -1,9 +1,12 @@
 package it.polimi.ingsw.model.logic;
 
 import it.polimi.ingsw.model.*;
-import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
+import it.polimi.ingsw.network.message.Message;
+import it.polimi.ingsw.network.message.MessageCode;
 import it.polimi.ingsw.network.message.SetPersonalGoal;
+import it.polimi.ingsw.utils.ClientDisconnectedException;
+import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,13 +17,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * This class implements the game rules and manages the players' turns.
  */
 public class GameLogic implements Runnable, Logic {
+    private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
     private final int numPlayers;
     private final int gameID;
     private boolean isActive;
     private Board board;
     private Bag tiles;
-    // TODO private Pair<Predicate<Shelf>, Predicate<Shelf>> CommonGoals;
+    private ArrayList<Integer> personalGoals;
     private List<CommonGoal> CommonGoals;
     private List<String> playerOrder;
 
@@ -29,6 +33,7 @@ public class GameLogic implements Runnable, Logic {
         this.numPlayers = clientList.size();
         this.gameID = gameID;
         this.isActive = true;
+        this.personalGoals = new ArrayList<Integer>(List.of(0,1,2,3,4,5,6,7,8,9,10,11,12));
     }
     @Override
     public void run(){
@@ -42,27 +47,43 @@ public class GameLogic implements Runnable, Logic {
         var rand = new Random();
         var randomCommonGoal = this.CommonGoals.get(rand.nextInt(this.CommonGoals.size()));
 
-        //distribute personal goals TODO: random
+        //SEND PERSONAL GOALS
         for (String username : clientList.keySet()){
             try {
+                System.out.println("Sending Personal goal to " + username);
+                int goalNumber = rand.nextInt(TOTAL_GOALS);
                 clientList.get(username)
-                        .send(new SetPersonalGoal(new PersonalGoal(new HashMap<Pair<Integer, Integer>, Tiles>(), new ArrayList<Integer>())));
-                System.out.println(username + " is ready");
+                        .sendingWithRetry(new SetPersonalGoal(goalNumber), 100, 1);
+                personalGoals.remove(goalNumber);
+                //System.out.println("Sent Personal goal to " + username);
             }
-            catch (Exception e){
+            catch (ClientDisconnectedException e){
                 System.out.println("Couldn't send Personal Goal to " + username);
             }
+            try {
+                Thread.sleep(2000);
+                Message reply = clientList.get(username).receive();
+                if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
+                    throw new NoMessageToReadException();
+                else
+                    System.out.println(username + " received his personal goal");
+            } catch (ClientDisconnectedException cde){
+                System.out.println("Client Disconnected after receiving Personal Goal");
+            } catch (NoMessageToReadException nme){
+                System.out.println("No Personal Goal confirmation was received");
+            } catch (InterruptedException ignored){}
+            System.out.println(username + " is ready");
         }
-        //distribute tiles
+        //DISTRIBUTE TILES
         board.refillBoard();
         System.out.println("Game " + gameID + " can now start");
-        //choose first player
+        //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
         System.out.print("\nPlayer order for game "+gameID+": ");
         for (String pl : playerOrder)
             System.out.print(pl+" ");
-        System.out.println("");
+        System.out.println();
         playTurn(playerOrder.get(0));
     }
     @Override
