@@ -1,19 +1,24 @@
 package it.polimi.ingsw.network.message;
 
-import it.polimi.ingsw.model.PersonalGoal;
-
 /**
  * Class: SetPersonalGoal
  * This is a Message subclass used to give a unique personal goal to every player.
  * @author Mattia Lucamarini
  */
-public class SetPersonalGoal extends Message {
-    private PersonalGoal goal;
-    public SetPersonalGoal(PersonalGoal pg) {
+public class SetPersonalGoal extends Message{
+    private int goalNumber;
+    private final boolean reply;
+    public SetPersonalGoal(int index) {
         super(MessageCode.SET_PERSONAL_GOAL);
-        this.goal = pg;
+        this.goalNumber = index;
+        this.reply = false;
     }
-    public PersonalGoal getPersonalGoal(){
-        return this.goal;
+    public SetPersonalGoal(){
+        super(MessageCode.SET_PERSONAL_GOAL);
+        this.reply = true;
     }
+    public int getGoalNumber(){
+        return this.goalNumber;
+    }
+    public boolean getReply() { return this.reply; }
 }
