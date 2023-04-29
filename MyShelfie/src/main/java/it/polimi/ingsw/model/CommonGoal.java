@@ -16,6 +16,12 @@ public class CommonGoal implements Goal {
         this.points = points;
     }
 
+    public CommonGoal(Predicate<Shelf> constraint, List<Integer> points) {
+        this.constraint = constraint;
+        this.points = new Stack<>();
+        this.points.addAll(points);
+    }
+
     /**
      * Method getConstraint
      * @author Shaffaeet Mohammad
@@ -33,13 +39,13 @@ public class CommonGoal implements Goal {
      * Checks if the goal has been achieved within the given shelf and returns the amount of points earned.
      * */
     public int checkGoal(Shelf shelf) {
-        if (constraint.test(shelf)) {
-            // Return the next point bonus on the stack.
-            return points.pop();
-        }
-        else {
+        if (points.empty() || !constraint.test(shelf)) {
             // Constraint not reached.
             return 0;
+        }
+        else {
+            // Return the next point bonus on the stack.
+            return points.pop();
         }
     }
 

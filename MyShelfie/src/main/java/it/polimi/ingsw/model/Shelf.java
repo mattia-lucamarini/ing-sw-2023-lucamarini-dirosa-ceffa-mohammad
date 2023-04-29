@@ -50,6 +50,9 @@ public class Shelf {
      * It transforms the cells above the tiles that are placed into valid cells.
      * */
     public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors) {
+        insertTiles(positions, colors, false);
+    }
+    public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors, boolean testMode) {
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
@@ -58,7 +61,7 @@ public class Shelf {
             int x = positions.get(i).getFirst();
             int y = positions.get(i).getSecond();
 
-            if (!isCellValid(x, y)) {
+            if (!testMode && !isCellValid(x, y)) {
                 throw new RuntimeException("Can't insert tile without other tiles underneath.");
             }
             else {

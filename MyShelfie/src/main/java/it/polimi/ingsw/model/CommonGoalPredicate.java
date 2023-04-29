@@ -31,9 +31,11 @@ public class CommonGoalPredicate {
      * */
     public static Predicate<Shelf> FourCorners() {
         return (Shelf shelf) -> {
-            return shelf.getTile(0, 0) == shelf.getTile(0, Shelf.COLUMNS) &&
-                    shelf.getTile(0, 0) == shelf.getTile(Shelf.ROWS, 0) &&
-                    shelf.getTile(0, 0) == shelf.getTile(Shelf.ROWS, Shelf.COLUMNS);
+            var cols = Shelf.COLUMNS - 1;
+            var rows = Shelf.ROWS - 1;
+            return shelf.getTile(0, 0) == shelf.getTile(0, cols) &&
+                    shelf.getTile(0, 0) == shelf.getTile(rows, 0) &&
+                    shelf.getTile(0, 0) == shelf.getTile(rows, cols);
         };
     }
 
@@ -85,7 +87,8 @@ public class CommonGoalPredicate {
                 for (int col = 0; col < Shelf.COLUMNS; col++) {
                     colors.add(shelf.getTile(row, col));
                 }
-                if (minColors <= colors.size() && colors.size() >= maxColors) {
+                if (colors.stream().noneMatch(Tiles::isEmpty) &&
+                        minColors <= colors.size() && colors.size() <= maxColors) {
                     count++;
                 }
             }

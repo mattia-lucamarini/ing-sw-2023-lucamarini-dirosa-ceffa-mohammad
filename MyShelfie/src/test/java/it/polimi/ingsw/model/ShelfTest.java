@@ -30,6 +30,12 @@ public class ShelfTest {
     }
 
     public static Shelf shelf2() {
+        // . . . . .
+        // . . . . .
+        // . . . . .
+        // P . . . .
+        // P P . B .
+        // P P P B .
         Shelf shelf = purpleShelf1();
 
         shelf.insertTiles(List.of(Pair.of(0, 3), Pair.of(1, 3)), List.of(Tiles.BLUE, Tiles.BLUE));

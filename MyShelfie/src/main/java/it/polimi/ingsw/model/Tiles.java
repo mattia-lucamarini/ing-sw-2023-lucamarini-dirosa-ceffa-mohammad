@@ -13,6 +13,10 @@ public enum Tiles {
         WHITE,
         LIGHTBLUE,
         NOTVALID,
-        VALID
+        VALID;
+
+        public boolean isEmpty() {
+                return this == Tiles.VALID || this == Tiles.NOTVALID;
+        }
 }
 
