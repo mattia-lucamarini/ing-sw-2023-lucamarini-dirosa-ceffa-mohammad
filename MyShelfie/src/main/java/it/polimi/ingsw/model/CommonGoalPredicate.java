@@ -137,7 +137,8 @@ public class CommonGoalPredicate {
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     var color = shelf.getTile(row, col);
                     var count = colors.getOrDefault(color, 0);
-                    colors.put(shelf.getTile(row, col), count + 1);
+                    if (!color.isEmpty())
+                        colors.put(shelf.getTile(row, col), count + 1);
                 }
             }
 
@@ -166,12 +167,15 @@ public class CommonGoalPredicate {
             for (int row = 0; row <= Shelf.ROWS - height; row++) {
                 for (int col = 0; col <= Shelf.COLUMNS - width; col++) {
                     var color = shelf.getTile(row, col);
-                    boolean shapeFound = false;
+
+                    if (color.isEmpty()) continue;
+
+                    boolean shapeFound = true;
                     for (var pos : shape) {
                         var sr = row + pos.getFirst();
                         var sc = col + pos.getSecond();
                         if (shelf.getTile(sr, sc) != color) {
-                            shapeFound = true;
+                            shapeFound = false;
                             break;
                         }
                     }

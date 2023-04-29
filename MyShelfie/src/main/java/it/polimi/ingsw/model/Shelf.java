@@ -35,7 +35,7 @@ public class Shelf {
     }
 
     public boolean isCellEmpty(int x, int y){
-        return matrix[x][y] == Tiles.NOTVALID || matrix[x][y] == Tiles.VALID;
+        return matrix[x][y].isEmpty();
     }
 
     public boolean isCellValid(int x, int y) {
@@ -71,6 +71,39 @@ public class Shelf {
                 }
             }
         }
+    }
+
+
+    /**
+     * Method: removeTiles
+     * @param col Column from which to remove tiles.
+     * @param amount Amount of tiles to remove.
+     * Remove tiles from given column. Keeps the board valid.
+     */
+    public void removeTiles(int col, int amount) {
+        for (int r = Shelf.ROWS - 1; r >= 0 && amount > 0; r--) {
+            if (!isCellEmpty(r, col)) {
+                amount--;
+                matrix[r][col] = Tiles.VALID;
+                if (r < Shelf.ROWS - 1)
+                    matrix[r + 1][col] = Tiles.NOTVALID;
+            }
+        }
+    }
+
+    /**
+     * Reflects shelf matrix along horizontal axis.
+     */
+    public void reflect() {
+        var newMatrix = new Tiles[ROWS][COLUMNS];
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLUMNS; c++) {
+                newMatrix[r][COLUMNS - 1 - c] = matrix[r][c];
+            }
+        }
+
+        matrix = newMatrix;
     }
 
     /**
@@ -162,5 +195,4 @@ public class Shelf {
 
     private Tiles[][] matrix;
     private int totalTiles;
-
 }

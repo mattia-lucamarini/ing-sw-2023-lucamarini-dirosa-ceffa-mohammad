@@ -49,6 +49,10 @@ public class CommonGoal implements Goal {
         }
     }
 
+    public void rechargePoints(List<Integer> points) {
+        this.points.addAll(points);
+    }
+
     /**
      * Method: all
      * This method creates and returns all 12 common goals that are present in the game, giving each an independent point
