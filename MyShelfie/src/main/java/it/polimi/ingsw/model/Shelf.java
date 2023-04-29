@@ -66,7 +66,7 @@ public class Shelf {
             }
             else {
                 matrix[x][y] = colors.get(i);
-                if (x < 5) {
+                if (!testMode && x < 5) {
                     matrix[x + 1][y] = Tiles.VALID;
                 }
             }

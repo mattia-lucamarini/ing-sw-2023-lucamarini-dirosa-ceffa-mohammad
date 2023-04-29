@@ -115,7 +115,8 @@ public class CommonGoalPredicate {
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     colors.add(shelf.getTile(row, col));
                 }
-                if (minColors <= colors.size() && colors.size() >= maxColors) {
+                if (colors.stream().noneMatch(Tiles::isEmpty) &&
+                        minColors <= colors.size() && colors.size() <= maxColors) {
                     count++;
                 }
             }

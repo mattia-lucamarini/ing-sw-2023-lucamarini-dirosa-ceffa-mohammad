@@ -61,6 +61,37 @@ public class CommonGoalTest {
         Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
     }
 
+    @Test
+    public void testCheckGoalColumns() {
+        var shelf = ShelfTest.shelf2();
+
+        var oneRow2Colors = new CommonGoal(
+                CommonGoalPredicate.Columns(2, 3, 1),
+                List.of(1, 2, 3)
+        );
+
+        // TEST: Bottom column is not complete -> 0 points.
+        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+
+        // Complete the first column.
+        shelf.insertTiles(
+                List.of(Pair.of(3, 0), Pair.of(4, 0), Pair.of(5, 0)),
+                List.of(Tiles.BLUE, Tiles.BLUE, Tiles.BLUE)
+        );
+
+        // TEST: Now first column is complete -> 3 points; 2 points.
+        Assert.assertEquals(3, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(2, oneRow2Colors.checkGoal(shelf));
+
+        // Add another color.
+        shelf.insertTiles(List.of(Pair.of(1, 0)), List.of(Tiles.GREEN), true);
+
+        // TEST: Now first column has 3 colors (max) -> 1 points; 0.
+        Assert.assertEquals(1, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+    }
+
     // Testiamo la funzione "all"
     @Test
     public void testAllRandomDraw() {
