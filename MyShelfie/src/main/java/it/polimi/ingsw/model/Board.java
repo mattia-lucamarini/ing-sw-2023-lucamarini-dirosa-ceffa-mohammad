@@ -182,7 +182,7 @@ public class Board {
      * But when takesTiles realizes that the player is trying to move diagonally by taking the (1,5) tile, the method throws a new RuntimeException and calls putItBack() to restore the board
      * as if the move had never taken place (by putting the original values over the previously taken cells (0,3) and (0,4)).*/
 
-    public void takeTiles(List<Pair<Integer, Integer>> positions){
+    public List<Tiles> takeTiles(List<Pair<Integer, Integer>> positions){
         int x, y, latestX = -2, latestY= -2;
         Tiles tilevalue;
         List<Pair<Integer, Integer>> sides;
@@ -219,6 +219,7 @@ public class Board {
                 }
             }
         }
+        return tilevalues;
     }
     /**Method : emptySide()
      * @param i index 1
