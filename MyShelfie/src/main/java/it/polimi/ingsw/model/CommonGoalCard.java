@@ -9,6 +9,7 @@ import java.util.Random;
 
 public class CommonGoalCard extends Card {
     private CommonGoal goal;
+    private int goalIndex;
     static List<CommonGoal> commonpointer;
 /**
  * Method: getGoal()
@@ -21,6 +22,10 @@ public class CommonGoalCard extends Card {
         int t =  val.nextInt(commonpointer.size());
         goal = commonpointer.get(t);
         commonpointer.remove(t);
+        goalIndex = t;
+    }
+    public int getGoalIndex() {
+        return goalIndex;
     }
 
     @Override

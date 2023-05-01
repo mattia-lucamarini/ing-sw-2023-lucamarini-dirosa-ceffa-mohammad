@@ -45,13 +45,14 @@ public class CommonGoal implements Goal {
         }
         else {
             // Return the next point bonus on the stack.
-            return points.pop();
+            return 1;
         }
     }
 
     public void rechargePoints(List<Integer> points) {
         this.points.addAll(points);
     }
+    public int takePoints(){return points.pop();}
 
     /**
      * Method: all

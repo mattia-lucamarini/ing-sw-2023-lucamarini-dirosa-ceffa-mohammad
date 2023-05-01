@@ -11,6 +11,7 @@ import java.util.Random;
 
 public class PersonalGoalCard extends Card implements Serializable {
     private PersonalGoal goal;
+    private int goalIndex;
     static List<PersonalGoal> personalpointer = PersonalGoal.all();
 
     /** Method: getGoal()
@@ -22,10 +23,12 @@ public class PersonalGoalCard extends Card implements Serializable {
         int t = rand.nextInt(personalpointer.size());
         goal = personalpointer.get(t);
         personalpointer.remove(t);
+        goalIndex = t;
     }
     public void generateGoal(int index){
         goal = personalpointer.get(index);
         personalpointer.remove(index);
+        goalIndex = index;
     }
     public PersonalGoalCard(PersonalGoal goal){
         this.goal = goal;
@@ -39,5 +42,9 @@ public class PersonalGoalCard extends Card implements Serializable {
     @Override
     public PersonalGoal getGoal(){
         return this.goal;
+    }
+
+    public int getGoalIndex() {
+        return goalIndex;
     }
 }
