@@ -13,4 +13,8 @@ public class PlayTurn extends Message {
         return this.username;
     }
     public Board getBoard() {return this.board;}
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
 }

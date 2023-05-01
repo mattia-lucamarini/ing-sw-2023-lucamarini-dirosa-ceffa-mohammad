@@ -16,6 +16,8 @@ public  enum MessageCode {
     GAME_START,
     PLAY_TURN,
     COMMON_GOAL_REACHED,
+    FULL_SHELF,
+    TURN_OVER,
 
     BAD_RESPONSE;
 }
