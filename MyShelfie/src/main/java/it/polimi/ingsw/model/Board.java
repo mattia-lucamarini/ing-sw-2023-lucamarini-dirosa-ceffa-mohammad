@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  * This class is an abstraction og the physical board where the game takes place.
  * It consists in a 9x9 matrix of Cells that can available (or not) for the game.
  */
-public class Board {
+public class Board implements Serializable {
 
     private Cell[][] grid = new Cell[9][9];
     Bag bag= new Bag();

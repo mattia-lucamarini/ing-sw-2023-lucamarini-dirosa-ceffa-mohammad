@@ -1,11 +1,14 @@
 package it.polimi.ingsw.model;
+
+import java.io.Serializable;
+
 /**
  * Class: Bag
  * @author Angelo Di Rosa
  * Bag is meant to represent the physical bag of the game in which all the 132 tiles are kept.
  * The class contains 6 integer, all initialized at 22 (number of tiles per type).
  */
-public class Bag {
+public class Bag implements Serializable {
     int blue = 22, green = 22, purple=22, yellow=22, white=22, lightblue=22 ;
 
     /**Method: remainingTiles(int tilenumber)

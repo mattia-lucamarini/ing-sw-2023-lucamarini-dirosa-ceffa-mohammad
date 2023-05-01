@@ -1,11 +1,14 @@
 package it.polimi.ingsw.model;
+
+import java.io.Serializable;
+
 /**
  * Class: Cell
  * @author Angelo Di Rosa
  * This class represents the little square of the board where you put the object tile.
  *
  */
-public class Cell {
+public class Cell implements Serializable {
     private Tiles tile;
 
     public Cell(Tiles t){
