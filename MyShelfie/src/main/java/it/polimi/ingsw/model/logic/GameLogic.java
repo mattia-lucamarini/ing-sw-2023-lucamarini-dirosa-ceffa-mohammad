@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * This class implements the game rules and manages the players' turns.
  */
 public class GameLogic implements Runnable, Logic {
+    private static final int ATTEMPTS = 25;
+    private static final int WAITING_TIME = 5;
     private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
     private HashMap<String, Integer> playerPoints;
@@ -72,7 +74,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("Game " + gameID + " can now start");
         for (String username : clientList.keySet()){
             try {
-                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), 50, 10);
+                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e){
                 System.out.println(username + "disconnected while sending game start notification");
             }
@@ -84,44 +86,98 @@ public class GameLogic implements Runnable, Logic {
         for (String pl : playerOrder)
             System.out.print(pl+" ");
         System.out.println();
-        playTurn(playerOrder.get(0));
+        for (String pl : playerOrder)
+            playTurn(pl);
+        System.out.println("Game over.");
     }
     @Override
     public boolean isActive() {
         return isActive;
     }
     public void playTurn(String player){
+        Message message = new PlayTurn(player);
+        ((PlayTurn) message).setBoard(board);
         System.out.println(player+", it's your turn.");
         for (String username : clientList.keySet()){
             try {
-                clientList.get(username).sendingWithRetry(new PlayTurn(player), 50, 10);
+                clientList.get(username).sendingWithRetry(message, ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e) {
-                System.out.println(username + "disconnected while sending turn notification");
+                System.out.println(username + " disconnected while sending turn start notification");
+            } catch (ClassCastException e){
+                System.out.println(e);
             }
         }
-        Message message = new Message(MessageCode.GENERIC_MESSAGE);
-        do {
+        while (true) {
             try{
-                message = clientList.get(player).receivingWithRetry(50, 10);
-                if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
-                    System.out.println(player + " reached goal "+ ((CommonGoalReached) message).getPosition());
-                    switch (((CommonGoalReached) message).getPosition()) {
-                        case 0 ->
-                                playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
-                        case 1 ->
-                                playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
-                        default -> throw new UnsupportedOperationException();
+                boolean goalNotificationReceived = false;
+                boolean fullShelfNotificationReceived = false;
+                boolean turnOverNotificationReceived = false;
+
+                while (!goalNotificationReceived) {
+                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
+                        goalNotificationReceived = true;
+                        if (((CommonGoalReached) message).getPosition() != 2) {
+                            System.out.println(player + " completed goal " + ((CommonGoalReached) message).getPosition());
+                            switch (((CommonGoalReached) message).getPosition()) {
+                                case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
+                                case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
+                                default -> throw new UnsupportedOperationException();
+                            }
+                            for (String username : clientList.keySet())
+                                try {
+                                    clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
+                                } catch (ClientDisconnectedException e) {
+                                    System.out.println(username + " disconnected while sending Common Goal notification");
+                                }
+                        } else {
+                            System.out.println(player + " did not complete any goal");
+                            clientList.get(player).sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
+                        }
                     }
-                    break;
                 }
-                System.out.println(player + " reached goal " + ((CommonGoalReached) message).getPosition() + 1);
+
+                while (!fullShelfNotificationReceived) {
+                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
+                        fullShelfNotificationReceived = true;
+                        System.out.println(player + " completed their shelf!");
+                        for (String username : clientList.keySet()) {
+                            try {
+                                clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
+                            } catch (ClientDisconnectedException e) {
+                                System.out.println(username + " disconnected while sending Full Shelf notification");
+                            }
+                        }
+                    }
+                    else if (message.getMessageType() == MessageCode.FULL_SHELF && !((FullShelf) message).getOutcome()) {
+                        fullShelfNotificationReceived = true;
+                        System.out.println(player + " didn't complete the shelf.");
+                        clientList.get(player).sendingWithRetry(new FullShelf(player, false), ATTEMPTS, WAITING_TIME);
+                    }
+                }
+                while (!turnOverNotificationReceived) {
+                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    if (message.getMessageType() == MessageCode.TURN_OVER) {
+                        turnOverNotificationReceived = true;
+                        for (String username : clientList.keySet()) {
+                            System.out.println(username + " ended their turn.");
+                            try {
+                                clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                            } catch (ClientDisconnectedException e) {
+                                System.out.println(username + " disconnected while sending End Turn notification");
+                            }
+                        }
+                        return;
+                    }
+                }
             } catch (NoMessageToReadException ignored){}
             catch (ClientDisconnectedException e){
                 System.out.println(player + " disconnected.");
                 return;
             }
         }
-        while (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED);
+
     }
     public void assignPoints(String player){
         //check game end

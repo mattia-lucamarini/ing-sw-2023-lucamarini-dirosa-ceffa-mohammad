@@ -19,13 +19,15 @@ import java.util.concurrent.TimeUnit;
  * @author Mattia Lucamarini
  */
 public class Client {
+    private static final int ATTEMPTS = 25;
+    private static final int WAITING_TIME = 5;
     private static Player player;
     private static PersonalGoalCard goalCard;
     private static Pair<CommonGoal, CommonGoal> commonGoals;
     private static Board board;
     private static boolean gameOn;
     public static void main(String[] args) {
-        System.out.print("Inserisci il tuo username: ");
+        System.out.print("Insert username: ");
         Scanner sc = new Scanner(System.in);
         player = new Player(sc.nextLine());
 
@@ -69,7 +71,7 @@ public class Client {
 
             if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
                 Scanner t = new Scanner(System.in);
-                System.out.print("Inserire numero di giocatori: ");
+                System.out.print("Insert player number: ");
                 int num = t.nextInt();
                 while(num<1 || num >4){
                     System.out.println("The number of players must be between 1-4!");
@@ -169,34 +171,88 @@ public class Client {
                 //check common goals
                 //check shelf completeness
                 while (gameOn){
-                    try {
-                        message = clientHandler.receivingWithRetry(100, 2);
-                    } catch (NoMessageToReadException e) {
-                        System.out.println("Stopped receiving turns notifications");
-                        clientHandler.stopConnection();
-                        return;
-                    } catch (ClientDisconnectedException e) {
-                        System.out.println("Disconnected from the server while waiting for the next turn.");
-                        clientHandler.stopConnection();
-                        return;
-                    }
-                    if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                        board = ((PlayTurn) message).getBoard();
-                        if (((PlayTurn) message).getUsername().equals(player.getUsername())) {
-                            System.out.println("\nIt's my turn!");
-                            //clientHandler.sendingWithRetry(new CommonGoalReached(1), 50, 10);
-                            //System.out.println("Sent goal");
-                            ArrayList<Tiles> playerPick = (ArrayList<Tiles>) board.takeTiles(new ArrayList<>(List.of(Pair.of(3,2), Pair.of(4,1))));
-                            player.getShelf().insertTiles(new ArrayList<>(List.of(Pair.of(3,2), Pair.of(4,1))), playerPick);
+                    do {
+                        try {
+                            message = clientHandler.receivingWithRetry(100, WAITING_TIME);
+                        } catch (NoMessageToReadException e) {
+                            System.out.println("Stopped receiving turns notifications");
+                            clientHandler.stopConnection();
+                            return;
+                        } catch (ClientDisconnectedException e) {
+                            System.out.println("Disconnected from the server while waiting for the next turn.");
+                            clientHandler.stopConnection();
+                            return;
+                        }
+                    } while (message.getMessageType() != MessageCode.PLAY_TURN);
 
-                            //checking goals
-                            for (int i = 0; i < 2; i++){
-                                if (List.of(commonGoals.getFirst(), commonGoals.getSecond()).get(i).checkGoal(player.getShelf()) == 1){
-                                        clientHandler.sendingWithRetry(new CommonGoalReached(i), 50, 10);
+                    board = ((PlayTurn) message).getBoard();
+                    if (((PlayTurn) message).getUsername().equals(player.getUsername())) {
+                        System.out.println("\nIt's your turn!");
+
+                        //TEST ACTIONS
+                        try {
+                            ArrayList<Tiles> playerPick = (ArrayList<Tiles>) board.takeTiles(new ArrayList<>(List.of(Pair.of(3,2), Pair.of(4,1))));
+                            player.getShelf().insertTiles(new ArrayList<>(List.of(Pair.of(0,0), Pair.of(0,1))), playerPick);
+                        }catch (RuntimeException e){
+                            System.out.println(e.getMessage());
+                        }
+                        System.out.println("Test actions done.");
+
+                        //CHECKING GOALS
+                        boolean commonReached = false;
+                        for (int i = 0; i < 2; i++){
+                            if (List.of(commonGoals.getFirst(), commonGoals.getSecond()).get(i).checkGoal(player.getShelf()) == 1){
+                                commonReached = true;
+                                clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
+                            }
+                        }
+                        if (!commonReached)
+                            clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
+
+                        do {
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
+
+                        System.out.println("Common Goals check passed.");
+
+                        //CHECKING SHELF FULLNESS
+                        boolean isShelfFull = true;
+                        out: for (int i = 0; i < 6; i++){
+                            for (int j = 0; j < 5; j++){
+                                if (player.getShelf().isCellEmpty(i, j)){
+                                    isShelfFull = false;
+                                    break out;
                                 }
                             }
-                        } else
-                            System.out.println(((PlayTurn) message).getUsername() + " can now play.");
+                        }
+                        if (isShelfFull){
+                            System.out.println("You completed the shelf!");
+                            clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
+                        }
+                        else {
+                            System.out.println("You didn't complete the shelf.");
+                            clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
+                        }
+                        do {
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } while (message.getMessageType() != MessageCode.FULL_SHELF);
+
+                        //END OF TURN
+                        clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                        do {
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } while (message.getMessageType() != MessageCode.TURN_OVER);
+                        System.out.println("You completed your turn.");
+
+                    } else{
+                        System.out.println(((PlayTurn) message).getUsername() + " is now playing.");
+                        do{
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                            if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
+                                System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition());
+                            if (message.getMessageType() == MessageCode.FULL_SHELF)
+                                System.out.println(((FullShelf) message).getPlayer() + " completed their shelf");
+                        } while (message.getMessageType() != MessageCode.TURN_OVER);
                     }
                 }
             }
