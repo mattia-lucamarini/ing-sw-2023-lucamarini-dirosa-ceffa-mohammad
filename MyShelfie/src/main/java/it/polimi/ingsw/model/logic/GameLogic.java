@@ -2,9 +2,7 @@ package it.polimi.ingsw.model.logic;
 
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
-import it.polimi.ingsw.network.message.Message;
-import it.polimi.ingsw.network.message.MessageCode;
-import it.polimi.ingsw.network.message.SetPersonalGoal;
+import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
@@ -19,13 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GameLogic implements Runnable, Logic {
     private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
+    private HashMap<String, Integer> playerPoints;
     private final int numPlayers;
     private final int gameID;
     private boolean isActive;
     private Board board;
-    private Bag tiles;
-    private ArrayList<Integer> personalGoalIndexes;
-    private List<CommonGoalCard> commonGoals;
+    private Bag bag;
+    private Pair<CommonGoalCard, CommonGoalCard> commonGoals;
     private List<String> playerOrder;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
@@ -33,29 +31,24 @@ public class GameLogic implements Runnable, Logic {
         this.numPlayers = clientList.size();
         this.gameID = gameID;
         this.isActive = true;
-        this.personalGoalIndexes = new ArrayList<Integer>(List.of(0,1,2,3,4,5,6,7,8,9,10,11,12));
-        this.commonGoals = new ArrayList<CommonGoalCard>();
+        this.playerPoints = new HashMap<>();
     }
     @Override
     public void run(){
         System.out.println("\nPreparing game " + gameID);
         this.board = new Board(numPlayers);
-        this.tiles = new Bag();
+        this.bag = new Bag();
 
-        //EXTRACT COMMON GOALS
-        commonGoals.add(new CommonGoalCard(numPlayers));
-        commonGoals.add(new CommonGoalCard(numPlayers));
-        System.out.println("Extracted Common Goals");
-
-        //SEND PERSONAL GOALS
+        //SEND PERSONAL AND COMMON GOALS
+        commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
         for (String username : clientList.keySet()){
-            Random rand = new Random();
             try {
-                System.out.println("Sending Personal goal to " + username);
-                int goalNumber = rand.nextInt(TOTAL_GOALS);
+                playerPoints.put(username, 0);
+                System.out.println("Sending goals to " + username);
                 clientList.get(username)
-                        .sendingWithRetry(new SetPersonalGoal(goalNumber), 100, 1);
-                personalGoalIndexes.remove(goalNumber);
+                        .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
+                clientList.get(username)
+                        .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
                 //System.out.println("Sent Personal goal to " + username);
             }
             catch (ClientDisconnectedException e){
@@ -75,7 +68,15 @@ public class GameLogic implements Runnable, Logic {
         }
         //DISTRIBUTE TILES
         board.refillBoard();
+        //START GAME
         System.out.println("Game " + gameID + " can now start");
+        for (String username : clientList.keySet()){
+            try {
+                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), 50, 10);
+            } catch (ClientDisconnectedException e){
+                System.out.println(username + "disconnected while sending game start notification");
+            }
+        }
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
@@ -91,11 +92,36 @@ public class GameLogic implements Runnable, Logic {
     }
     public void playTurn(String player){
         System.out.println(player+", it's your turn.");
-        //pick tiles
-        //insert tiles
-        //check common goals
-        //check board
-        //check shelf completeness
+        for (String username : clientList.keySet()){
+            try {
+                clientList.get(username).sendingWithRetry(new PlayTurn(player), 50, 10);
+            } catch (ClientDisconnectedException e) {
+                System.out.println(username + "disconnected while sending turn notification");
+            }
+        }
+        Message message = new Message(MessageCode.GENERIC_MESSAGE);
+        do {
+            try{
+                message = clientList.get(player).receivingWithRetry(50, 10);
+                if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
+                    System.out.println(player + " reached goal "+ ((CommonGoalReached) message).getPosition());
+                    switch (((CommonGoalReached) message).getPosition()) {
+                        case 0 ->
+                                playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
+                        case 1 ->
+                                playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
+                        default -> throw new UnsupportedOperationException();
+                    }
+                    break;
+                }
+                System.out.println(player + " reached goal " + ((CommonGoalReached) message).getPosition() + 1);
+            } catch (NoMessageToReadException ignored){}
+            catch (ClientDisconnectedException e){
+                System.out.println(player + " disconnected.");
+                return;
+            }
+        }
+        while (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED);
     }
     public void assignPoints(String player){
         //check game end
