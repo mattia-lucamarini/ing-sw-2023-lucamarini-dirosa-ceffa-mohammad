@@ -19,7 +19,9 @@ public class CommonGoalCard extends Card {
         Random val = new Random();
         goal = new CommonGoal(null, null);
         commonpointer = CommonGoal.all(numPlayers);
-        int t =  val.nextInt(commonpointer.size());
+        int t = 0;
+        for (int i = 0; i < 2; i++)
+            t =  val.nextInt(commonpointer.size() - i);
         goal = commonpointer.get(t);
         commonpointer.remove(t);
         goalIndex = t;

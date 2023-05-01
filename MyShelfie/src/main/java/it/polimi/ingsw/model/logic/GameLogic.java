@@ -46,15 +46,15 @@ public class GameLogic implements Runnable, Logic {
         for (String username : clientList.keySet()){
             try {
                 playerPoints.put(username, 0);
-                System.out.println("Sending goals to " + username);
+                System.out.println("[GAME " + gameID + "] Sending goals to " + username);
                 clientList.get(username)
                         .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
                 clientList.get(username)
                         .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
-                //System.out.println("Sent Personal goal to " + username);
+                //System.out.println("[GAME " + gameID + "] Sent Personal goal to " + username);
             }
             catch (ClientDisconnectedException e){
-                System.out.println("Couldn't send Personal Goal to " + username);
+                System.out.println("[GAME " + gameID + "] Couldn't send Personal Goal to " + username);
             }
             try {
                 Message reply = clientList.get(username).receivingWithRetry(10, 5);
@@ -63,9 +63,9 @@ public class GameLogic implements Runnable, Logic {
                 else
                     System.out.println(username + " is ready");
             } catch (ClientDisconnectedException cde){
-                System.out.println("Client Disconnected after receiving Personal Goal");
+                System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
-                System.out.println("No Personal Goal confirmation was received");
+                System.out.println("[GAME " + gameID + "] No Personal Goal confirmation was received");
             }
         }
         //DISTRIBUTE TILES
@@ -88,7 +88,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println();
         for (String pl : playerOrder)
             playTurn(pl);
-        System.out.println("Game over.");
+        System.out.println("Game " + gameID + " is over.");
     }
     @Override
     public boolean isActive() {
@@ -97,14 +97,14 @@ public class GameLogic implements Runnable, Logic {
     public void playTurn(String player){
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
-        System.out.println(player+", it's your turn.");
+        System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
         for (String username : clientList.keySet()){
             try {
                 clientList.get(username).sendingWithRetry(message, ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e) {
-                System.out.println(username + " disconnected while sending turn start notification");
+                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending turn start notification");
             } catch (ClassCastException e){
-                System.out.println(e);
+                System.out.println("[GAME " + gameID + "] " + e);
             }
         }
         while (true) {
@@ -118,7 +118,7 @@ public class GameLogic implements Runnable, Logic {
                     if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
                         goalNotificationReceived = true;
                         if (((CommonGoalReached) message).getPosition() != 2) {
-                            System.out.println(player + " completed goal " + ((CommonGoalReached) message).getPosition());
+                            System.out.println("[GAME " + gameID + "] " + player + " completed goal " + ((CommonGoalReached) message).getPosition());
                             switch (((CommonGoalReached) message).getPosition()) {
                                 case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
                                 case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
@@ -128,10 +128,10 @@ public class GameLogic implements Runnable, Logic {
                                 try {
                                     clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
                                 } catch (ClientDisconnectedException e) {
-                                    System.out.println(username + " disconnected while sending Common Goal notification");
+                                    System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
                                 }
                         } else {
-                            System.out.println(player + " did not complete any goal");
+                            System.out.println("[GAME " + gameID + "] " + player + " did not complete any goal");
                             clientList.get(player).sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
                         }
                     }
@@ -141,18 +141,18 @@ public class GameLogic implements Runnable, Logic {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
                         fullShelfNotificationReceived = true;
-                        System.out.println(player + " completed their shelf!");
+                        System.out.println("[GAME " + gameID + "] " + player + " completed their shelf!");
                         for (String username : clientList.keySet()) {
                             try {
                                 clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
                             } catch (ClientDisconnectedException e) {
-                                System.out.println(username + " disconnected while sending Full Shelf notification");
+                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Full Shelf notification");
                             }
                         }
                     }
                     else if (message.getMessageType() == MessageCode.FULL_SHELF && !((FullShelf) message).getOutcome()) {
                         fullShelfNotificationReceived = true;
-                        System.out.println(player + " didn't complete the shelf.");
+                        System.out.println("[GAME " + gameID + "] " + player + " didn't complete the shelf.");
                         clientList.get(player).sendingWithRetry(new FullShelf(player, false), ATTEMPTS, WAITING_TIME);
                     }
                 }
@@ -161,11 +161,11 @@ public class GameLogic implements Runnable, Logic {
                     if (message.getMessageType() == MessageCode.TURN_OVER) {
                         turnOverNotificationReceived = true;
                         for (String username : clientList.keySet()) {
-                            System.out.println(username + " ended their turn.");
+                            System.out.println("[GAME " + gameID + "] " + username + " ended their turn.");
                             try {
                                 clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                             } catch (ClientDisconnectedException e) {
-                                System.out.println(username + " disconnected while sending End Turn notification");
+                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
                             }
                         }
                         return;
@@ -173,7 +173,7 @@ public class GameLogic implements Runnable, Logic {
                 }
             } catch (NoMessageToReadException ignored){}
             catch (ClientDisconnectedException e){
-                System.out.println(player + " disconnected.");
+                System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
                 return;
             }
         }
