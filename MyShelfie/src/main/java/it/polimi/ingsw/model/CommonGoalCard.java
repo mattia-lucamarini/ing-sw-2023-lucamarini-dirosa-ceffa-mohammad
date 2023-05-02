@@ -1,7 +1,5 @@
 package it.polimi.ingsw.model;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.Random;
 
 /**Class: CommonGoalCard
@@ -11,19 +9,30 @@ import java.util.Random;
 
 public class CommonGoalCard extends Card {
     private CommonGoal goal;
-    List<CommonGoal> commonpointer;
+    private int goalIndex;
+    static List<CommonGoal> commonpointer;
 /**
  * Method: getGoal()
  * @author Angelo Di Rosa
  * This method overrides the superclass method. It is used to choose a Random common goal for the game from a common goal list.*/
-    @Override
-    public CommonGoal getGoal(){
+    public CommonGoalCard(int numPlayers){
         Random val = new Random();
         goal = new CommonGoal(null, null);
-        commonpointer = goal.all();
-        int t =  val.nextInt(commonpointer.size());
+        commonpointer = CommonGoal.all(numPlayers);
+        int t = 0;
+        for (int i = 0; i < 2; i++)
+            t =  val.nextInt(commonpointer.size() - i);
         goal = commonpointer.get(t);
-        return goal;
+        commonpointer.remove(t);
+        goalIndex = t;
+    }
+    public int getGoalIndex() {
+        return goalIndex;
+    }
+
+    @Override
+    public CommonGoal getGoal(){
+        return this.goal;
     }
 
 }

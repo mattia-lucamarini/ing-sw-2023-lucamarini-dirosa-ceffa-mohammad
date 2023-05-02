@@ -35,7 +35,7 @@ public class Shelf {
     }
 
     public boolean isCellEmpty(int x, int y){
-        return matrix[x][y] == Tiles.NOTVALID || matrix[x][y] == Tiles.VALID;
+        return matrix[x][y].isEmpty();
     }
 
     public boolean isCellValid(int x, int y) {
@@ -50,6 +50,9 @@ public class Shelf {
      * It transforms the cells above the tiles that are placed into valid cells.
      * */
     public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors) {
+        insertTiles(positions, colors, false);
+    }
+    public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors, boolean testMode) {
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
@@ -58,16 +61,49 @@ public class Shelf {
             int x = positions.get(i).getFirst();
             int y = positions.get(i).getSecond();
 
-            if (!isCellValid(x, y)) {
+            if (!testMode && !isCellValid(x, y)) {
                 throw new RuntimeException("Can't insert tile without other tiles underneath.");
             }
             else {
                 matrix[x][y] = colors.get(i);
-                if (x < 5) {
+                if (!testMode && x < 5) {
                     matrix[x + 1][y] = Tiles.VALID;
                 }
             }
         }
+    }
+
+
+    /**
+     * Method: removeTiles
+     * @param col Column from which to remove tiles.
+     * @param amount Amount of tiles to remove.
+     * Remove tiles from given column. Keeps the board valid.
+     */
+    public void removeTiles(int col, int amount) {
+        for (int r = Shelf.ROWS - 1; r >= 0 && amount > 0; r--) {
+            if (!isCellEmpty(r, col)) {
+                amount--;
+                matrix[r][col] = Tiles.VALID;
+                if (r < Shelf.ROWS - 1)
+                    matrix[r + 1][col] = Tiles.NOTVALID;
+            }
+        }
+    }
+
+    /**
+     * Reflects shelf matrix along horizontal axis.
+     */
+    public void reflect() {
+        var newMatrix = new Tiles[ROWS][COLUMNS];
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLUMNS; c++) {
+                newMatrix[r][COLUMNS - 1 - c] = matrix[r][c];
+            }
+        }
+
+        matrix = newMatrix;
     }
 
     /**
@@ -159,5 +195,4 @@ public class Shelf {
 
     private Tiles[][] matrix;
     private int totalTiles;
-
 }

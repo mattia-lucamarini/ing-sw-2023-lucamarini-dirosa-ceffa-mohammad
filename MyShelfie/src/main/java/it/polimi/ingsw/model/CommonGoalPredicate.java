@@ -31,9 +31,11 @@ public class CommonGoalPredicate {
      * */
     public static Predicate<Shelf> FourCorners() {
         return (Shelf shelf) -> {
-            return shelf.getTile(0, 0) == shelf.getTile(0, Shelf.COLUMNS) &&
-                    shelf.getTile(0, 0) == shelf.getTile(Shelf.ROWS, 0) &&
-                    shelf.getTile(0, 0) == shelf.getTile(Shelf.ROWS, Shelf.COLUMNS);
+            var cols = Shelf.COLUMNS - 1;
+            var rows = Shelf.ROWS - 1;
+            return shelf.getTile(0, 0) == shelf.getTile(0, cols) &&
+                    shelf.getTile(0, 0) == shelf.getTile(rows, 0) &&
+                    shelf.getTile(0, 0) == shelf.getTile(rows, cols);
         };
     }
 
@@ -85,7 +87,8 @@ public class CommonGoalPredicate {
                 for (int col = 0; col < Shelf.COLUMNS; col++) {
                     colors.add(shelf.getTile(row, col));
                 }
-                if (minColors <= colors.size() && colors.size() >= maxColors) {
+                if (colors.stream().noneMatch(Tiles::isEmpty) &&
+                        minColors <= colors.size() && colors.size() <= maxColors) {
                     count++;
                 }
             }
@@ -112,7 +115,8 @@ public class CommonGoalPredicate {
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     colors.add(shelf.getTile(row, col));
                 }
-                if (minColors <= colors.size() && colors.size() >= maxColors) {
+                if (colors.stream().noneMatch(Tiles::isEmpty) &&
+                        minColors <= colors.size() && colors.size() <= maxColors) {
                     count++;
                 }
             }
@@ -133,7 +137,8 @@ public class CommonGoalPredicate {
                 for (int row = 0; row < Shelf.ROWS; row++) {
                     var color = shelf.getTile(row, col);
                     var count = colors.getOrDefault(color, 0);
-                    colors.put(shelf.getTile(row, col), count + 1);
+                    if (!color.isEmpty())
+                        colors.put(shelf.getTile(row, col), count + 1);
                 }
             }
 
@@ -162,12 +167,15 @@ public class CommonGoalPredicate {
             for (int row = 0; row <= Shelf.ROWS - height; row++) {
                 for (int col = 0; col <= Shelf.COLUMNS - width; col++) {
                     var color = shelf.getTile(row, col);
-                    boolean shapeFound = false;
+
+                    if (color.isEmpty()) continue;
+
+                    boolean shapeFound = true;
                     for (var pos : shape) {
                         var sr = row + pos.getFirst();
                         var sc = col + pos.getSecond();
                         if (shelf.getTile(sr, sc) != color) {
-                            shapeFound = true;
+                            shapeFound = false;
                             break;
                         }
                     }

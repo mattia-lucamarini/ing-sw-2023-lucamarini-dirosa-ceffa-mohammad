@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  * This class is an abstraction og the physical board where the game takes place.
  * It consists in a 9x9 matrix of Cells that can available (or not) for the game.
  */
-public class Board {
+public class Board implements Serializable {
 
     private Cell[][] grid = new Cell[9][9];
     Bag bag= new Bag();
@@ -182,7 +183,7 @@ public class Board {
      * But when takesTiles realizes that the player is trying to move diagonally by taking the (1,5) tile, the method throws a new RuntimeException and calls putItBack() to restore the board
      * as if the move had never taken place (by putting the original values over the previously taken cells (0,3) and (0,4)).*/
 
-    public void takeTiles(List<Pair<Integer, Integer>> positions){
+    public List<Tiles> takeTiles(List<Pair<Integer, Integer>> positions){
         int x, y, latestX = -2, latestY= -2;
         Tiles tilevalue;
         List<Pair<Integer, Integer>> sides;
@@ -219,6 +220,7 @@ public class Board {
                 }
             }
         }
+        return tilevalues;
     }
     /**Method : emptySide()
      * @param i index 1
