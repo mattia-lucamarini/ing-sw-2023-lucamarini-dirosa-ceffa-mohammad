@@ -1,20 +1,25 @@
 package it.polimi.ingsw.server.network;
 
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiService;
 import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
 
 
 import it.polimi.ingsw.server.WebServer;
+import it.polimi.ingsw.server.network.RmiServerServices.RmiServerService;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Set;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class: ServerSocketNetwork
@@ -24,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     private final int port;
     private final ServerSocket listener;
+    private final RmiServerService accepter;
+    private final ConcurrentLinkedQueue<ClientHandler> waitingList;
+
 
     /**
      * Default constructor
@@ -34,6 +42,11 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     public ServerSocketAndRmiNetwork(int port) throws IOException {
         this.port = port;
         this.listener = new ServerSocket(this.port);
+        this.accepter = new RmiServerService();
+        Registry registry = LocateRegistry.createRegistry(1099);
+        registry.rebind("RmiServer", this.accepter);
+        this.waitingList = new ConcurrentLinkedQueue<>();
+
         // to do -> manage RMI clients
     }
 
@@ -48,26 +61,29 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     public ConcurrentHashMap<String, ClientHandler> acceptNewClients(ConcurrentHashMap<String, Integer> activePlayers,
                                                            ConcurrentHashMap<String, ClientHandler> clientHandlers) {
             ConcurrentHashMap<String, ClientHandler> clientList = new ConcurrentHashMap<>();
-            int numConnectedPlayers = 0;
             int maxNumPlayers = WebServer.MAX_PLAYERS;
-            Set<String> temporaryClients  = new HashSet<>();
-            while (numConnectedPlayers < maxNumPlayers) {
-                System.out.println("Web Server: Wait for a new player.");
+            while (clientList.size() < maxNumPlayers) {
+                System.out.println("[Web Server] Wait for a new player.");
+                ClientHandler clientHandler =  null;
+                while(clientHandler == null){
+                    clientHandler = this.waitingList.poll();
+                    this.removeDisconnectedWaitingClients(clientList);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    }catch(InterruptedException ignored){
+                    }
+                }
                 try {
-                    Socket socket = listener.accept();
-                    SocketClientHandler socketClientHandler = new SocketClientHandler(socket);
-                    socketClientHandler.receivingKernel();
-                    socketClientHandler.pingKernel();
                     LoginRequest message = null;
                     try{
-                        message = (LoginRequest) socketClientHandler.receivingWithRetry(2, 1);
+                        message = (LoginRequest) clientHandler.receivingWithRetry(2, 1);
                     }catch(NoMessageToReadException e){
                         throw new ClientDisconnectedException();
                     }
                     String clientUsername = message.getUsername();
 
-                    if(temporaryClients.contains(clientUsername)){
-                        boolean status = socketClientHandler.sendingWithRetry(new LoginReply(false),
+                    if(clientList.containsKey(clientUsername)){
+                        boolean status = clientHandler.sendingWithRetry(new LoginReply(false),
                                 3, 1);
                         if(! status){
                             throw new ClientDisconnectedException();
@@ -79,7 +95,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                             // -> recover procedure: we reconnect to player to the game
                         }
                         else{ // this client is already connected and alive -> reject log in
-                            boolean status = socketClientHandler.sendingWithRetry(new LoginReply(false),
+                            boolean status = clientHandler.sendingWithRetry(new LoginReply(false),
                                     3, 1);
                             if(! status){
                                 throw new ClientDisconnectedException();
@@ -87,25 +103,23 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                         }
                     }
                     else{ // new player
-                        if(numConnectedPlayers == 0){ // first player of a new game
-                            System.out.println("Sending num player request.");
-                            maxNumPlayers = askForNumPlayers(clientUsername, socketClientHandler);
+                        if(clientList.size() == 0){ // first player of a new game
+                            System.out.println("[Web Server] Sending num player request.");
+                            maxNumPlayers = askForNumPlayers(clientUsername, clientHandler);
                         }
-                        boolean status = socketClientHandler.sendingWithRetry(new LoginReply(true),
+                        boolean status = clientHandler.sendingWithRetry(new LoginReply(true),
                                 3,2);
                         if(!status) throw new ClientDisconnectedException();
-                        clientList.put(clientUsername, socketClientHandler);
-                        System.out.println("Web Server: got one new client!");
-                        temporaryClients.add(clientUsername);
-                        numConnectedPlayers += 1;
+                        clientList.put(clientUsername, clientHandler);
+                        System.out.println("[Web Server] new client logged in!");
                     }
 
                 } catch (ClientDisconnectedException e) {
-                    WebServer.LOG.warning(("Error adding a new client: " + e.getMessage()));
-                    System.out.println("Web Server: disconnection during log in.");
+                    WebServer.LOG.warning(("[Web Server] Error adding a new client: " + e.getMessage()));
+                    System.out.println("[Web Server] disconnection during log in.");
                 } catch (Exception e) {
-                    WebServer.LOG.severe(("Unknown Error occurred while adding a new client: " + e.getMessage()));
-                    System.out.println("Web Server: Unknown Error during log in.");
+                    WebServer.LOG.severe(("[Web Server] Unknown Error occurred while adding a new client: " + e.getMessage()));
+                    System.out.println("[Web Server] Unknown Error during log in.");
                 }
 
             }// end while
@@ -133,6 +147,63 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
             //reasonable time, we close the connection with him to avoid to create a queue of waiting clients
         }
         return message.getNumPlayers();
+    }
+
+    /**
+     * Method to check and remove disconnected clients waiting for a new game
+     *
+     * @param clientList represents the list of clients already logged in, waiting for other players.
+     */
+    private void removeDisconnectedWaitingClients(ConcurrentHashMap<String, ClientHandler> clientList){
+        for(String client: clientList.keySet()){
+            if(! clientList.get(client).isConnected()){
+                clientList.remove(client);
+            }
+        }
+    }
+
+    /**
+     * Kernel to establish the connection with new rmi clients
+     *
+     */
+    public void establishRmiConnectionKernel(){
+        new Thread(()-> {
+            while (true) {
+                if (this.accepter.isThereAClient()) {
+                    System.out.println("[Web Server] got a RMI client!");
+                    ClientHandler clientHandler = new RmiClientHandler((RmiService) this.accepter.getServerService());
+                    clientHandler.receivingKernel();
+                    clientHandler.pingKernel();
+                    this.waitingList.add(clientHandler);
+                } else {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Kernel to establish the connection with new socket clients
+     *
+     */
+    public void establishSocketConnectionKernel(){
+        new Thread(()-> {
+            while(true){
+                try {
+                    Socket socket = listener.accept();
+                    System.out.println("[Web Server] got a Socket client!");
+                    SocketClientHandler clientHandler = new SocketClientHandler(socket);
+                    clientHandler.receivingKernel();
+                    clientHandler.pingKernel();
+                    this.waitingList.add(clientHandler);
+                }catch(IOException e){
+                    WebServer.LOG.severe(e.getMessage());
+                }
+            }
+        }).start();
     }
 
     /**

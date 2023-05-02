@@ -27,20 +27,20 @@ public class TestGameLogic implements Runnable, Logic {
 
     @Override
     public void run() {
-        System.out.println("Game " + this.gameID + ": Starting ...");
+        System.out.println("*Game " + this.gameID + "* Starting ...");
         for (String username : clientList.keySet()){
             try {
                 boolean status = clientList.get(username).sendingWithRetry(new Message(MessageCode.GENERIC_MESSAGE),
                         2, 1);
                 if(! status){
-                    System.out.println("Game " + this.gameID + ": Error sending to: " + username);
+                    System.out.println("*Game " + this.gameID + "* Error sending to: " + username);
                     clientList.remove(username); //we remove this player from the test
                 }
                 else{
-                    System.out.println("Game " + this.gameID + ": Correctly send to: " + username);
+                    System.out.println("*Game " + this.gameID + "* Correctly send to: " + username);
                 }
             }catch(ClientDisconnectedException e){
-                System.out.println("Game " + this.gameID + ": Disconnected: " + username);
+                System.out.println("*Game " + this.gameID + "* Disconnected: " + username);
                 clientList.remove(username); //we remove this player from the test
             }
         }
@@ -56,15 +56,15 @@ public class TestGameLogic implements Runnable, Logic {
                 try {
                     message = clientList.get(username).receive();
                     if(message.getMessageType().equals(MessageCode.GENERIC_MESSAGE)) {
-                        System.out.println("Game " + this.gameID + ": Correctly received from: " + username);
+                        System.out.println("*Game " + this.gameID + "* Correctly received from: " + username);
                     }
                     else{
-                        System.out.println("Game " + this.gameID + ": Bad format message: " + username);
+                        System.out.println("*Game " + this.gameID + "* Bad format message: " + username);
                     }
                 }catch(NoMessageToReadException e){
-                    System.out.println("Game " + this.gameID + ": No message from: " + username);
+                    System.out.println("*Game " + this.gameID + "* No message from: " + username);
                 }catch(ClientDisconnectedException  e){
-                    System.out.println("Game " + this.gameID + ": Disconnected: " + username);
+                    System.out.println("*Game " + this.gameID + "* Disconnected: " + username);
                     clientList.remove(username); //we remove this player from the test
                 }
             }
@@ -75,7 +75,7 @@ public class TestGameLogic implements Runnable, Logic {
 
         }
 
-        System.out.println("Game "+this.gameID+": Test Game completed");
+        System.out.println("*Game "+this.gameID+"* Test Game completed");
         this.isActive = false;
     }
     @Override

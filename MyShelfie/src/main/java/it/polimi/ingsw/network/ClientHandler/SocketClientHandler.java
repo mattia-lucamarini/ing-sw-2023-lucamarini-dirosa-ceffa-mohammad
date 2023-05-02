@@ -44,9 +44,9 @@ public class SocketClientHandler extends ClientHandler {
     }
 
     /**
-     * Implementation of the method putMessageInNetwork witch socket network connection
+     * Implementation of the method putMessageInNetwork with socket network connection
      *
-     * @param message message to put on the network
+     * @param message message to put in the network
      * @throws ErrorSendException if an error occurs trying to send a message through the socket
      */
     @Override

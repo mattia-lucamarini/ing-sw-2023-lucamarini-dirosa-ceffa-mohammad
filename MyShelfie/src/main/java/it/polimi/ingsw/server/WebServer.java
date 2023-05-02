@@ -23,10 +23,9 @@ public class WebServer {
 
     public final static int MAX_PLAYERS = 4; //spostare nella classe GameLogic
     public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
-    private final ServerNetworkManager mainNetworkManager;
+    private final ServerSocketAndRmiNetwork mainNetworkManager;
     private final ConcurrentHashMap<Integer, Logic> activeGames;
     private final ConcurrentHashMap<String, Integer> activePlayers;
-
     private final ConcurrentHashMap<String, ClientHandler> clientHandlers;
     private Integer gamesCounter;
     private final String executionMode; //it defines the execution of the  web server: test or production
@@ -43,8 +42,10 @@ public class WebServer {
         this.activePlayers = new ConcurrentHashMap<>();
         this.clientHandlers = new ConcurrentHashMap<>();
         this.mainNetworkManager = new ServerSocketAndRmiNetwork(59090);
+        this.mainNetworkManager.establishSocketConnectionKernel();
+        this.mainNetworkManager.establishRmiConnectionKernel();
         if (!executionMode.equals("test") && !executionMode.equals("production")){
-            System.out.println("Web Server: bad selected mode. Using test by default.");
+            System.out.println("[Web Server] bad selected mode. Using test by default.");
             this.executionMode = "test";
         }
         else {
@@ -106,11 +107,11 @@ public class WebServer {
      */
     private void checkAndFinalizeGame() { //fare code refactoring
         while(true){
-            System.out.println("Web Server: Active Games: "+this.activeGames.size());
+            System.out.println("[Web Server] Number of active Games: "+this.activeGames.size());
             for(Integer id: this.activeGames.keySet()){
                 if(! this.activeGames.get(id).isActive()){
                     this.activeGames.remove(id);
-                    System.out.println("Web Server: removing Game "+ id);
+                    System.out.println("[Web Server] removing Game "+ id);
                     for(String username: this.activePlayers.keySet()){
                         if(this.activePlayers.get(username).equals(id)){
                             this.activePlayers.remove(username);
@@ -134,7 +135,7 @@ public class WebServer {
     private void checkClientConnection() {
         while(true){
             for(String username: this.clientHandlers.keySet()) {
-                System.out.println("Web Server: " + username + ": is connected: "
+                System.out.println("[Web Server] " + username + ": is connected: "
                         + this.clientHandlers.get(username).isConnected());
             }
             try {

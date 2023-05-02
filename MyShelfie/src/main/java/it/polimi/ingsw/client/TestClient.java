@@ -1,12 +1,19 @@
 package it.polimi.ingsw.client;
 
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiInterface;
+import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiService;
 import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
+import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
+import it.polimi.ingsw.server.network.RmiServerServices.RmiServerService;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.net.Socket;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -18,13 +25,26 @@ public class TestClient {
     public static void main(String[] args) throws Exception {
 
         String username = "paul";
-        Socket socket = new Socket("127.0.0.1", 59090);
-        ClientHandler clientHandler = new SocketClientHandler(socket);
+        String network = "RMI";
+
+        ClientHandler clientHandler = null;
+
+        if(network.equals("Socket")) {
+            Socket socket = new Socket("127.0.0.1", 59090);
+            clientHandler = new SocketClientHandler(socket);
+        }
+        else{
+            Registry registry = LocateRegistry.getRegistry();
+            RmiServerInterface RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
+            RmiInterface rmiClientService = RmiServer.getRmiClientService();
+            clientHandler = new RmiClientHandler(rmiClientService);
+        }
+
         clientHandler.receivingKernel();
         clientHandler.pingKernel();
         boolean flag = false;
         try {
-            flag = clientHandler.sendingWithRetry(new LoginRequest(username), 1, 1);
+            flag = clientHandler.sendingWithRetry(new LoginRequest(username), 2, 1);
         } catch (ClientDisconnectedException e) {
             System.out.println("disconnected from the server before sending log in request.");
             clientHandler.stopConnection();
