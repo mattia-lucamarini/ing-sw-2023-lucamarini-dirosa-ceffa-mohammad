@@ -183,10 +183,10 @@ public class Client {
                             clientHandler.stopConnection();
                             return;
                         }
-                    } while (message.getMessageType() != MessageCode.PLAY_TURN || message.getMessageType() != MessageCode.END_GAME);
+                    } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
 
-                    board = ((PlayTurn) message).getBoard();
                     if (message.getMessageType() == MessageCode.PLAY_TURN) {
+                        board = ((PlayTurn) message).getBoard();
                         if (((PlayTurn) message).getUsername().equals(player.getUsername())) {
                             System.out.println("\nIt's your turn!");
 
@@ -232,7 +232,7 @@ public class Client {
                                 clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             } else {
                                 System.out.println("You didn't complete the shelf.");
-                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
+                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             }
                             do {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -256,7 +256,7 @@ public class Client {
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
                         }
                     } else if (message.getMessageType() == MessageCode.END_GAME){
-                        System.out.println("Time to calculate points. Sending my shelf..");
+                        System.out.println("\nTime to calculate points. Sending my shelf..");
                         clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
                     }
                 }

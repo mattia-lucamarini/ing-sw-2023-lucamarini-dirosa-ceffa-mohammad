@@ -36,6 +36,7 @@ public class GameLogic implements Runnable, Logic {
         this.gameID = gameID;
         this.isActive = true;
         this.playerPoints = new HashMap<>();
+        this.personalGoals = new HashMap<String, PersonalGoalCard>();
     }
     @Override
     public void run(){
@@ -97,12 +98,12 @@ public class GameLogic implements Runnable, Logic {
             fullShelf = playTurn(pl);
         }
 
-        System.out.println("[GAME " + gameID + "] All turns are over. Calculating score..");
+        System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
         for (String pl : playerOrder)
             assignPoints(pl);
 
         System.out.println("[GAME " + gameID + "] FINAL SCORES: ");
-        playerPoints.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((Map.Entry<String, Integer> pl) -> {System.out.println(pl.getKey() + ": " + pl.getValue() + " points.");});
+        playerPoints.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((Map.Entry<String, Integer> pl) -> System.out.println(pl.getKey() + ": " + pl.getValue() + " points."));
     }
     @Override
     public boolean isActive() {
@@ -197,21 +198,17 @@ public class GameLogic implements Runnable, Logic {
 
     }
     public void assignPoints(String player){
-        try {
-            clientList.get(player).sendingWithRetry(new Message(MessageCode.END_GAME), ATTEMPTS, WAITING_TIME);
-        } catch (ClientDisconnectedException e){
-            System.out.println("[GAME " + gameID + "]" + player + " disconnected while sending end game notification.");
-        }
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
-        while (message.getMessageType() != MessageCode.SHELF_CHECK){
+        do {
             try {
-            message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                clientList.get(player).sendingWithRetry(new Message(MessageCode.END_GAME), ATTEMPTS, WAITING_TIME);
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
             } catch (NoMessageToReadException e){
                 System.out.println("[GAME " + gameID + "] Didn't receive shelf from " + player);
             } catch (ClientDisconnectedException e){
-                System.out.println("[GAME " + gameID + "]" + player + " didn't send their shelf.");
+                System.out.println("[GAME " + gameID + "]" + player + " disconnected during point assignment.");
             }
-        }
+        } while (message.getMessageType() != MessageCode.SHELF_CHECK);
         int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
         System.out.println("[GAME " + gameID + "]" + player + " has gained " + personalGoalScore + " points from their personal goal.");
