@@ -8,6 +8,7 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Class: GameLogic
@@ -26,6 +27,7 @@ public class GameLogic implements Runnable, Logic {
     private Board board;
     private Bag bag;
     private Pair<CommonGoalCard, CommonGoalCard> commonGoals;
+    private HashMap<String, PersonalGoalCard> personalGoals;
     private List<String> playerOrder;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
@@ -47,6 +49,7 @@ public class GameLogic implements Runnable, Logic {
             try {
                 playerPoints.put(username, 0);
                 System.out.println("[GAME " + gameID + "] Sending goals to " + username);
+                personalGoals.put(username, new PersonalGoalCard());
                 clientList.get(username)
                         .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
                 clientList.get(username)
@@ -71,7 +74,7 @@ public class GameLogic implements Runnable, Logic {
         //DISTRIBUTE TILES
         board.refillBoard();
         //START GAME
-        System.out.println("Game " + gameID + " can now start");
+        System.out.println("[GAME " + gameID + "] Now starting..");
         for (String username : clientList.keySet()){
             try {
                 clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
@@ -82,19 +85,30 @@ public class GameLogic implements Runnable, Logic {
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
-        System.out.print("\nPlayer order for game "+gameID+": ");
+        System.out.print("\n[GAME " + gameID + "] Player order: ");
         for (String pl : playerOrder)
             System.out.print(pl+" ");
         System.out.println();
+
+        //START TURNS
+        boolean fullShelf = false;
+        while (!fullShelf){
         for (String pl : playerOrder)
-            playTurn(pl);
-        System.out.println("Game " + gameID + " is over.");
+            fullShelf = playTurn(pl);
+        }
+
+        System.out.println("[GAME " + gameID + "] All turns are over. Calculating score..");
+        for (String pl : playerOrder)
+            assignPoints(pl);
+
+        System.out.println("[GAME " + gameID + "] FINAL SCORES: ");
+        playerPoints.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((Map.Entry<String, Integer> pl) -> {System.out.println(pl.getKey() + ": " + pl.getValue() + " points.");});
     }
     @Override
     public boolean isActive() {
         return isActive;
     }
-    public void playTurn(String player){
+    public boolean playTurn(String player){
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
@@ -111,6 +125,7 @@ public class GameLogic implements Runnable, Logic {
             try{
                 boolean goalNotificationReceived = false;
                 boolean fullShelfNotificationReceived = false;
+                boolean fullShelf = false;
                 boolean turnOverNotificationReceived = false;
 
                 while (!goalNotificationReceived) {
@@ -140,8 +155,10 @@ public class GameLogic implements Runnable, Logic {
                 while (!fullShelfNotificationReceived) {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
+                        fullShelf = true;
                         fullShelfNotificationReceived = true;
                         System.out.println("[GAME " + gameID + "] " + player + " completed their shelf!");
+                        playerPoints.put(player, playerPoints.get(player) + 1);
                         for (String username : clientList.keySet()) {
                             try {
                                 clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
@@ -168,25 +185,52 @@ public class GameLogic implements Runnable, Logic {
                                 System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
                             }
                         }
-                        return;
+                        return fullShelf;
                     }
                 }
             } catch (NoMessageToReadException ignored){}
             catch (ClientDisconnectedException e){
                 System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
-                return;
+                return false;
             }
         }
 
     }
     public void assignPoints(String player){
-        //check game end
-        //check personal goal
-        //check common goal
-        //check adjacent groups
-    }
-    public void finishGame(){
-        //assign points to players
-        //declare winner
+        try {
+            clientList.get(player).sendingWithRetry(new Message(MessageCode.END_GAME), ATTEMPTS, WAITING_TIME);
+        } catch (ClientDisconnectedException e){
+            System.out.println("[GAME " + gameID + "]" + player + " disconnected while sending end game notification.");
+        }
+        Message message = new Message(MessageCode.GENERIC_MESSAGE);
+        while (message.getMessageType() != MessageCode.SHELF_CHECK){
+            try {
+            message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+            } catch (NoMessageToReadException e){
+                System.out.println("[GAME " + gameID + "] Didn't receive shelf from " + player);
+            } catch (ClientDisconnectedException e){
+                System.out.println("[GAME " + gameID + "]" + player + " didn't send their shelf.");
+            }
+        }
+        int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
+        playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
+        System.out.println("[GAME " + gameID + "]" + player + " has gained " + personalGoalScore + " points from their personal goal.");
+
+        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) ((ShelfCheck) message).getShelf().findTileGroups();
+
+        for (Pair<Tiles, Integer> group : tileGroups){
+            int gainedPoints = 0;
+            if (group.getSecond() == 3)
+                gainedPoints = 2;
+            else if (group.getSecond() == 4)
+                gainedPoints = 3;
+            else if (group.getSecond() == 5)
+                gainedPoints = 5;
+            else if (group.getSecond() >= 6)
+                gainedPoints = 8;
+            playerPoints.put(player, playerPoints.get(player) + gainedPoints);
+            System.out.println("[GAME " + gameID + "]" + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
+        }
+
     }
 }
