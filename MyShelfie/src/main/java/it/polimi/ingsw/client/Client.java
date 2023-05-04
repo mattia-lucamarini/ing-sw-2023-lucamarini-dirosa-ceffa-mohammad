@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Class: Client
@@ -201,21 +202,39 @@ public class Client {
                                         break;
                                     case "help":
                                         System.out.println("\nboard: print board\n" +
-                                                "shelf: print shelf");
-
+                                                "shelf: print shelf\n" +
+                                                "take: extract the tiles specified by your coordinates");
+                                        break;
+                                    case "take":
+                                        System.out.println("Type the coordinates of the tile you want to take (ex. 3 2) or nothing if you are done.");
+                                        ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
+                                        for (int i = 0; i < 3; i++) {
+                                            System.out.print("\t"+i+"> ");
+                                            String tilePick = sc.nextLine();
+                                            if (tilePick.equals(""))
+                                                break;
+                                            Pattern tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
+                                            if (tilePattern.matcher(tilePick).find()) {
+                                                Scanner pickScanner = new Scanner(tilePick);
+                                                totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                                            }
+                                            else {
+                                                System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
+                                                i--;
+                                            }
+                                        }
+                                        try {
+                                            board.takeTiles(totalPick);
+                                        } catch (RuntimeException e) {
+                                            System.out.println(e.getMessage());
+                                        }
+                                        break;
                                     case "done":
                                         break;
                                     default:
                                         System.out.println("Unknown command.");
                                 }
                             } while (!command.equals("done"));
-                            try {
-                                ArrayList<Tiles> playerPick = (ArrayList<Tiles>) board.takeTiles(new ArrayList<>(List.of(Pair.of(3, 2), Pair.of(4, 1))));
-                                player.getShelf().insertTiles(new ArrayList<>(List.of(Pair.of(0, 0), Pair.of(0, 1))), playerPick);
-                            } catch (RuntimeException e) {
-                                System.out.println(e.getMessage());
-                            }
-                            System.out.println("Test actions done.");
 
                             //CHECKING GOALS
                             boolean commonReached = false;

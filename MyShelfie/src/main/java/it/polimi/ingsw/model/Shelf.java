@@ -192,6 +192,7 @@ public class Shelf implements Serializable {
 
     public void printShelf(){
         for(int i = ROWS-1 ; i >= 0; --i){
+            System.out.print(i + "\t");
             for(int j = COLUMNS-1; j>=0; --j){
                 if (matrix[i][j] == Tiles.NOTVALID)
                     System.out.print(" ");
@@ -203,6 +204,10 @@ public class Shelf implements Serializable {
             }
             System.out.print("\n");
         }
+        System.out.print("  ");
+        for (int i = 0; i < 9; i++)
+            System.out.print(i + " ");
+        System.out.print("\n");
     }
 
     public Tiles getTile(int r, int c) {

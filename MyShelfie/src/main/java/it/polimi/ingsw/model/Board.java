@@ -261,6 +261,7 @@ public class Board implements Serializable {
 
     public void printBoard(){
         for(int i = 0 ; i < 9; ++i){
+            System.out.print(i + "\t");
             for(int j = 0; j < 9; ++j){
                 if (grid[i][j].getTile() == Tiles.NOTVALID)
                     System.out.print(" ");
@@ -272,5 +273,9 @@ public class Board implements Serializable {
                 }
             System.out.print("\n");
             }
+        System.out.print("  ");
+        for (int i = 0; i < 9; i++)
+            System.out.print(i + " ");
+        System.out.print("\n");
         }
     }
