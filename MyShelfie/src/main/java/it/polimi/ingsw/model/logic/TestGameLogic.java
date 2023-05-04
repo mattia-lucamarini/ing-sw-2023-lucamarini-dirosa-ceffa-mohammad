@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Class: GameLogic
+ * @author Paolo Ceffa
  * Test Class to test the communication between the WebServer and the Clients
  */
 public class TestGameLogic implements Runnable, Logic {
@@ -29,20 +31,7 @@ public class TestGameLogic implements Runnable, Logic {
     public void run() {
         System.out.println("*Game " + this.gameID + "* Starting ...");
         for (String username : clientList.keySet()){
-            try {
-                boolean status = clientList.get(username).sendingWithRetry(new Message(MessageCode.GENERIC_MESSAGE),
-                        2, 1);
-                if(! status){
-                    System.out.println("*Game " + this.gameID + "* Error sending to: " + username);
-                    clientList.remove(username); //we remove this player from the test
-                }
-                else{
-                    System.out.println("*Game " + this.gameID + "* Correctly send to: " + username);
-                }
-            }catch(ClientDisconnectedException e){
-                System.out.println("*Game " + this.gameID + "* Disconnected: " + username);
-                clientList.remove(username); //we remove this player from the test
-            }
+            acceptPlayer(username);
         }
 
         try {
@@ -81,5 +70,53 @@ public class TestGameLogic implements Runnable, Logic {
     @Override
     public boolean isActive() {
         return isActive;
+    }
+
+    /**
+     * Implementation of the method reconnectPlayer to allow the reconnection of the player to the game
+     *
+     * @param username the unique identifier of a player
+     * @param clientHandler the object to manage the communication. It should be updated in the Game instance
+     * @return the status of the reconnection
+     */
+    @Override
+    public boolean reconnectPlayer(String username, ClientHandler clientHandler) {
+        if(clientList.containsKey(username)){
+            System.out.println("*Game " + this.gameID + "* Error ! it's connected yet: " + username);
+            return false;
+        }
+        else{
+            clientList.put(username, clientHandler);
+            System.out.println("*Game " + this.gameID + "* Reconnected!: " + username);
+            new Thread(()-> {try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException ignored) {
+            }
+                this.acceptPlayer(username);
+            }).start();
+            return true;
+        }
+    }
+
+    /**
+     * Method to accept a player into the game and to notify him about the beginning of it
+     *
+     * @param username the unique identifier of a player
+     */
+    private void acceptPlayer(String username) {
+        try{
+            boolean status = clientList.get(username).sendingWithRetry(new Message(MessageCode.GENERIC_MESSAGE),
+                    2, 1);
+            if(! status){
+                System.out.println("*Game " + this.gameID + "* Error sending to: " + username);
+                clientList.remove(username); //we remove this player from the test
+            }
+            else{
+                System.out.println("*Game " + this.gameID + "* Correctly send to: " + username);
+            }
+        }catch(ClientDisconnectedException e){
+            System.out.println("*Game " + this.gameID + "* Disconnected: " + username);
+            clientList.remove(username); //we remove this player from the test
+        }
     }
 }

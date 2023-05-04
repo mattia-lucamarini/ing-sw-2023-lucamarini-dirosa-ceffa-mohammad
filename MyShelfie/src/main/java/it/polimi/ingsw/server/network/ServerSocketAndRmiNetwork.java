@@ -1,5 +1,6 @@
 package it.polimi.ingsw.server.network;
 
+import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
 import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiService;
@@ -54,12 +55,15 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
      * Implementation of acceptNewClients method of ServerNetworkManager
      *
      * @param activePlayers defines the clients currently handled by the web server
+     * @param clientHandlers stores the clientHandler of each client currently handled by the web server
+     * @param activeGames stores all the currently games
      * @return the new accepted clients ready for a new game, by a couple of unique username identifier and a
      * SocketClientHandler object used to manage the communication with the client through a Socket
      */
     @Override //to implement -> manage the disconnection of an already accepted client while waiting for the others
     public ConcurrentHashMap<String, ClientHandler> acceptNewClients(ConcurrentHashMap<String, Integer> activePlayers,
-                                                           ConcurrentHashMap<String, ClientHandler> clientHandlers) {
+                                                           ConcurrentHashMap<String, ClientHandler> clientHandlers,
+                                                                     ConcurrentHashMap<Integer, Logic> activeGames) {
             ConcurrentHashMap<String, ClientHandler> clientList = new ConcurrentHashMap<>();
             int maxNumPlayers = WebServer.MAX_PLAYERS;
             while (clientList.size() < maxNumPlayers) {
@@ -67,7 +71,11 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                 ClientHandler clientHandler =  null;
                 while(clientHandler == null){
                     clientHandler = this.waitingList.poll();
-                    this.removeDisconnectedWaitingClients(clientList);
+                    if(clientHandler!= null && ! clientHandler.isConnected()){
+                        System.out.println("[Web Server] Client disconnected waiting for the log in.");
+                        clientHandler = null;
+                    }
+                    this.removeDisconnectedLoggedWaitingClients(clientList);
                     try {
                         TimeUnit.MILLISECONDS.sleep(50);
                     }catch(InterruptedException ignored){
@@ -92,7 +100,17 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                     }
                     if(activePlayers.containsKey(clientUsername)){ //if the client is already in our system
                         if(! clientHandlers.get(clientUsername).isConnected()){
-                            // -> recover procedure: we reconnect to player to the game
+                            try { // we try to reconnect the player
+                                boolean status = this.reconnectionProcedure(clientUsername, clientHandler,
+                                        clientHandlers, activeGames.get(activePlayers.get(clientUsername)));
+                                if (status) {
+                                    System.out.println("[Web Server] Correctly reconnected: " + clientUsername);
+                                } else {
+                                    System.out.println("[Web Server] Error reconnecting a client.");
+                                }
+                            }catch(ClientDisconnectedException e){
+                                System.out.println("[Web Server] disconnection during reconnection procedure.");
+                            }
                         }
                         else{ // this client is already connected and alive -> reject log in
                             boolean status = clientHandler.sendingWithRetry(new LoginReply(false),
@@ -112,13 +130,15 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                         if(!status) throw new ClientDisconnectedException();
                         clientList.put(clientUsername, clientHandler);
                         System.out.println("[Web Server] new client logged in!");
+                        this.removeDisconnectedLoggedWaitingClients(clientList);
                     }
 
                 } catch (ClientDisconnectedException e) {
                     WebServer.LOG.warning(("[Web Server] Error adding a new client: " + e.getMessage()));
                     System.out.println("[Web Server] disconnection during log in.");
                 } catch (Exception e) {
-                    WebServer.LOG.severe(("[Web Server] Unknown Error occurred while adding a new client: " + e.getMessage()));
+                    WebServer.LOG.severe(("[Web Server] Unknown Error occurred while adding a new client: "
+                            + e.getMessage()));
                     System.out.println("[Web Server] Unknown Error during log in.");
                 }
 
@@ -154,7 +174,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
      *
      * @param clientList represents the list of clients already logged in, waiting for other players.
      */
-    private void removeDisconnectedWaitingClients(ConcurrentHashMap<String, ClientHandler> clientList){
+    private void removeDisconnectedLoggedWaitingClients(ConcurrentHashMap<String, ClientHandler> clientList){
         for(String client: clientList.keySet()){
             if(! clientList.get(client).isConnected()){
                 clientList.remove(client);
@@ -204,6 +224,26 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                 }
             }
         }).start();
+    }
+
+    /**
+     * Method to manage the reconnection of a client: we substitute the old client handler with the new one
+     *
+     * @param username the unique identifier of the user
+     * @param clientHandler the new clientHandler object of the client
+     * @param clientHandlers stores the clientHandler of each client currently handled by the web server
+     * @param activeGames stores all the currently games
+     * @return the status of the procedure
+     * @throws ClientDisconnectedException if the client disconnects during this phase
+     */
+    private boolean reconnectionProcedure(String username, ClientHandler clientHandler,
+                                          ConcurrentHashMap<String, ClientHandler> clientHandlers,
+                                          Logic activeGames)
+            throws ClientDisconnectedException {
+        clientHandlers.replace(username, clientHandler);
+        boolean status = activeGames.reconnectPlayer(username, clientHandler);
+        if(status) status = clientHandler.sendingWithRetry(new LoginReply(true),3, 1);
+        return status;
     }
 
     /**

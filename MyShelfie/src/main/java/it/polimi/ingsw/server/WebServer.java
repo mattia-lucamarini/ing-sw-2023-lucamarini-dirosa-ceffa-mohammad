@@ -64,7 +64,7 @@ public class WebServer {
             new Thread(this::checkClientConnection).start();
             while (true) {
                 ConcurrentHashMap<String, ClientHandler> clients = this.mainNetworkManager.acceptNewClients(
-                        this.activePlayers, this.clientHandlers);
+                        this.activePlayers, this.clientHandlers, this.activeGames);
                 if (clients != null) {
                     startNewGame(clients);
                     this.gamesCounter += 1;
@@ -79,6 +79,7 @@ public class WebServer {
 
     /**
      * It starts a new game on a new thread, and it adds the new clients to the activatePlayers structure.
+     *
      * @param clients represents the players of the new game by a unique username and a ClientHandler object
      * used to communicate with the client-side
      *
@@ -139,7 +140,7 @@ public class WebServer {
                         + this.clientHandlers.get(username).isConnected());
             }
             try {
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(2);
             }catch(InterruptedException e){
                 WebServer.LOG.warning(e.getMessage());
             }

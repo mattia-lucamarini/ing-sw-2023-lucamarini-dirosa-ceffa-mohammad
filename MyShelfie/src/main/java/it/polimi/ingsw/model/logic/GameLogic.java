@@ -94,6 +94,12 @@ public class GameLogic implements Runnable, Logic {
     public boolean isActive() {
         return isActive;
     }
+
+    @Override
+    public boolean reconnectPlayer(String username, ClientHandler clientHandler) { //  -- to implement --
+        return false;
+    }
+
     public void playTurn(String player){
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);

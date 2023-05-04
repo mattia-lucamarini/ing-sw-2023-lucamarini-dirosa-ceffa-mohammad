@@ -3,11 +3,9 @@ package it.polimi.ingsw.client;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
 import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiInterface;
-import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiService;
 import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
-import it.polimi.ingsw.server.network.RmiServerServices.RmiServerService;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
@@ -18,14 +16,15 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Just a random Client Application to perform some test
+ * Class: TestClient
  * @author Paolo Ceffa
+ * Just a random Client Application to perform some test
  */
 public class TestClient {
     public static void main(String[] args) throws Exception {
 
-        String username = "paul";
-        String network = "RMI";
+        String username = "paulll";
+        String network = "Socket";
 
         ClientHandler clientHandler = null;
 
@@ -133,7 +132,7 @@ public class TestClient {
         if (message.getMessageType().equals(MessageCode.GENERIC_MESSAGE)) {
             int testIterations = 0;
             boolean status;
-            while (testIterations < 10) {
+            while (testIterations < 25) {
                 try {
                     status = clientHandler.sendingWithRetry(new Message(MessageCode.GENERIC_MESSAGE),
                             2, 1);

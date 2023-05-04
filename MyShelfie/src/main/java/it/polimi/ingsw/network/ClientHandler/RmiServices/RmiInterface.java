@@ -7,8 +7,10 @@ import java.rmi.RemoteException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Interface to extend in order to implement an RMI service object
- *
+ * Interface: RmiInterface
+ * @author Paolo Ceffa
+ * Interface to extend in order to implement an RMI service object which offers the network to allow communication
+ * between clients and server
  */
 public interface RmiInterface extends Remote {
 

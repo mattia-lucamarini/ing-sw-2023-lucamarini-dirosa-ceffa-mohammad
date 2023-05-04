@@ -7,6 +7,10 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Class: RmiServerService
+ * Implementation of RmiServerInterface, which allow a Rmi client to establish a connection with the server
+ */
 public class RmiServerService extends UnicastRemoteObject implements RmiServerInterface {
 
     RmiInterface rmiService;
