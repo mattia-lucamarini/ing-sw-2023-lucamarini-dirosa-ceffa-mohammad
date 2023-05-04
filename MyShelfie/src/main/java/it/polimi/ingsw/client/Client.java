@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Class: Client
@@ -166,11 +167,7 @@ public class Client {
                 System.out.println("The game is now starting");
 
                 //TURN PROCESSING
-                //pick tiles
-                //insert tiles
-                //check common goals
-                //check shelf completeness
-                while (gameOn){
+                while (gameOn) {
                     do {
                         try {
                             message = clientHandler.receivingWithRetry(100, WAITING_TIME);
@@ -183,76 +180,121 @@ public class Client {
                             clientHandler.stopConnection();
                             return;
                         }
-                    } while (message.getMessageType() != MessageCode.PLAY_TURN);
+                    } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
 
-                    board = ((PlayTurn) message).getBoard();
-                    if (((PlayTurn) message).getUsername().equals(player.getUsername())) {
-                        System.out.println("\nIt's your turn!");
+                    if (message.getMessageType() == MessageCode.PLAY_TURN) {
+                        board = ((PlayTurn) message).getBoard();
+                        if (((PlayTurn) message).getUsername().equals(player.getUsername())) {
+                            System.out.println("\nIt's your turn!");
 
-                        //TEST ACTIONS
-                        try {
-                            ArrayList<Tiles> playerPick = (ArrayList<Tiles>) board.takeTiles(new ArrayList<>(List.of(Pair.of(3,2), Pair.of(4,1))));
-                            player.getShelf().insertTiles(new ArrayList<>(List.of(Pair.of(0,0), Pair.of(0,1))), playerPick);
-                        }catch (RuntimeException e){
-                            System.out.println(e.getMessage());
-                        }
-                        System.out.println("Test actions done.");
+                            //TEST ACTIONS
+                            System.out.println("Enter a command to play. (type 'help' to see all commands)");
+                            String command;
+                            do {
+                                System.out.print("> ");
+                                command = sc.nextLine();
+                                switch (command) {
+                                    case "board":
+                                        board.printBoard();
+                                        break;
+                                    case "shelf":
+                                        player.getShelf().printShelf();
+                                        break;
+                                    case "help":
+                                        System.out.println("\nboard: print board\n" +
+                                                "shelf: print shelf\n" +
+                                                "take: extract the tiles specified by your coordinates");
+                                        break;
+                                    case "take":
+                                        System.out.println("Type the coordinates of the tile you want to take (ex. 3 2) or nothing if you are done.");
+                                        ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
+                                        for (int i = 0; i < 3; i++) {
+                                            System.out.print("\t"+i+"> ");
+                                            String tilePick = sc.nextLine();
+                                            if (tilePick.equals(""))
+                                                break;
+                                            Pattern tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
+                                            if (tilePattern.matcher(tilePick).find()) {
+                                                Scanner pickScanner = new Scanner(tilePick);
+                                                totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                                            }
+                                            else {
+                                                System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
+                                                i--;
+                                            }
+                                        }
+                                        try {
+                                            board.takeTiles(totalPick);
+                                        } catch (RuntimeException e) {
+                                            System.out.println(e.getMessage());
+                                        }
+                                        break;
+                                    case "done":
+                                        break;
+                                    default:
+                                        System.out.println("Unknown command.");
+                                }
+                            } while (!command.equals("done"));
 
-                        //CHECKING GOALS
-                        boolean commonReached = false;
-                        for (int i = 0; i < 2; i++){
-                            if (List.of(commonGoals.getFirst(), commonGoals.getSecond()).get(i).checkGoal(player.getShelf()) == 1){
-                                commonReached = true;
-                                clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
-                            }
-                        }
-                        if (!commonReached)
-                            clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
-
-                        do {
-                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
-
-                        System.out.println("Common Goals check passed.");
-
-                        //CHECKING SHELF FULLNESS
-                        boolean isShelfFull = true;
-                        out: for (int i = 0; i < 6; i++){
-                            for (int j = 0; j < 5; j++){
-                                if (player.getShelf().isCellEmpty(i, j)){
-                                    isShelfFull = false;
-                                    break out;
+                            //CHECKING GOALS
+                            boolean commonReached = false;
+                            for (int i = 0; i < 2; i++) {
+                                if (List.of(commonGoals.getFirst(), commonGoals.getSecond()).get(i).checkGoal(player.getShelf()) == 1) {
+                                    commonReached = true;
+                                    clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
                                 }
                             }
-                        }
-                        if (isShelfFull){
-                            System.out.println("You completed the shelf!");
-                            clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
-                        }
-                        else {
-                            System.out.println("You didn't complete the shelf.");
-                            clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
-                        }
-                        do {
-                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        } while (message.getMessageType() != MessageCode.FULL_SHELF);
+                            if (!commonReached)
+                                clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
 
-                        //END OF TURN
-                        clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
-                        do {
-                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        } while (message.getMessageType() != MessageCode.TURN_OVER);
-                        System.out.println("You completed your turn.");
+                            do {
+                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                            } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
 
-                    } else{
-                        System.out.println(((PlayTurn) message).getUsername() + " is now playing.");
-                        do{
-                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                            if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                                System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition());
-                            if (message.getMessageType() == MessageCode.FULL_SHELF)
-                                System.out.println(((FullShelf) message).getPlayer() + " completed their shelf");
-                        } while (message.getMessageType() != MessageCode.TURN_OVER);
+                            System.out.println("Common Goals check passed.");
+
+                            //CHECKING SHELF FULLNESS
+                            boolean isShelfFull = true;
+                            out:
+                            for (int i = 0; i < 6; i++) {
+                                for (int j = 0; j < 5; j++) {
+                                    if (player.getShelf().isCellEmpty(i, j)) {
+                                        isShelfFull = false;
+                                        break out;
+                                    }
+                                }
+                            }
+                            if (isShelfFull) {
+                                System.out.println("You completed the shelf!");
+                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
+                            } else {
+                                System.out.println("You didn't complete the shelf.");
+                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
+                            }
+                            do {
+                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                            } while (message.getMessageType() != MessageCode.FULL_SHELF);
+
+                            //END OF TURN
+                            clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                            do {
+                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                            } while (message.getMessageType() != MessageCode.TURN_OVER);
+                            System.out.println("You completed your turn.");
+
+                        } else {
+                            System.out.println(((PlayTurn) message).getUsername() + " is now playing.");
+                            do {
+                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                                if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
+                                    System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition());
+                                if (message.getMessageType() == MessageCode.FULL_SHELF)
+                                    System.out.println(((FullShelf) message).getPlayer() + " completed their shelf, obtaining 1 point! \nRemaining players will play their turns before calculating the score and ending the game.");
+                            } while (message.getMessageType() != MessageCode.TURN_OVER);
+                        }
+                    } else if (message.getMessageType() == MessageCode.END_GAME){
+                        System.out.println("\nTime to calculate points. Sending my shelf..");
+                        clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
                     }
                 }
             }

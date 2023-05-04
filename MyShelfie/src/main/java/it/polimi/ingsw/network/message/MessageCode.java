@@ -18,6 +18,7 @@ public  enum MessageCode {
     COMMON_GOAL_REACHED,
     FULL_SHELF,
     TURN_OVER,
-
+    SHELF_CHECK,
+    END_GAME,
     BAD_RESPONSE;
 }

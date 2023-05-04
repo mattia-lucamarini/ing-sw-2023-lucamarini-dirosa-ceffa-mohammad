@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * The shelf has 6 rows and 5 columns. Tiles can only be placed in valid cells, which are only the bottom row when
  * the shelf is initialized.
  */
-public class Shelf {
+public class Shelf implements Serializable {
     public static final int ROWS = 6;
     public static final int COLUMNS = 5;
 
@@ -187,6 +188,26 @@ public class Shelf {
 
             return count;
         }
+    }
+
+    public void printShelf(){
+        for(int i = ROWS-1 ; i >= 0; --i){
+            System.out.print(i + "\t");
+            for(int j = COLUMNS-1; j>=0; --j){
+                if (matrix[i][j] == Tiles.NOTVALID)
+                    System.out.print(" ");
+                else if (matrix[i][j] == Tiles.VALID)
+                    System.out.print("-");
+                else
+                    System.out.print(matrix[i][j].toString().charAt(0));
+                System.out.print(" ");
+            }
+            System.out.print("\n");
+        }
+        System.out.print("  ");
+        for (int i = 0; i < 9; i++)
+            System.out.print(i + " ");
+        System.out.print("\n");
     }
 
     public Tiles getTile(int r, int c) {
