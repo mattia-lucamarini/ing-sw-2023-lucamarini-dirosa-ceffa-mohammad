@@ -190,6 +190,21 @@ public class Shelf implements Serializable {
         }
     }
 
+    public void printShelf(){
+        for(int i = ROWS-1 ; i >= 0; --i){
+            for(int j = COLUMNS-1; j>=0; --j){
+                if (matrix[i][j] == Tiles.NOTVALID)
+                    System.out.print(" ");
+                else if (matrix[i][j] == Tiles.VALID)
+                    System.out.print("-");
+                else
+                    System.out.print(matrix[i][j].toString().charAt(0));
+                System.out.print(" ");
+            }
+            System.out.print("\n");
+        }
+    }
+
     public Tiles getTile(int r, int c) {
         return matrix[r][c];
     }

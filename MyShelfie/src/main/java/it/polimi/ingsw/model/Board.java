@@ -262,11 +262,15 @@ public class Board implements Serializable {
     public void printBoard(){
         for(int i = 0 ; i < 9; ++i){
             for(int j = 0; j < 9; ++j){
-                System.out.println(grid[i][j].getTile());
+                if (grid[i][j].getTile() == Tiles.NOTVALID)
+                    System.out.print(" ");
+                else if (grid[i][j].getTile() == Tiles.VALID)
+                    System.out.print("-");
+                else
+                    System.out.print(grid[i][j].getTile().toString().charAt(0));
+                System.out.print(" ");
+                }
+            System.out.print("\n");
             }
-            System.out.println("\n");
         }
     }
-
-
-}

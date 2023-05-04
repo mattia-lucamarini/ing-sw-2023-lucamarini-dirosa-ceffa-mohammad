@@ -166,10 +166,6 @@ public class Client {
                 System.out.println("The game is now starting");
 
                 //TURN PROCESSING
-                //pick tiles
-                //insert tiles
-                //check common goals
-                //check shelf completeness
                 while (gameOn) {
                     do {
                         try {
@@ -191,6 +187,28 @@ public class Client {
                             System.out.println("\nIt's your turn!");
 
                             //TEST ACTIONS
+                            System.out.println("Enter a command to play. (type 'help' to see all commands)");
+                            String command;
+                            do {
+                                System.out.print("> ");
+                                command = sc.nextLine();
+                                switch (command) {
+                                    case "board":
+                                        board.printBoard();
+                                        break;
+                                    case "shelf":
+                                        player.getShelf().printShelf();
+                                        break;
+                                    case "help":
+                                        System.out.println("\nboard: print board\n" +
+                                                "shelf: print shelf");
+
+                                    case "done":
+                                        break;
+                                    default:
+                                        System.out.println("Unknown command.");
+                                }
+                            } while (!command.equals("done"));
                             try {
                                 ArrayList<Tiles> playerPick = (ArrayList<Tiles>) board.takeTiles(new ArrayList<>(List.of(Pair.of(3, 2), Pair.of(4, 1))));
                                 player.getShelf().insertTiles(new ArrayList<>(List.of(Pair.of(0, 0), Pair.of(0, 1))), playerPick);
