@@ -20,5 +20,8 @@ public  enum MessageCode {
     TURN_OVER,
     SHELF_CHECK,
     END_GAME,
+    CHOSEN_TILES,
+    MOVE_LEGAL,
+    MOVE_ILLEGAL,
     BAD_RESPONSE;
 }
