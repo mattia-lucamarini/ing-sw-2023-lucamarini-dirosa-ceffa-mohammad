@@ -287,7 +287,7 @@ public class Client {
                                 clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             } else {
                                 //System.out.println("You didn't complete the shelf.");
-                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
+                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             }
                             do {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -317,8 +317,16 @@ public class Client {
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
                         }
                     } else if (message.getMessageType() == MessageCode.END_GAME){
-                        System.out.println("\nTime to calculate points. Sending my shelf..");
+                        gameOn = false;
+                        System.out.println("\nThe game is over. Waiting for the final scores..");
                         clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
+                        do {
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } while (message.getMessageType() != MessageCode.FINAL_SCORE);
+                        ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
+                        for (int i = 0; i < playerPoints.size(); i++)
+                            System.out.println(i+1+": "+ playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond()+" punti)");
+                        System.out.println(playerPoints.get(0).getFirst() + " wins!");
                     }
                 }
             }

@@ -100,9 +100,22 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
         for (String pl : playerOrder)
             assignPoints(pl);
+        System.out.println("\n[GAME " + gameID + "] FINAL SCORES: ");
+        ArrayList<Pair<String, Integer>> orderedPoints = new ArrayList<>();
+        for (Map.Entry<String, Integer> score : playerPoints.entrySet())
+            orderedPoints.add(new Pair(score.getKey(), score.getValue()));
 
-        System.out.println("[GAME " + gameID + "] FINAL SCORES: ");
-        playerPoints.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((Map.Entry<String, Integer> pl) -> System.out.println(pl.getKey() + ": " + pl.getValue() + " points."));
+        orderedPoints.sort(Comparator.comparing(Pair::getSecond));
+        for (int i = 0; i < orderedPoints.size(); i++)
+            System.out.println(i+1+": "+ orderedPoints.get(i).getFirst() + " (" + orderedPoints.get(i).getSecond()+" punti)");
+        System.out.println(orderedPoints.get(0).getFirst() + " wins!");
+        for (String pl : clientList.keySet()) {
+            try {
+                clientList.get(pl).sendingWithRetry(new FinalScore(orderedPoints), ATTEMPTS, WAITING_TIME);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
     @Override
     public boolean isActive() {
@@ -242,7 +255,7 @@ public class GameLogic implements Runnable, Logic {
         } while (message.getMessageType() != MessageCode.SHELF_CHECK);
         int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
-        System.out.println("[GAME " + gameID + "]" + player + " has gained " + personalGoalScore + " points from their personal goal.");
+        System.out.println("[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) ((ShelfCheck) message).getShelf().findTileGroups();
 

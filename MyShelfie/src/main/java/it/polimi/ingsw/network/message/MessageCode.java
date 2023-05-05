@@ -23,5 +23,6 @@ public  enum MessageCode {
     CHOSEN_TILES,
     MOVE_LEGAL,
     MOVE_ILLEGAL,
+    FINAL_SCORE,
     BAD_RESPONSE;
 }
