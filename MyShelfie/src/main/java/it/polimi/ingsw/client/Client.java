@@ -210,18 +210,18 @@ public class Client {
                                     case "take":
                                         if (pickedTiles < 3) {
                                             System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type nothing if you are done.");
-                                            for (int i = pickedTiles; i <= 3; i++) {
-                                                System.out.print("\t" + (i+1) + "> ");
+                                            for (int i = totalPick.size(); i <= 3; i++) {
+                                                System.out.print("\t" + (i) + "> ");
                                                 String tilePick = sc.nextLine();
                                                 Pattern tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
                                                 if (tilePick.equals("cancel")) {
                                                     totalPick.clear();
                                                     break;
-                                                } else if (tilePattern.matcher(tilePick).find() && totalPick.size() < 3) {
+                                                } else if (tilePattern.matcher(tilePick).find() && totalPick.size() <= 3) {
                                                     Scanner pickScanner = new Scanner(tilePick);
                                                     totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
                                                     pickedTiles++;
-                                                } else if (tilePick.equals("") || pickedTiles == 3) {
+                                                } else if (tilePick.equals("") || totalPick.size() == 3) {
                                                     try {
                                                         board.takeTiles(totalPick);
                                                         do {
@@ -269,7 +269,7 @@ public class Client {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                             } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
 
-                            System.out.println("Common Goals check passed.");
+                            //System.out.println("Common Goals check passed.");
 
                             //CHECKING SHELF FULLNESS
                             boolean isShelfFull = true;
@@ -286,8 +286,8 @@ public class Client {
                                 System.out.println("You completed the shelf!");
                                 clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             } else {
-                                System.out.println("You didn't complete the shelf.");
-                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
+                                //System.out.println("You didn't complete the shelf.");
+                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
                             }
                             do {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);

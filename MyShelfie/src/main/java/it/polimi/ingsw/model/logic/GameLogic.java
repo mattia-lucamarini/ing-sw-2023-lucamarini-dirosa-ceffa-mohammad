@@ -134,17 +134,18 @@ public class GameLogic implements Runnable, Logic {
                 boolean fullShelf = false;
                 boolean turnOverNotificationReceived = false;
                 int pickedTiles = 0;
+                ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
                 while (!moveNotificationReceived){
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    //System.out.println(message.getMessageType());
                     if (message.getMessageType() == MessageCode.CHOSEN_TILES) {
-                        pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
-                        moveNotificationReceived = (pickedTiles == 3);
                         try {
                             board.takeTiles(((ChosenTiles) message).getPlayerMove());
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
-                            System.out.println(player + " made a legal move.");
+                            pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
+                            playerPick.addAll(((ChosenTiles) message).getPlayerMove());
+                            //System.out.println(player + " made a legal move.");
+                            moveNotificationReceived = (pickedTiles == 3);
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
@@ -152,8 +153,9 @@ public class GameLogic implements Runnable, Logic {
                     }
                     if (moveNotificationReceived){
                         for (String username : clientList.keySet()){
-                            if (username.equals(player)){
-                                clientList.get(username).sendingWithRetry(new ChosenTiles(((ChosenTiles) message).getPlayerMove()), ATTEMPTS, WAITING_TIME);
+                            if (!username.equals(player)){
+                                clientList.get(username).sendingWithRetry(new ChosenTiles(playerPick), ATTEMPTS, WAITING_TIME);
+                                //System.out.println("Sent move notification to "+username);
                             }
                         }
                     }
@@ -207,8 +209,8 @@ public class GameLogic implements Runnable, Logic {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     if (message.getMessageType() == MessageCode.TURN_OVER) {
                         turnOverNotificationReceived = true;
+                        System.out.println("[GAME " + gameID + "] " + player + " ended their turn.");
                         for (String username : clientList.keySet()) {
-                            System.out.println("[GAME " + gameID + "] " + username + " ended their turn.");
                             try {
                                 clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                             } catch (ClientDisconnectedException e) {
@@ -255,7 +257,7 @@ public class GameLogic implements Runnable, Logic {
             else if (group.getSecond() >= 6)
                 gainedPoints = 8;
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);
-            System.out.println("[GAME " + gameID + "]" + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
+            System.out.println("[GAME " + gameID + "] " + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
         }
 
     }
