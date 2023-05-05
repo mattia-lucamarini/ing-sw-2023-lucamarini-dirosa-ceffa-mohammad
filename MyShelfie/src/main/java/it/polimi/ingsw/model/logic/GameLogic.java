@@ -8,7 +8,6 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Class: GameLogic
@@ -129,11 +128,36 @@ public class GameLogic implements Runnable, Logic {
         }
         while (true) {
             try{
+                boolean moveNotificationReceived = false;
                 boolean goalNotificationReceived = false;
                 boolean fullShelfNotificationReceived = false;
                 boolean fullShelf = false;
                 boolean turnOverNotificationReceived = false;
+                int pickedTiles = 0;
 
+                while (!moveNotificationReceived){
+                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    //System.out.println(message.getMessageType());
+                    if (message.getMessageType() == MessageCode.CHOSEN_TILES) {
+                        pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
+                        moveNotificationReceived = (pickedTiles == 3);
+                        try {
+                            board.takeTiles(((ChosenTiles) message).getPlayerMove());
+                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
+                            System.out.println(player + " made a legal move.");
+                        } catch (RuntimeException e) {
+                            System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
+                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
+                        }
+                    }
+                    if (moveNotificationReceived){
+                        for (String username : clientList.keySet()){
+                            if (username.equals(player)){
+                                clientList.get(username).sendingWithRetry(new ChosenTiles(((ChosenTiles) message).getPlayerMove()), ATTEMPTS, WAITING_TIME);
+                            }
+                        }
+                    }
+                }
                 while (!goalNotificationReceived) {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {

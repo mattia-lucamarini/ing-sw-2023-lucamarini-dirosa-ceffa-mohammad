@@ -188,6 +188,8 @@ public class Client {
                             System.out.println("\nIt's your turn!");
 
                             //TEST ACTIONS
+                            ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
+                            int pickedTiles = 0;
                             System.out.println("Enter a command to play. (type 'help' to see all commands)");
                             String command;
                             do {
@@ -206,28 +208,44 @@ public class Client {
                                                 "take: extract the tiles specified by your coordinates");
                                         break;
                                     case "take":
-                                        System.out.println("Type the coordinates of the tile you want to take (ex. 3 2) or nothing if you are done.");
-                                        ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
-                                        for (int i = 0; i < 3; i++) {
-                                            System.out.print("\t"+i+"> ");
-                                            String tilePick = sc.nextLine();
-                                            if (tilePick.equals(""))
-                                                break;
-                                            Pattern tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
-                                            if (tilePattern.matcher(tilePick).find()) {
-                                                Scanner pickScanner = new Scanner(tilePick);
-                                                totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                                        if (pickedTiles < 3) {
+                                            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type nothing if you are done.");
+                                            for (int i = pickedTiles; i <= 3; i++) {
+                                                System.out.print("\t" + (i+1) + "> ");
+                                                String tilePick = sc.nextLine();
+                                                Pattern tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
+                                                if (tilePick.equals("cancel")) {
+                                                    totalPick.clear();
+                                                    break;
+                                                } else if (tilePattern.matcher(tilePick).find() && totalPick.size() < 3) {
+                                                    Scanner pickScanner = new Scanner(tilePick);
+                                                    totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                                                    pickedTiles++;
+                                                } else if (tilePick.equals("") || pickedTiles == 3) {
+                                                    try {
+                                                        board.takeTiles(totalPick);
+                                                        do {
+                                                            clientHandler.sendingWithRetry(new ChosenTiles(totalPick), ATTEMPTS, WAITING_TIME);
+                                                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                                                        } while (message == null);
+                                                        if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
+                                                            System.out.println("Move was verified.");
+                                                        } else
+                                                            System.out.println("Move was not verified.");
+                                                    } catch (RuntimeException e) {
+                                                        System.out.println(e.getMessage());
+                                                        System.out.println("Try another move.");
+                                                        pickedTiles = 0;
+                                                        totalPick.clear();
+                                                    }
+                                                    break;
+                                                } else {
+                                                    System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
+                                                    i--;
+                                                }
                                             }
-                                            else {
-                                                System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
-                                                i--;
-                                            }
-                                        }
-                                        try {
-                                            board.takeTiles(totalPick);
-                                        } catch (RuntimeException e) {
-                                            System.out.println(e.getMessage());
-                                        }
+                                        } else
+                                            System.out.println("You already took 3 tiles.");
                                         break;
                                     case "done":
                                         break;
@@ -286,6 +304,12 @@ public class Client {
                             System.out.println(((PlayTurn) message).getUsername() + " is now playing.");
                             do {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                                if (message.getMessageType() == MessageCode.CHOSEN_TILES)
+                                    try {
+                                        board.takeTiles(((ChosenTiles) message).getPlayerMove());
+                                    } catch (RuntimeException e){
+                                        System.out.println(e.getMessage());
+                                    }
                                 if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
                                     System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition());
                                 if (message.getMessageType() == MessageCode.FULL_SHELF)

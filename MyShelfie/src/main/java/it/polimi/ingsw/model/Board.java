@@ -273,7 +273,7 @@ public class Board implements Serializable {
                 }
             System.out.print("\n");
             }
-        System.out.print("  ");
+        System.out.print("    ");
         for (int i = 0; i < 9; i++)
             System.out.print(i + " ");
         System.out.print("\n");
