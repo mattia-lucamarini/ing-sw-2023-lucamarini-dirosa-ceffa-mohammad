@@ -66,7 +66,7 @@ public class GameLogic implements Runnable, Logic {
                 if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
                     throw new NoMessageToReadException();
                 else
-                    System.out.println(username + " is ready");
+                    System.out.println("[GAME " + gameID + "]" + username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
@@ -95,10 +95,8 @@ public class GameLogic implements Runnable, Logic {
         //START TURNS
         while (!fullShelf){
             System.out.println("[GAME " + gameID + "] Starting round");
-        for (String pl : playerOrder){
+        for (String pl : playerOrder)
             playTurn(pl);
-            System.out.println("TURN OVER");
-        }
         }
 
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
@@ -110,6 +108,7 @@ public class GameLogic implements Runnable, Logic {
             orderedPoints.add(new Pair(score.getKey(), score.getValue()));
 
         orderedPoints.sort(Comparator.comparing(Pair::getSecond));
+        Collections.reverse(orderedPoints);
         for (int i = 0; i < orderedPoints.size(); i++)
             System.out.println(i+1+": "+ orderedPoints.get(i).getFirst() + " (" + orderedPoints.get(i).getSecond()+" punti)");
         System.out.println(orderedPoints.get(0).getFirst() + " wins!");
@@ -227,7 +226,6 @@ public class GameLogic implements Runnable, Logic {
                     for (String username : clientList.keySet()) {
                         try {
                             clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
-                            System.out.println("Sent turn over notification (" + fullShelf + ")");
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
                         }
