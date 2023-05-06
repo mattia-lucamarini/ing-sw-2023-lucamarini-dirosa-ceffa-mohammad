@@ -254,6 +254,7 @@ public class Client {
                                 }
                             } while (!command.equals("done"));
 
+                            clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                             //CHECKING GOALS
                             boolean commonReached = false;
                             for (int i = 0; i < 2; i++) {
