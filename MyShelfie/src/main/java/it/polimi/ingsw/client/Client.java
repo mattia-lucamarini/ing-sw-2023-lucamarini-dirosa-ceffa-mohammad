@@ -25,6 +25,7 @@ public class Client {
     private static Player player;
     private static PersonalGoalCard goalCard;
     private static Pair<CommonGoal, CommonGoal> commonGoals;
+    private static ArrayList<CommonGoal> goalList;
     private static Board board;
     private static boolean gameOn;
     public static void main(String[] args) {
@@ -194,6 +195,7 @@ public class Client {
                             Pattern tilePattern;
                             System.out.println("Enter a command to play. (type 'help' to see all commands)");
                             String command;
+                            boolean canContinue = true;
                             do {
                                 System.out.print("> ");
                                 command = sc.nextLine();
@@ -239,7 +241,7 @@ public class Client {
                                         if (tempPick.size() > 0) {
                                             try {
                                                 pickedTiles.addAll(board.takeTiles(tempPick));
-                                                System.out.println(pickedTiles);
+                                                //System.out.println(pickedTiles);
                                                 totalPick.addAll(tempPick);
                                                 tempPick.clear();
                                                 do {
@@ -260,7 +262,7 @@ public class Client {
                                         break;
                                     case "insert":
                                         if (pickedTiles.size() == 0) {
-                                            System.out.println("Pick some tiles from the board first.");
+                                            System.out.println("You have no available tiles to insert.");
                                             break;
                                         }
                                         System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.");
@@ -288,19 +290,29 @@ public class Client {
                                         }
                                         break;
                                     case "done":
+                                        if (pickedTiles.size() > 0) {
+                                            System.out.println("You still have to insert your tiles first.");
+                                            canContinue = false;
+                                        } else
+                                            canContinue = true;
                                         break;
                                     default:
                                         System.out.println("Unknown command.");
                                 }
-                            } while (!command.equals("done"));
+                            } while (!command.equals("done") || !canContinue);
 
                             clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                             //CHECKING GOALS
                             boolean commonReached = false;
+                            goalList =  new ArrayList<>(List.of(commonGoals.getFirst(), commonGoals.getSecond()));
                             for (int i = 0; i < 2; i++) {
-                                if (List.of(commonGoals.getFirst(), commonGoals.getSecond()).get(i).checkGoal(player.getShelf()) == 1) {
-                                    commonReached = true;
-                                    clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
+                                if (goalList.get(i).checkGoal(player.getShelf()) == 1) {
+                                    int goalScore = goalList.get(i).takePoints();
+                                    if (goalScore > 0) {
+                                        commonReached = true;
+                                        System.out.println("You reached common goal " + i + ", gaining " + goalScore +" points.");
+                                        clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
+                                    }
                                 }
                             }
                             if (!commonReached)
@@ -324,7 +336,7 @@ public class Client {
                                 }
                             }
                             if (isShelfFull) {
-                                System.out.println("You completed the shelf!");
+                                System.out.println("You completed the shelf and gained 1 point.");
                                 clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                             } else {
                                 //System.out.println("You didn't complete the shelf.");
@@ -352,21 +364,38 @@ public class Client {
                                         System.out.println(e.getMessage());
                                     }
                                 if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                                    System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition());
+                                    System.out.println(((CommonGoalReached) message).getPlayer() + " reached Common Goal " + ((CommonGoalReached) message).getPosition() + ", gaining " + goalList.get(((CommonGoalReached) message).getPosition()).takePoints() + "points.");
                                 if (message.getMessageType() == MessageCode.FULL_SHELF)
                                     System.out.println(((FullShelf) message).getPlayer() + " completed their shelf, obtaining 1 point! \nRemaining players will play their turns before calculating the score and ending the game.");
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
                         }
                     } else if (message.getMessageType() == MessageCode.END_GAME){
                         gameOn = false;
-                        System.out.println("\nThe game is over. Waiting for the final scores..");
+                        System.out.println("\nThe game is over.\n");
+                        System.out.println("I gained "+ goalCard.getGoal().checkGoal(player.getShelf()) + " points from my personal goal.");
+                        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) player.getShelf().findTileGroups();
+
+                        for (Pair<Tiles, Integer> group : tileGroups){
+                            int gainedPoints = 0;
+                            if (group.getSecond() == 3)
+                                gainedPoints = 2;
+                            else if (group.getSecond() == 4)
+                                gainedPoints = 3;
+                            else if (group.getSecond() == 5)
+                                gainedPoints = 5;
+                            else if (group.getSecond() >= 6)
+                                gainedPoints = 8;
+                            System.out.println("I gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
+                        }
+
                         clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
                         do {
                             message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                         } while (message.getMessageType() != MessageCode.FINAL_SCORE);
+                        System.out.println("\nFINAL SCORES:");
                         ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
                         for (int i = 0; i < playerPoints.size(); i++)
-                            System.out.println(i+1+": "+ playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond()+" punti)");
+                            System.out.println(i+1+": "+ playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond()+" points)");
                         System.out.println(playerPoints.get(0).getFirst() + " wins!");
                     }
                 }

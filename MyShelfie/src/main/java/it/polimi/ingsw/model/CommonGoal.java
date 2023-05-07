@@ -52,7 +52,13 @@ public class CommonGoal implements Goal {
     public void rechargePoints(List<Integer> points) {
         this.points.addAll(points);
     }
-    public int takePoints(){return points.pop();}
+    public int takePoints(){
+        try {
+            return points.pop();
+        } catch (EmptyStackException e){
+            return 0;
+        }
+    }
 
     /**
      * Method: all

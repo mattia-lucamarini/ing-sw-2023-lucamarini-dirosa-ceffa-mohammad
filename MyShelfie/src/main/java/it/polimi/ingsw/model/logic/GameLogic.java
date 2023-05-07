@@ -36,7 +36,7 @@ public class GameLogic implements Runnable, Logic {
         this.gameID = gameID;
         this.isActive = true;
         this.playerPoints = new HashMap<>();
-        this.personalGoals = new HashMap<String, PersonalGoalCard>();
+        this.personalGoals = new HashMap<>();
         this.fullShelf = false;
     }
     @Override
@@ -252,7 +252,7 @@ public class GameLogic implements Runnable, Logic {
         } while (message.getMessageType() != MessageCode.SHELF_CHECK);
         int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
-        System.out.println("[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
+        System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) ((ShelfCheck) message).getShelf().findTileGroups();
 
