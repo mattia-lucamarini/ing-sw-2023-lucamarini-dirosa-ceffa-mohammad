@@ -157,7 +157,7 @@ public class GameLogic implements Runnable, Logic {
                     try {
                         pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
                             if (pickedTiles > 3)
-                                throw new RuntimeException("Too many tiles");
+                                throw new RuntimeException("Too many tiles (" + pickedTiles + ")");
                         board.takeTiles(((ChosenTiles) message).getPlayerMove());
                         clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
                         playerPick.addAll(((ChosenTiles) message).getPlayerMove());
