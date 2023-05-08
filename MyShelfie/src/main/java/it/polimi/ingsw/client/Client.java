@@ -170,6 +170,7 @@ public class Client {
                 if (message.getMessageType() == MessageCode.PLAYER_ORDER) {
                     playerOrder = ((PlayerOrder) message).getOrder();
                     playerShelves = new HashMap<>();
+                    System.out.print("Player order: ");
                     for (String pl : playerOrder) {
                         System.out.print(pl + " ");
                         if (!pl.equals(player.getUsername()))
@@ -177,7 +178,6 @@ public class Client {
                     }
                 }
             }
-            System.out.println("order received");
             try {
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
@@ -193,7 +193,7 @@ public class Client {
             if (message.getMessageType() == MessageCode.GAME_START) {
 
                 gameOn = true;
-                System.out.println("The game is now starting");
+                System.out.println("\nThe game is now starting");
 
                 //TURN PROCESSING
                 while (gameOn) {
@@ -217,7 +217,6 @@ public class Client {
                             System.out.println("\nIt's your turn!");
 
                             //TEST ACTIONS
-                            ArrayList<Pair<Integer, Integer>> tempPick = new ArrayList<>();
                             ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
                             ArrayList<Tiles> pickedTiles = new ArrayList<>();
                             Pattern tilePattern;
@@ -257,19 +256,19 @@ public class Client {
                                                 insert: put your tiles into the shelf""");
                                         break;
                                     case "take":
-                                        if (totalPick.size() < 3) {
+                                        if (totalPick.size() == 0) {
                                             System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type nothing if you are done.");
                                             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                                                 System.out.print("\t" + (i + 1) + "> ");
                                                 String tilePick = sc.nextLine();
                                                 tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
                                                 if (tilePick.equals("cancel")) {
-                                                    tempPick.clear();
+                                                    totalPick.clear();
                                                     break;
                                                 } else if (tilePattern.matcher(tilePick).find()) {
                                                     Scanner pickScanner = new Scanner(tilePick);
-                                                    tempPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
-                                                } else if (tilePick.equals("") && tempPick.size() > 0)
+                                                    totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                                                } else if (tilePick.equals("") && totalPick.size() > 0)
                                                     break;
                                                 else {
                                                     System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
@@ -277,15 +276,13 @@ public class Client {
                                                 }
                                             }
                                         } else {
-                                            System.out.println("You already took 3 tiles.");
+                                            System.out.println("You already made your move.");
                                             break;
                                         }
-                                        if (tempPick.size() > 0) {
+                                        if (totalPick.size() > 0) {
                                             try {
-                                                pickedTiles.addAll(board.takeTiles(tempPick));
+                                                pickedTiles.addAll(board.takeTiles(totalPick));
                                                 //System.out.println(pickedTiles);
-                                                totalPick.addAll(tempPick);
-                                                tempPick.clear();
                                                 do {
                                                     clientHandler.sendingWithRetry(new ChosenTiles(totalPick), ATTEMPTS, WAITING_TIME);
                                                     message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -333,7 +330,7 @@ public class Client {
                                         break;
                                     case "done":
                                         if (pickedTiles.size() > 0 || totalPick.size() == 0) {
-                                            System.out.println("You still have to insert your tiles first.");
+                                            System.out.println("You still have to complete your move.");
                                             canContinue = false;
                                         } else
                                             canContinue = true;
