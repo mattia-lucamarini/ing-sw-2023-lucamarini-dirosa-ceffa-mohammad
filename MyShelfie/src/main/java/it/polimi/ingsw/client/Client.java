@@ -172,7 +172,7 @@ public class Client {
                     playerShelves = new HashMap<>();
                     for (String pl : playerOrder) {
                         System.out.print(pl + " ");
-                        if (pl != player.getUsername())
+                        if (!pl.equals(player.getUsername()))
                             playerShelves.put(pl, new Shelf());
                     }
                 }
@@ -232,7 +232,21 @@ public class Client {
                                         board.printBoard();
                                         break;
                                     case "shelf":
-                                        player.getShelf().printShelf();
+                                        System.out.println("Insert the name of the player, or nothing if you want to see yours.");
+                                        System.out.print("Players: ");
+                                        for (String pl : playerOrder)
+                                            System.out.print(pl + " ");
+                                        System.out.print("\n\t> ");
+                                        String shelfCommand = sc.nextLine();
+                                        if (shelfCommand.equals("") || shelfCommand.equals(player.getUsername()))
+                                            player.getShelf().printShelf();
+                                        else{
+                                            try{
+                                                playerShelves.get(shelfCommand).printShelf();
+                                            } catch (Exception e){
+                                                System.out.println("Unknown player. Try again");
+                                            }
+                                        }
                                         break;
                                     case "help":
                                         System.out.println("""
@@ -318,7 +332,7 @@ public class Client {
                                         }
                                         break;
                                     case "done":
-                                        if (pickedTiles.size() > 0) {
+                                        if (pickedTiles.size() > 0 || totalPick.size() == 0) {
                                             System.out.println("You still have to insert your tiles first.");
                                             canContinue = false;
                                         } else
@@ -381,8 +395,11 @@ public class Client {
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
                             System.out.println("You completed your turn.");
 
+                            clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), ATTEMPTS, WAITING_TIME);
+
                         } else {
-                            System.out.println(((PlayTurn) message).getUsername() + " is now playing.");
+                            String nowPlaying = ((PlayTurn) message).getUsername();
+                            System.out.println(nowPlaying + " is now playing.");
                             do {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                                 if (message.getMessageType() == MessageCode.CHOSEN_TILES)
@@ -396,6 +413,9 @@ public class Client {
                                 if (message.getMessageType() == MessageCode.FULL_SHELF)
                                     System.out.println(((FullShelf) message).getPlayer() + " completed their shelf, obtaining 1 point! \nRemaining players will play their turns before calculating the score and ending the game.");
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
+                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                            if (message.getMessageType() == MessageCode.SHELF_CHECK)
+                                playerShelves.put(nowPlaying, ((ShelfCheck) message).getShelf());
                         }
                     } else if (message.getMessageType() == MessageCode.END_GAME) {
                         gameOn = false;

@@ -235,6 +235,13 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
+            message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+            if (message.getMessageType() == MessageCode.SHELF_CHECK){
+                for (String pl : playerOrder){
+                    if (!pl.equals(player))
+                        clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
+                }
+            }
         } catch (NoMessageToReadException ignored){}
         catch (ClientDisconnectedException e){
             System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
