@@ -9,6 +9,7 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,8 @@ public class Client {
     private static PersonalGoalCard goalCard;
     private static Pair<CommonGoal, CommonGoal> commonGoals;
     private static ArrayList<CommonGoal> goalList;
+    private static ArrayList<String> playerOrder;
+    private static HashMap<String, Shelf> playerShelves;
     private static Board board;
     private static boolean gameOn;
     public static void main(String[] args) {
@@ -151,6 +154,30 @@ public class Client {
 
             //WAITING TO START GAME
             System.out.println("Waiting for other players...");
+            while (playerOrder == null) {
+                try {
+                    message = clientHandler.receivingWithRetry(100, 2);
+                } catch (NoMessageToReadException e) {
+                    System.out.println("Not enough players to start a new game.");
+                    clientHandler.stopConnection();
+                    return;
+                } catch (ClientDisconnectedException e) {
+                    System.out.println("Disconnected from the server while waiting for other players.");
+                    clientHandler.stopConnection();
+                    return;
+                }
+
+                if (message.getMessageType() == MessageCode.PLAYER_ORDER) {
+                    playerOrder = ((PlayerOrder) message).getOrder();
+                    playerShelves = new HashMap<>();
+                    for (String pl : playerOrder) {
+                        System.out.print(pl + " ");
+                        if (pl != player.getUsername())
+                            playerShelves.put(pl, new Shelf());
+                    }
+                }
+            }
+            System.out.println("order received");
             try {
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
@@ -164,6 +191,7 @@ public class Client {
             }
 
             if (message.getMessageType() == MessageCode.GAME_START) {
+
                 gameOn = true;
                 System.out.println("The game is now starting");
 
@@ -191,7 +219,7 @@ public class Client {
                             //TEST ACTIONS
                             ArrayList<Pair<Integer, Integer>> tempPick = new ArrayList<>();
                             ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
-                            ArrayList<Tiles> pickedTiles  = new ArrayList<>();
+                            ArrayList<Tiles> pickedTiles = new ArrayList<>();
                             Pattern tilePattern;
                             System.out.println("Enter a command to play. (type 'help' to see all commands)");
                             String command;
@@ -280,11 +308,11 @@ public class Client {
                                             int moveIndex = pickScanner.nextInt();
                                             Tiles pick = pickedTiles.get(moveIndex);
                                             Pair<Integer, Integer> pickPosition = Pair.of(pickScanner.nextInt(), pickScanner.nextInt());
-                                            try{
+                                            try {
                                                 player.getShelf().insertTiles(new ArrayList<>(List.of(pickPosition)), new ArrayList<>(List.of(pick)));
                                                 pickedTiles.remove(moveIndex);
                                                 System.out.println("Done.");
-                                            } catch (RuntimeException e){
+                                            } catch (RuntimeException e) {
                                                 System.out.println(e.getMessage());
                                             }
                                         }
@@ -304,13 +332,13 @@ public class Client {
                             clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                             //CHECKING GOALS
                             boolean commonReached = false;
-                            goalList =  new ArrayList<>(List.of(commonGoals.getFirst(), commonGoals.getSecond()));
+                            goalList = new ArrayList<>(List.of(commonGoals.getFirst(), commonGoals.getSecond()));
                             for (int i = 0; i < 2; i++) {
                                 if (goalList.get(i).checkGoal(player.getShelf()) == 1) {
                                     int goalScore = goalList.get(i).takePoints();
                                     if (goalScore > 0) {
                                         commonReached = true;
-                                        System.out.println("You reached common goal " + i + ", gaining " + goalScore +" points.");
+                                        System.out.println("You reached common goal " + i + ", gaining " + goalScore + " points.");
                                         clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
                                     }
                                 }
@@ -360,7 +388,7 @@ public class Client {
                                 if (message.getMessageType() == MessageCode.CHOSEN_TILES)
                                     try {
                                         board.takeTiles(((ChosenTiles) message).getPlayerMove());
-                                    } catch (RuntimeException e){
+                                    } catch (RuntimeException e) {
                                         System.out.println(e.getMessage());
                                     }
                                 if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
@@ -369,13 +397,13 @@ public class Client {
                                     System.out.println(((FullShelf) message).getPlayer() + " completed their shelf, obtaining 1 point! \nRemaining players will play their turns before calculating the score and ending the game.");
                             } while (message.getMessageType() != MessageCode.TURN_OVER);
                         }
-                    } else if (message.getMessageType() == MessageCode.END_GAME){
+                    } else if (message.getMessageType() == MessageCode.END_GAME) {
                         gameOn = false;
                         System.out.println("\nThe game is over.\n");
-                        System.out.println("I gained "+ goalCard.getGoal().checkGoal(player.getShelf()) + " points from my personal goal.");
+                        System.out.println("I gained " + goalCard.getGoal().checkGoal(player.getShelf()) + " points from my personal goal.");
                         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) player.getShelf().findTileGroups();
 
-                        for (Pair<Tiles, Integer> group : tileGroups){
+                        for (Pair<Tiles, Integer> group : tileGroups) {
                             int gainedPoints = 0;
                             if (group.getSecond() == 3)
                                 gainedPoints = 2;
@@ -395,12 +423,11 @@ public class Client {
                         System.out.println("\nFINAL SCORES:");
                         ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
                         for (int i = 0; i < playerPoints.size(); i++)
-                            System.out.println(i+1+": "+ playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond()+" points)");
+                            System.out.println(i + 1 + ": " + playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond() + " points)");
                         System.out.println(playerPoints.get(0).getFirst() + " wins!");
                     }
                 }
             }
-
         } catch (Exception ignored){}
     }
 }

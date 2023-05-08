@@ -28,7 +28,7 @@ public class GameLogic implements Runnable, Logic {
     private Bag bag;
     private Pair<CommonGoalCard, CommonGoalCard> commonGoals;
     private HashMap<String, PersonalGoalCard> personalGoals;
-    private List<String> playerOrder;
+    private ArrayList<String> playerOrder;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
         this.clientList = clientList;
@@ -75,22 +75,25 @@ public class GameLogic implements Runnable, Logic {
         }
         //DISTRIBUTE TILES
         board.refillBoard();
-        //START GAME
-        System.out.println("[GAME " + gameID + "] Now starting..");
-        for (String username : clientList.keySet()){
-            try {
-                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
-            } catch (ClientDisconnectedException e){
-                System.out.println(username + "disconnected while sending game start notification");
-            }
-        }
+
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
         System.out.print("\n[GAME " + gameID + "] Player order: ");
         for (String pl : playerOrder)
-            System.out.print(pl+" ");
+            System.out.print(pl + " ");
         System.out.println();
+
+        //START GAME
+        System.out.println("[GAME " + gameID + "] Now starting..");
+        for (String username : clientList.keySet()){
+            try {
+                clientList.get(username).sendingWithRetry(new PlayerOrder(playerOrder), ATTEMPTS, WAITING_TIME);
+                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
+            } catch (ClientDisconnectedException e){
+                System.out.println(username + "disconnected while sending game start notification");
+            }
+        }
 
         //START TURNS
         while (!fullShelf){

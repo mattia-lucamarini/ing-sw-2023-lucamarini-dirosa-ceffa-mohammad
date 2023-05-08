@@ -14,6 +14,7 @@ public  enum MessageCode {
     SET_PERSONAL_GOAL,
     SET_COMMON_GOALS,
     GAME_START,
+    PLAYER_ORDER,
     PLAY_TURN,
     COMMON_GOAL_REACHED,
     FULL_SHELF,
