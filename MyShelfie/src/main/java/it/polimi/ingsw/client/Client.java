@@ -6,6 +6,10 @@ import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
+import it.polimi.ingsw.view.View;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 
 import java.net.Socket;
 import java.util.ArrayList;
@@ -31,10 +35,20 @@ public class Client {
     private static HashMap<String, Shelf> playerShelves;
     private static Board board;
     private static boolean gameOn;
+
     public static void main(String[] args) {
-        System.out.print("Insert username: ");
+        System.out.println("Welcome!\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
         Scanner sc = new Scanner(System.in);
-        player = new Player(sc.nextLine());
+        switch (sc.nextLine()){
+            case "1":
+                System.out.print("Insert username: ");
+                player = new Player(sc.nextLine());
+                break;
+            case "2":
+                View view = new View();
+                view.main(args);
+                break;
+        }
 
         try (Socket socket = new Socket("127.0.0.1", 59090)) {
             ClientHandler clientHandler = new SocketClientHandler(socket);
@@ -447,4 +461,5 @@ public class Client {
             }
         } catch (Exception ignored){}
     }
+
 }
