@@ -75,6 +75,10 @@ public class Board implements Serializable {
         }
     }
 
+    public Tiles getTile(int row, int column) {
+        return grid[row][column].getTile();
+    }
+
     /**
      * Method : refillBoard
      * @author Angelo Di Rosa
@@ -153,7 +157,7 @@ public class Board implements Serializable {
             }
         }
         if(east<=8 && !grid[east][j].isNotValid()){
-            if(!grid[i][east].isEmpty()) {
+            if(!grid[east][j].isEmpty()) {
                 return true;
             }
         }
