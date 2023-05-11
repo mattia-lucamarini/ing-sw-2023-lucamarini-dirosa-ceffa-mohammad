@@ -1,14 +1,10 @@
 package it.polimi.ingsw.model;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.Stack;
-import java.util.function.Predicate;
 
 public class CommonGoalTest {
     @Test
@@ -181,7 +177,7 @@ public class CommonGoalTest {
         Assert.assertEquals(0, goal.checkGoal(shelf));
     }
 
-    // Testiamo la funzione "all"
+    // Testiamo la funzione "all".
     @Test
     public void testAllRandomDraw() {
         Shelf shelf = ShelfTest.shelf2();
