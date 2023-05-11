@@ -135,7 +135,7 @@ public class Board implements Serializable {
      * Object tiles surrounded by only NOTVALID tiles are not allowed in the game!*/
 
     public boolean anyTilesAround(int i, int j){
-        int north, south, east, west, result=0;
+        int north, south, east, west;
         north = i-1;
         south = i+1;
         east= j+1;
@@ -156,8 +156,8 @@ public class Board implements Serializable {
                 return true;
             }
         }
-        if(east<=8 && !grid[east][j].isNotValid()){
-            if(!grid[east][j].isEmpty()) {
+        if(east<=8 && !grid[i][east].isNotValid()){
+            if(!grid[i][east].isEmpty()) {
                 return true;
             }
         }
@@ -186,7 +186,6 @@ public class Board implements Serializable {
 
     public List<Tiles> takeTiles(List<Pair<Integer, Integer>> positions){
         int x, y, latestX = -2, latestY= -2;
-        Tiles tilevalue;
         List<Pair<Integer, Integer>> sides;
         List<Tiles> tilevalues = new ArrayList<>();
 
