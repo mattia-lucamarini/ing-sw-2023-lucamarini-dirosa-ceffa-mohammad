@@ -119,10 +119,7 @@ public class Board implements Serializable {
                 }
             }
         }
-        if(singletiles == remainingtiles){
-            return true; //The board needs to be refilled.
-        }
-        return false;
+        return singletiles == remainingtiles; //The board needs to be refilled.
     }
 
     /**Method: anyTilesAround(int i, int j)
