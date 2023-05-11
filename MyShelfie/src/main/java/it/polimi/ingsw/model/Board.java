@@ -210,7 +210,11 @@ public class Board implements Serializable {
                     sides = this.emptySides(x,y);
                     if (sides.size()==1 && sides.get(0).getFirst()== latestX && sides.get(0).getSecond()== latestY ){
                         this.putItBack(positions, tilevalues);
-                        throw new RuntimeException("The move is not valid.");
+                        throw new RuntimeException("The move is not valid. ");
+                    }
+                    else if(sides.size()==0){
+                        this.putItBack(positions, tilevalues);
+                        throw new RuntimeException("The move is not valid. NO EMPTY CELLS AROUND");
                     }
                     else{
                         grid[x][y].assignValue(Tiles.VALID);
