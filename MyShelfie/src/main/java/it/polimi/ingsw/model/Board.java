@@ -163,6 +163,7 @@ public class Board implements Serializable {
         }
         return false;
     }
+
     /**
      * Method takeTiles(List<Pair<Integer, Integer>>)
      * @author Angelo Di Rosa
