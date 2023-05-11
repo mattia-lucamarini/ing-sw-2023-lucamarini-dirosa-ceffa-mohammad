@@ -215,7 +215,7 @@ public class Board implements Serializable {
                     }
                     else if(sides.size()==0){
                         this.putItBack(positions, tilevalues);
-                        throw new RuntimeException("The move is not valid. NO EMPTY CELLS AROUND");
+                        throw new RuntimeException("The move is not valid. NO EMPTY CELLS AROUND" );
                     }
                     else{
                         grid[x][y].assignValue(Tiles.VALID);
