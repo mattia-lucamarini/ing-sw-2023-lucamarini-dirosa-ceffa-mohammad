@@ -44,7 +44,7 @@ public class CommonGoal implements Goal {
             return 0;
         }
         else {
-            // Return the next point bonus on the stack.
+            // Constraint reached.
             return 1;
         }
     }
