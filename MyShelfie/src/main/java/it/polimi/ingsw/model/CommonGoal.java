@@ -36,7 +36,7 @@ public class CommonGoal implements Goal {
      * Method checkGoal
      * @author Shaffaeet Mohammad
      * @param shelf shelf within which the constraint will be checked.
-     * Checks if the goal has been achieved within the given shelf and returns the amount of points earned.
+     * Checks if the goal has been achieved within the given shelf.
      * */
     public int checkGoal(Shelf shelf) {
         if (points.empty() || !constraint.test(shelf)) {
@@ -52,7 +52,8 @@ public class CommonGoal implements Goal {
     public void rechargePoints(List<Integer> points) {
         this.points.addAll(points);
     }
-    public int takePoints(){
+
+    public int takePoints() {
         try {
             return points.pop();
         } catch (EmptyStackException e){
