@@ -38,6 +38,7 @@ public class Client {
 
     public static void main(String[] args) {
         System.out.println("Welcome!\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
+        System.out.print("> ");
         Scanner sc = new Scanner(System.in);
         switch (sc.nextLine()){
             case "1":
