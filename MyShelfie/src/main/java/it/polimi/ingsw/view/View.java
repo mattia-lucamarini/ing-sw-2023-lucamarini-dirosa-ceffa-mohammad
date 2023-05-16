@@ -58,10 +58,9 @@ public class View extends Application {
         root.getChildren().addAll(label,username,l2,socket,rmi,login);
         root.setSpacing(20);
         root.setAlignment(Pos.CENTER);
-        Scene scene1 = new Scene(root, 600, 400);
-
+        Scene scene1 = new Scene(mockup, 600, 400);
+        scene1.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage.setScene(scene1);
-
 
         stage.show();
     }
