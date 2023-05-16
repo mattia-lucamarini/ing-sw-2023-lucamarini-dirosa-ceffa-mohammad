@@ -1,16 +1,19 @@
 package it.polimi.ingsw.model;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.Stack;
-import java.util.function.Predicate;
 
 public class CommonGoalTest {
+    private int takePointsIfGoal(CommonGoal goal, Shelf shelf) {
+        if (goal.checkGoal(shelf) == 1) {
+            return goal.takePoints();
+        }
+        else return 0;
+    }
+
     @Test
     public void TestCheckGoalAdjacent() {
         Shelf shelf = ShelfTest.shelf2();
@@ -20,18 +23,18 @@ public class CommonGoalTest {
                 CommonGoalPredicate.Adjacent(6, 2),
                 List.of(1, 2, 3)
         );
-        Assert.assertEquals(0, adjacent6G2T.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(adjacent6G2T, shelf));
 
         // Should pass
         CommonGoal adjacent1G2T = new CommonGoal(
                 CommonGoalPredicate.Adjacent(1, 2),
                 List.of(1, 2, 3)
         );
-        Assert.assertEquals(3, adjacent1G2T.checkGoal(shelf));
-        Assert.assertEquals(2, adjacent1G2T.checkGoal(shelf));
-        Assert.assertEquals(1, adjacent1G2T.checkGoal(shelf));
-        Assert.assertEquals(0, adjacent1G2T.checkGoal(shelf));
-        Assert.assertEquals(0, adjacent1G2T.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(adjacent1G2T, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(adjacent1G2T, shelf));
+        Assert.assertEquals(1, takePointsIfGoal(adjacent1G2T, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(adjacent1G2T, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(adjacent1G2T, shelf));
     }
 
     @Test
@@ -44,22 +47,22 @@ public class CommonGoalTest {
         );
 
         // TEST: Bottom row is not complete -> 0 points.
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
 
         // Complete the row.
         shelf.insertTiles(List.of(Pair.of(0, 4)), List.of(Tiles.PURPLE));
 
         // TEST: Now bottom row is complete -> 3 points; 2 points.
-        Assert.assertEquals(3, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(2, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(oneRow2Colors, shelf));
 
         // Add another color.
         shelf.insertTiles(List.of(Pair.of(0, 2)), List.of(Tiles.GREEN), true);
 
         // TEST: Now bottom row has 3 colors (max) -> 1 points; 0.
-        Assert.assertEquals(1, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(1, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
     }
 
     @Test
@@ -72,7 +75,7 @@ public class CommonGoalTest {
         );
 
         // TEST: Bottom column is not complete -> 0 points.
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
 
         // Complete the first column.
         shelf.insertTiles(
@@ -81,16 +84,16 @@ public class CommonGoalTest {
         );
 
         // TEST: Now first column is complete -> 3 points; 2 points.
-        Assert.assertEquals(3, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(2, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(oneRow2Colors, shelf));
 
         // Add another color.
         shelf.insertTiles(List.of(Pair.of(1, 0)), List.of(Tiles.GREEN), true);
 
         // TEST: Now first column has 3 colors (max) -> 1 points; 0.
-        Assert.assertEquals(1, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
-        Assert.assertEquals(0, oneRow2Colors.checkGoal(shelf));
+        Assert.assertEquals(1, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(oneRow2Colors, shelf));
     }
 
     @Test
@@ -102,7 +105,7 @@ public class CommonGoalTest {
         );
 
         // TEST: 6 purples -> 0 points.
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
 
         // Add 2 purples in different group.
         shelf.insertTiles(
@@ -111,10 +114,10 @@ public class CommonGoalTest {
         );
 
         // TEST: Now 8 purples total -> 3 points; 2 points.
-        Assert.assertEquals(3, goal.checkGoal(shelf));
-        Assert.assertEquals(2, goal.checkGoal(shelf));
-        Assert.assertEquals(1, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(1, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
     }
 
     @Test
@@ -131,17 +134,17 @@ public class CommonGoalTest {
         );
 
         // TEST: Shape not there -> 0 points.
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
 
         // Complete the shape.
         shelf.insertTiles(List.of(Pair.of(1, 2)), List.of(Tiles.PURPLE), true);
 
         // TEST: Now shape is complete -> 3 points; 2 points.
-        Assert.assertEquals(3, goal.checkGoal(shelf));
-        Assert.assertEquals(2, goal.checkGoal(shelf));
-        Assert.assertEquals(1, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(1, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
     }
 
     @Test
@@ -154,34 +157,34 @@ public class CommonGoalTest {
         );
 
         // TEST: One missing -> 0 points.
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
 
         // Complete the stairs by adding yellow back in.
         shelf.insertTiles(List.of(Pair.of(0, 4)), List.of(Tiles.YELLOW));
 
         // TEST: Now stairs are complete -> 3 points; 2 points.
-        Assert.assertEquals(3, goal.checkGoal(shelf));
-        Assert.assertEquals(2, goal.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(goal, shelf));
 
         // Add another tile.
         shelf.insertTiles(List.of(Pair.of(1, 4)), List.of(Tiles.YELLOW));
 
         // TEST: Stairs are still there -> 1 points; 0.
-        Assert.assertEquals(1, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(1, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
 
         // Invert stairs.
         shelf.reflect();
 
         // TEST: Stairs are still there -> 3 points; 2; 0.
         goal.rechargePoints(List.of(2, 3));
-        Assert.assertEquals(3, goal.checkGoal(shelf));
-        Assert.assertEquals(2, goal.checkGoal(shelf));
-        Assert.assertEquals(0, goal.checkGoal(shelf));
+        Assert.assertEquals(3, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(2, takePointsIfGoal(goal, shelf));
+        Assert.assertEquals(0, takePointsIfGoal(goal, shelf));
     }
 
-    // Testiamo la funzione "all"
+    // Testiamo la funzione "all".
     @Test
     public void testAllRandomDraw() {
         Shelf shelf = ShelfTest.shelf2();
@@ -190,7 +193,7 @@ public class CommonGoalTest {
         var allGoals = CommonGoal.all(4);
         Collections.shuffle(allGoals);
         for (var goal : allGoals) {
-            Assert.assertTrue(List.of(2, 4, 6, 8, 0).contains(goal.checkGoal(shelf)));
+            Assert.assertTrue(List.of(2, 4, 6, 8, 0).contains(takePointsIfGoal(goal, shelf)));
         }
     }
 }

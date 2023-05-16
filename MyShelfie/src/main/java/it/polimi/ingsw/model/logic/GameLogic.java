@@ -8,7 +8,6 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Class: GameLogic
@@ -24,11 +23,12 @@ public class GameLogic implements Runnable, Logic {
     private final int numPlayers;
     private final int gameID;
     private boolean isActive;
+    private boolean fullShelf;
     private Board board;
     private Bag bag;
     private Pair<CommonGoalCard, CommonGoalCard> commonGoals;
     private HashMap<String, PersonalGoalCard> personalGoals;
-    private List<String> playerOrder;
+    private ArrayList<String> playerOrder;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
         this.clientList = clientList;
@@ -36,7 +36,8 @@ public class GameLogic implements Runnable, Logic {
         this.gameID = gameID;
         this.isActive = true;
         this.playerPoints = new HashMap<>();
-        this.personalGoals = new HashMap<String, PersonalGoalCard>();
+        this.personalGoals = new HashMap<>();
+        this.fullShelf = false;
     }
     @Override
     public void run(){
@@ -65,7 +66,7 @@ public class GameLogic implements Runnable, Logic {
                 if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
                     throw new NoMessageToReadException();
                 else
-                    System.out.println(username + " is ready");
+                    System.out.println("[GAME " + gameID + "]" + username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
@@ -74,36 +75,53 @@ public class GameLogic implements Runnable, Logic {
         }
         //DISTRIBUTE TILES
         board.refillBoard();
-        //START GAME
-        System.out.println("[GAME " + gameID + "] Now starting..");
-        for (String username : clientList.keySet()){
-            try {
-                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
-            } catch (ClientDisconnectedException e){
-                System.out.println(username + "disconnected while sending game start notification");
-            }
-        }
+
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
         Collections.shuffle(playerOrder);
         System.out.print("\n[GAME " + gameID + "] Player order: ");
         for (String pl : playerOrder)
-            System.out.print(pl+" ");
+            System.out.print(pl + " ");
         System.out.println();
 
+        //START GAME
+        System.out.println("[GAME " + gameID + "] Now starting..");
+        for (String username : clientList.keySet()){
+            try {
+                clientList.get(username).sendingWithRetry(new PlayerOrder(playerOrder), ATTEMPTS, WAITING_TIME);
+                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
+            } catch (ClientDisconnectedException e){
+                System.out.println(username + "disconnected while sending game start notification");
+            }
+        }
+
         //START TURNS
-        boolean fullShelf = false;
         while (!fullShelf){
+            System.out.println("[GAME " + gameID + "] Starting round");
         for (String pl : playerOrder)
-            fullShelf = playTurn(pl);
+            playTurn(pl);
         }
 
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
         for (String pl : playerOrder)
             assignPoints(pl);
+        System.out.println("\n[GAME " + gameID + "] FINAL SCORES: ");
+        ArrayList<Pair<String, Integer>> orderedPoints = new ArrayList<>();
+        for (Map.Entry<String, Integer> score : playerPoints.entrySet())
+            orderedPoints.add(new Pair(score.getKey(), score.getValue()));
 
-        System.out.println("[GAME " + gameID + "] FINAL SCORES: ");
-        playerPoints.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((Map.Entry<String, Integer> pl) -> System.out.println(pl.getKey() + ": " + pl.getValue() + " points."));
+        orderedPoints.sort(Comparator.comparing(Pair::getSecond));
+        Collections.reverse(orderedPoints);
+        for (int i = 0; i < orderedPoints.size(); i++)
+            System.out.println(i+1+": "+ orderedPoints.get(i).getFirst() + " (" + orderedPoints.get(i).getSecond()+" punti)");
+        System.out.println(orderedPoints.get(0).getFirst() + " wins!");
+        for (String pl : clientList.keySet()) {
+            try {
+                clientList.get(pl).sendingWithRetry(new FinalScore(orderedPoints), ATTEMPTS, WAITING_TIME);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
     @Override
     public boolean isActive() {
@@ -114,7 +132,7 @@ public class GameLogic implements Runnable, Logic {
         return false;
     }
 
-    public boolean playTurn(String player){
+    public void playTurn(String player){
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
@@ -127,81 +145,109 @@ public class GameLogic implements Runnable, Logic {
                 System.out.println("[GAME " + gameID + "] " + e);
             }
         }
-        while (true) {
-            try{
-                boolean goalNotificationReceived = false;
-                boolean fullShelfNotificationReceived = false;
-                boolean fullShelf = false;
-                boolean turnOverNotificationReceived = false;
 
-                while (!goalNotificationReceived) {
-                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
-                        goalNotificationReceived = true;
-                        if (((CommonGoalReached) message).getPosition() != 2) {
-                            System.out.println("[GAME " + gameID + "] " + player + " completed goal " + ((CommonGoalReached) message).getPosition());
-                            switch (((CommonGoalReached) message).getPosition()) {
-                                case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
-                                case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
-                                default -> throw new UnsupportedOperationException();
-                            }
-                            for (String username : clientList.keySet())
-                                try {
-                                    clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
-                                } catch (ClientDisconnectedException e) {
-                                    System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
-                                }
-                        } else {
-                            System.out.println("[GAME " + gameID + "] " + player + " did not complete any goal");
-                            clientList.get(player).sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
-                        }
-                    }
-                }
+        try{
+            boolean moveNotificationReceived = false;
+            boolean goalNotificationReceived = false;
+            boolean fullShelfNotificationReceived = false;
+            boolean turnOverNotificationReceived = false;
+            int pickedTiles = 0;
+            ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
-                while (!fullShelfNotificationReceived) {
-                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
-                        fullShelf = true;
-                        fullShelfNotificationReceived = true;
-                        System.out.println("[GAME " + gameID + "] " + player + " completed their shelf!");
-                        playerPoints.put(player, playerPoints.get(player) + 1);
-                        for (String username : clientList.keySet()) {
-                            try {
-                                clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e) {
-                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Full Shelf notification");
-                            }
-                        }
-                    }
-                    else if (message.getMessageType() == MessageCode.FULL_SHELF && !((FullShelf) message).getOutcome()) {
-                        fullShelfNotificationReceived = true;
-                        System.out.println("[GAME " + gameID + "] " + player + " didn't complete the shelf.");
-                        clientList.get(player).sendingWithRetry(new FullShelf(player, false), ATTEMPTS, WAITING_TIME);
+            while (!moveNotificationReceived){
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                if (message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
+                    try {
+                        pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
+                            if (pickedTiles > 3)
+                                throw new RuntimeException("Too many tiles (" + pickedTiles + ")");
+                        board.takeTiles(((ChosenTiles) message).getPlayerMove());
+                        clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
+                        playerPick.addAll(((ChosenTiles) message).getPlayerMove());
+                    } catch (RuntimeException e) {
+                        System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
+                        clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
                     }
                 }
-                while (!turnOverNotificationReceived) {
-                    message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (message.getMessageType() == MessageCode.TURN_OVER) {
-                        turnOverNotificationReceived = true;
-                        for (String username : clientList.keySet()) {
-                            System.out.println("[GAME " + gameID + "] " + username + " ended their turn.");
-                            try {
-                                clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e) {
-                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
-                            }
-                        }
-                        return fullShelf;
+                else if (message.getMessageType() == MessageCode.TURN_OVER){
+                    for (String username : clientList.keySet()){
+                        if (!username.equals(player))
+                            clientList.get(username).sendingWithRetry(new ChosenTiles(playerPick), ATTEMPTS, WAITING_TIME);
                     }
+                    moveNotificationReceived = true;
                 }
-            } catch (NoMessageToReadException ignored){}
-            catch (ClientDisconnectedException e){
-                System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
-                return false;
             }
-        }
+            while (!goalNotificationReceived) {
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
+                    goalNotificationReceived = true;
+                    if (((CommonGoalReached) message).getPosition() != 2) {
+                        System.out.println("[GAME " + gameID + "] " + player + " completed goal " + ((CommonGoalReached) message).getPosition());
+                        switch (((CommonGoalReached) message).getPosition()) {
+                            case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
+                            case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
+                            default -> throw new UnsupportedOperationException();
+                        }
+                        for (String username : clientList.keySet())
+                            try {
+                                clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
+                            } catch (ClientDisconnectedException e) {
+                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
+                            }
+                    } else {
+                        System.out.println("[GAME " + gameID + "] " + player + " did not complete any goal");
+                        clientList.get(player).sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
+                    }
+                }
+            }
 
+            while (!fullShelfNotificationReceived) {
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
+                    fullShelf = true;
+                    fullShelfNotificationReceived = true;
+                    System.out.println("[GAME " + gameID + "] " + player + " completed their shelf!");
+                    playerPoints.put(player, playerPoints.get(player) + 1);
+                    for (String username : clientList.keySet()) {
+                        try {
+                            clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e) {
+                            System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Full Shelf notification");
+                        }
+                    }
+                }
+                else if (message.getMessageType() == MessageCode.FULL_SHELF && !((FullShelf) message).getOutcome()) {
+                    fullShelfNotificationReceived = true;
+                    System.out.println("[GAME " + gameID + "] " + player + " didn't complete the shelf.");
+                    clientList.get(player).sendingWithRetry(new FullShelf(player, false), ATTEMPTS, WAITING_TIME);
+                }
+            }
+            while (!turnOverNotificationReceived) {
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                if (message.getMessageType() == MessageCode.TURN_OVER) {
+                    turnOverNotificationReceived = true;
+                    for (String username : clientList.keySet()) {
+                        try {
+                            clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e) {
+                            System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
+                        }
+                    }
+                }
+            }
+            message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+            if (message.getMessageType() == MessageCode.SHELF_CHECK){
+                for (String pl : playerOrder){
+                    if (!pl.equals(player))
+                        clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
+                }
+            }
+        } catch (NoMessageToReadException ignored){}
+        catch (ClientDisconnectedException e){
+            System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
+        }
     }
+
     public void assignPoints(String player){
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         do {
@@ -216,7 +262,7 @@ public class GameLogic implements Runnable, Logic {
         } while (message.getMessageType() != MessageCode.SHELF_CHECK);
         int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
-        System.out.println("[GAME " + gameID + "]" + player + " has gained " + personalGoalScore + " points from their personal goal.");
+        System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) ((ShelfCheck) message).getShelf().findTileGroups();
 
@@ -231,7 +277,7 @@ public class GameLogic implements Runnable, Logic {
             else if (group.getSecond() >= 6)
                 gainedPoints = 8;
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);
-            System.out.println("[GAME " + gameID + "]" + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
+            System.out.println("[GAME " + gameID + "] " + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
         }
 
     }

@@ -192,8 +192,8 @@ public class Shelf implements Serializable {
 
     public void printShelf(){
         for(int i = ROWS-1 ; i >= 0; --i){
-            System.out.print(i + "\t");
-            for(int j = COLUMNS-1; j>=0; --j){
+            System.out.print(i + " ");
+            for(int j = 0; j < COLUMNS; ++j){
                 if (matrix[i][j] == Tiles.NOTVALID)
                     System.out.print(" ");
                 else if (matrix[i][j] == Tiles.VALID)
@@ -205,7 +205,7 @@ public class Shelf implements Serializable {
             System.out.print("\n");
         }
         System.out.print("  ");
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < COLUMNS; i++)
             System.out.print(i + " ");
         System.out.print("\n");
     }
