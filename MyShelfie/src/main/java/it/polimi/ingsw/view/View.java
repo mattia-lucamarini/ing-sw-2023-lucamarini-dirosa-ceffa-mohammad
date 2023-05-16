@@ -6,13 +6,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -31,6 +29,17 @@ public class View extends Application {
         TextField username = new TextField("Type your username here");
         username.setFont(font);
         System.out.println(username.getText());
+        Label l2 = new Label("Choose which connection you would like to use;");
+        l2.setFont(font);
+        ToggleGroup group = new ToggleGroup();
+        RadioButton socket = new RadioButton("SOCKET");
+        socket.setFont(font);
+        socket.setUserData("Socket");
+        socket.setToggleGroup(group);
+        RadioButton rmi = new RadioButton("RMI");
+        rmi.setFont(font);
+        rmi.setUserData("RMI");
+        rmi.setToggleGroup(group);
         Button login = new Button("Send");
         login.setFont(font);
         login.setOnAction(new EventHandler<ActionEvent>() {
@@ -38,9 +47,15 @@ public class View extends Application {
             public void handle(ActionEvent actionEvent) {
                 String us = username.getText();
                 Player player = new Player(us);
+                if(group.getSelectedToggle()==rmi){
+                    //do rmi -- to discuss
+                }
+                else{
+                    //do socket -- to discuss
+                }
             }
         });
-        root.getChildren().addAll(label,username,login);
+        root.getChildren().addAll(label,username,l2,socket,rmi,login);
         root.setSpacing(20);
         root.setAlignment(Pos.CENTER);
         Scene scene1 = new Scene(root, 600, 400);
