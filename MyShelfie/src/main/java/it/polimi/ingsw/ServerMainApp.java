@@ -19,7 +19,7 @@ public class ServerMainApp {
         System.out.println("Welcome to the Server Command Line Interface!");
         System.out.println();
         try {
-            WebServer webServer = new WebServer("test");
+            WebServer webServer = new WebServer("production");
             webServer.launchKernel();
         }
         catch(Exception a){

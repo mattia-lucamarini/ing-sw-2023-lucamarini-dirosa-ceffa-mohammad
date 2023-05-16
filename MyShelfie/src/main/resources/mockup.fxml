@@ -14,7 +14,7 @@
    <children>
       <ImageView fitHeight="400.0" fitWidth="429.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../../../../assets/boards/livingroom.png" />
+            <Image url="assets/boards/livingroom.png" />
          </image>
       </ImageView>
       <TabPane layoutX="400.0" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
@@ -25,7 +25,7 @@
                      <children>
                         <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="25.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@../../../../assets/boards/bookshelf.png" />
+                              <Image url="assets/boards/bookshelf.png" />
                            </image>
                         </ImageView>
                      </children>
@@ -38,7 +38,7 @@
                      <children>
                         <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="25.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@../../../../assets/boards/bookshelf.png" />
+                              <Image url="assets/boards/bookshelf.png" />
                            </image>
                         </ImageView>
                      </children>
@@ -51,12 +51,12 @@
          <children>
             <ImageView fitHeight="67.0" fitWidth="102.0" layoutY="50.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../assets/common goal cards/1.jpg" />
+                  <Image url="assets/common goal cards/1.jpg" />
                </image>
             </ImageView>
             <ImageView fitHeight="69.0" fitWidth="101.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../assets/common goal cards/2.jpg" />
+                  <Image url="assets/common goal cards/2.jpg" />
                </image>
             </ImageView>
          </children>
@@ -65,7 +65,7 @@
          <children>
             <ImageView fitHeight="133.0" fitWidth="86.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../assets/personal goal cards/Personal_Goals.png" />
+                  <Image url="assets/personal goal cards/Personal_Goals.png" />
                </image>
             </ImageView>
             <VBox prefHeight="131.0" prefWidth="114.0">
