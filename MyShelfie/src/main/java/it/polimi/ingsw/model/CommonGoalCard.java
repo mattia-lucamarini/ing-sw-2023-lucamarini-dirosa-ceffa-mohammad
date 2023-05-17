@@ -20,8 +20,8 @@ public class CommonGoalCard extends Card {
         goal = new CommonGoal(null, null);
         commonpointer = CommonGoal.all(numPlayers);
         int t = 0;
-        for (int i = 0; i < 2; i++)
-            t =  val.nextInt(commonpointer.size() - i);
+        t =  val.nextInt(commonpointer.size());
+        //System.out.println("Goal number " + t);
         goal = commonpointer.get(t);
         commonpointer.remove(t);
         goalIndex = t;

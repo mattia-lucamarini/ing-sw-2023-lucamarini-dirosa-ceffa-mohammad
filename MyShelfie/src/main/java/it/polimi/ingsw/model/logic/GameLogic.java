@@ -47,6 +47,10 @@ public class GameLogic implements Runnable, Logic {
 
         //SEND PERSONAL AND COMMON GOALS
         commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
+        while(commonGoals.getFirst().getGoalIndex() == commonGoals.getSecond().getGoalIndex()){
+            //System.out.println("Goals index are the same, picking another one");
+            commonGoals = Pair.of(commonGoals.getFirst(), new CommonGoalCard(numPlayers));
+        }
         for (String username : clientList.keySet()){
             try {
                 playerPoints.put(username, 0);
