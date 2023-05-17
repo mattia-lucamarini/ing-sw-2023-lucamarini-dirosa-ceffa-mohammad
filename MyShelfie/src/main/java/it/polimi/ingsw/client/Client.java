@@ -7,9 +7,6 @@ import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 import it.polimi.ingsw.view.View;
-import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 
 import java.net.Socket;
 import java.util.ArrayList;
@@ -72,7 +69,7 @@ public class Client {
             }
             try {
                 TimeUnit.MILLISECONDS.sleep(500);
-            }catch(InterruptedException ignored){
+            } catch (InterruptedException ignored) {
             }
 
             //RECEIVING NUMREQUEST
@@ -93,7 +90,7 @@ public class Client {
                 Scanner t = new Scanner(System.in);
                 System.out.print("Insert player number: ");
                 int num = t.nextInt();
-                while(num<1 || num >4){
+                while (num < 1 || num > 4) {
                     System.out.println("The number of players must be between 1-4!");
                     System.out.print("Inserire numero di giocatori: ");
                     num = t.nextInt();
@@ -268,11 +265,12 @@ public class Client {
                                                 board: print board
                                                 shelf: print shelf
                                                 take: extract the tiles specified by your coordinates
-                                                insert: put your tiles into the shelf""");
+                                                insert: put your tiles into the shelf
+                                                done: end your turn""");
                                         break;
                                     case "take":
                                         if (totalPick.size() == 0) {
-                                            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type nothing if you are done.");
+                                            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type 'done' if you are done.");
                                             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                                                 System.out.print("\t" + (i + 1) + "> ");
                                                 String tilePick = sc.nextLine();
@@ -283,7 +281,7 @@ public class Client {
                                                 } else if (tilePattern.matcher(tilePick).find()) {
                                                     Scanner pickScanner = new Scanner(tilePick);
                                                     totalPick.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
-                                                } else if (tilePick.equals("") && totalPick.size() > 0)
+                                                } else if (tilePick.equals("done") && totalPick.size() > 0)
                                                     break;
                                                 else {
                                                     System.out.println("\tInvalid command. Type the row, followed by whitespace and the column.");
@@ -319,7 +317,7 @@ public class Client {
                                             System.out.println("You have no available tiles to insert.");
                                             break;
                                         }
-                                        System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.");
+                                        System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.");
                                         System.out.println("Your tiles: ");
                                         for (int i = 0; i < pickedTiles.size(); i++)
                                             System.out.println(i + ": " + pickedTiles.get(i));
@@ -460,7 +458,9 @@ public class Client {
                     }
                 }
             }
-        } catch (Exception ignored){}
+        } catch (Exception e){
+            System.out.println(e);
+        }
     }
 
 }
