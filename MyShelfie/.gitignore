@@ -91,6 +91,3 @@ fabric.properties
 # Desktop Services Store files (Mac)
 .DS_Store
 **/.DS_Store
-
-# Docker in developing phase
-Dockerfile
