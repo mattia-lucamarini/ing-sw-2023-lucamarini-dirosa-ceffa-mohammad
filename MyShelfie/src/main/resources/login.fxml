@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.Pane?>
+
+
+<Pane fx:controller = "it.polimi.ingsw.view.ViewHandler" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="337.0" prefWidth="476.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label fx:id="l1" layoutX="175.0" layoutY="50.0" text="Welcome to MyShelfie!" />
+      <Label fx:id="l2" layoutX="160.0" layoutY="93.0" text="Please insert your username:" />
+      <TextField fx:id="text" layoutX="158.0" layoutY="123.0" opacity="0.5" text="&quot;type your username here&quot;" />
+      <RadioButton fx:id="socket" layoutX="202.0" layoutY="198.0" mnemonicParsing="false" text="SOCKET">
+         <toggleGroup>
+            <ToggleGroup fx:id="connection" />
+         </toggleGroup>
+      </RadioButton>
+      <RadioButton fx:id="rmi" layoutX="216.0" layoutY="230.0" mnemonicParsing="false" text="RMI" toggleGroup="$connection" />
+      <Label fx:id="l3" layoutX="175.0" layoutY="169.0" text="Select your connection:" />
+      <Button fx:id="loginbutton" layoutX="215.0" layoutY="276.0" mnemonicParsing="false" onAction="#login" text="Send" />
+   </children>
+</Pane>
