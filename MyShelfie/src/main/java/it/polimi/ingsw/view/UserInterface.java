@@ -3,63 +3,64 @@ package it.polimi.ingsw.view;
 import it.polimi.ingsw.model.Pair;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Tiles;
+import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 
 import java.util.ArrayList;
 
 
 public interface UserInterface {
+    void printErrorMessage(String error);
 
-void printErrorMessage(String error);
+    void printMessage(String msg);
 
-Player askForUsername();
+    Player askForUsername();
 
-int askForNumOfPlayers();
+    int askForNumOfPlayers(ClientHandler cl);
 
-void manageLogin(boolean status);
+    //void manageLogin(boolean status);
 
-void showPersonalGoal(int goalNumber);
+    void showPersonalGoal(int goalNumber);
 
-void showCommonGoals(int goalNumber1, int goalNumber2);
+    void showCommonGoals(int goalNumber1, int goalNumber2);
 
-void waitForOtherPlayers();
+    ArrayList<String> waitForOtherPlayers(ClientHandler cl);
 
-void showPlayersOrder(ArrayList<String> order);
+    void showPlayersOrder(ArrayList<String> order);
 
-void showStartGame();
+    void showGameStart();
 
-void turnNotification();
+    void turnNotification(String nowPlaying);
 
-String getCommand();
+    String getCommand();
 
-void boardCommand();
+    void boardCommand();
 
-void shelfCommand();
+    void shelfCommand();
 
-void helpCommand();
+    void helpCommand();
 
-ArrayList<Pair<Integer, Integer>> takeCommand();
+    ArrayList<Tiles> takeCommand();
 
-Pair<Pair<Integer, Integer>, Tiles> insertCommand();
+    void insertCommand(ArrayList<Tiles> pickedTiles);
 
-void doneCommand();
+    boolean doneCommand();
 
-void unknownCommand();
+    void unknownCommand();
 
-void commonGoalReached();
+    void commonGoalReached(int index, int goalScore);
 
-void shelfCompleted();
+    void shelfCompleted();
 
-void turnCompleted();
+    void turnCompleted();
 
-void showWhoIsPlaying(String username);
+    void showWhoIsPlaying(String username);
 
-void someoneReachedCommonGoal(String username, Integer position, Integer points);
+    void someoneReachedCommonGoal(String username, Integer position, Integer points);
 
-void someoneCompletedShelf(String username);
+    void someoneCompletedShelf(String username);
 
-void showPersonalGoalAchievement(Integer personalGoalPoints, Integer groupPoints, Integer groups);
+    void showPersonalGoalAchievement(int points);
 
-void finalRank(ArrayList<Pair<String, Integer>> playerPoints);
-
-
+    void finalScore();
+    void finalRank(ArrayList<Pair<String, Integer>> playerPoints);
 }
