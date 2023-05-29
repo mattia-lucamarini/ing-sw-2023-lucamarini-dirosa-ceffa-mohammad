@@ -15,14 +15,16 @@ docker build -t web-server .
 ```
  docker run -d -p 59090:59090 -p 1099:1099 --name web-server web-server
 ```
-Now the Web Server is running in background container !
+Now the Web Server is running in a background container !
+
+Notice: if you want to run it not in background, drop '-d'.
 
 ### Stop the container:
 ```
 docker container stop web-server
 ```
 ### Run the container the next time:
-The next time you want to run container it's enough to run:
+The next time you want to run the container it's enough to run:
 ```
 docker container start web-server
 ```
