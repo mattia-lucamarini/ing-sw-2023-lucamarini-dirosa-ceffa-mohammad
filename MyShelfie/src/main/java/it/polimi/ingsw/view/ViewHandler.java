@@ -75,7 +75,7 @@ public class ViewHandler {
         Pane gamelayout = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/game.fxml")));
         boardgrid = (GridPane) gamelayout.getChildren().get(0);
         shelfgrid = (GridPane) gamelayout.getChildren().get(1);
-        //boardgrid.add(new ImageView("Cornici1.1.png") ,0,0);
+        boardgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm())) ,0,0);
         Scene gameplay = new Scene(gamelayout, 800, 601);
         stage = (Stage)(((Node)e.getSource()).getScene().getWindow());
         stage.setScene(gameplay);
