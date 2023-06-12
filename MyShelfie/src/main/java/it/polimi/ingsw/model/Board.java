@@ -199,7 +199,7 @@ public class Board implements Serializable {
             }
             else{
                 tilevalues.add(grid[x][y].getTile());
-                if(grid[x][y].isNotValid()){
+                if(grid[x][y].isNotValid() || grid[x][y].isEmpty()){
                     this.putItBack(positions, tilevalues);
                     throw new RuntimeException("This cell is not available for the game");
                 }
