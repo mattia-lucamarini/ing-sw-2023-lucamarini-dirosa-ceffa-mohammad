@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane fx:id="numberOfPlayers" fx:controller="it.polimi.ingsw.view.ViewHandler" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="253.0" prefWidth="386.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <RadioButton fx:id="two" layoutX="177.0" layoutY="109.0" mnemonicParsing="false" onAction="#numberOfPlayersController" text="2" toggleGroup="$numplayers">
+         <toggleGroup>
+            <ToggleGroup fx:id="numplayers" />
+         </toggleGroup>
+      </RadioButton>
+      <RadioButton fx:id="three" layoutX="177.0" layoutY="140.0" mnemonicParsing="false" onAction="#numberOfPlayersController" prefHeight="18.0" prefWidth="31.0" text="3" toggleGroup="$numplayers" />
+      <RadioButton fx:id="four" layoutX="177.0" layoutY="170.0" mnemonicParsing="false" onAction="#numberOfPlayersController" text="4" toggleGroup="$numplayers" />
+      <Label layoutX="95.0" layoutY="40.0" text="Please select the number of players:" />
+   </children>
+</AnchorPane>
