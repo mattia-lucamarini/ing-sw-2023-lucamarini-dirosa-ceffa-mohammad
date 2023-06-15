@@ -44,5 +44,9 @@ public class View extends Application{
     public Stage getStage(){
         return stage1;
     }
+
+    public void showNumScreen(Stage stage) throws IOException {
+        throw new RuntimeException("To implement");
+    }
 }
 

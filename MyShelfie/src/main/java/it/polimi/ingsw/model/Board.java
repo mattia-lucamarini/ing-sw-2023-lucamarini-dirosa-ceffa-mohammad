@@ -254,7 +254,7 @@ public class Board implements Serializable {
      * @param moves the player's move
      * @param t a List of tile values of the player's selected cells
      * @author Angelo Di Rosa
-     * This method restore the cells by putting their original tile on it whenever a player makes a wrong move.
+     * This method restores the cells by putting their original tile on it whenever a player makes a wrong move.
      */
     public void putItBack(List<Pair<Integer,Integer>> moves, List<Tiles> t){
         for(int i = 0; i < t.size(); ++i){

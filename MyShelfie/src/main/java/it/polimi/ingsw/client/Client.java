@@ -10,6 +10,7 @@ import it.polimi.ingsw.view.CLIInterface;
 import it.polimi.ingsw.view.UserInterface;
 import it.polimi.ingsw.view.View;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,7 +117,12 @@ public class Client {
         }
 
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
-            userInterface.askForNumOfPlayers(clientHandler);
+            try {
+                userInterface.askForNumOfPlayers(clientHandler);
+            } catch (IOException e) {
+                throw new RuntimeException("To implement");
+            }
+
             try {
                 message = clientHandler.receivingWithRetry(10, 2);
             } catch (NoMessageToReadException e) {

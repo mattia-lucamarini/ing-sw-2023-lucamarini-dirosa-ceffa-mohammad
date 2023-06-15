@@ -28,15 +28,16 @@ public class BoardTest {
         Assert.assertFalse(board.checkStatus());
 
         // Remove tiles.
+        board.printBoard();
         for (int r = 0; r < 9; r += 2) {
             for (int c = 0; c < 9; c++) {
-                if (board.getTile(r, c) != Tiles.NOTVALID)
+                if (!List.of(Tiles.NOTVALID, Tiles.VALID).contains(board.getTile(r, c)))
                     board.takeTiles(List.of(Pair.of(r, c)));
             }
         }
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c += 2) {
-                if (board.getTile(r, c) != Tiles.NOTVALID)
+                if (!List.of(Tiles.NOTVALID, Tiles.VALID).contains(board.getTile(r, c)))
                     board.takeTiles(List.of(Pair.of(r, c)));
             }
         }
