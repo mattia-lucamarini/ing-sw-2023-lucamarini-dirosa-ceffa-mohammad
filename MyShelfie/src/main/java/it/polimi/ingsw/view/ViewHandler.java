@@ -1,7 +1,12 @@
 package it.polimi.ingsw.view;
 
+import com.sun.javafx.scene.control.skin.FXVK;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Tiles;
+import it.polimi.ingsw.network.message.Message;
+import it.polimi.ingsw.view.MessageView.*;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -23,16 +28,21 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ViewHandler {
-    private final GUIClient client;
     private int flag=-1, nump;
     private String username;
     private String conn;
     private Stage stage;
-    private GUIInterface gui;
     private boolean answer = false;
+    private static Object lock = new Object();
+    private GUIClient client;
+    private GUIInterface gui;
+    private GraphicLogic glogic;
+    private ConcurrentLinkedQueue<MessageView> sendedfromgui;
+    private View view;
     @FXML
     TextField text;
     @FXML
@@ -53,12 +63,69 @@ public class ViewHandler {
     ImageView commongoal2;
     @FXML
     ImageView stack1, stack2, iw1;
-    public ViewHandler(GUIClient client){
-        this.client = client;
+    @FXML
+    Label l1;
+   /*public ViewHandler(GUIClient client){
+       //this.lock = lock;
+       //this.answer = answer;
+       this.client = client;
+    }*/
+
+    public ViewHandler(Stage stage, View view){
+        this.gui = new GUIInterface();
+        this.glogic = new GraphicLogic(gui);
+        this.stage = stage;
+        this.view = view;
+        Thread t = new Thread(()->{glogic.init();});
+        t.start();
+        Thread kernel = new Thread(()->{
+            MessageView message;
+            sendedfromgui = gui.getSendedQueue();
+            do{
+                message = sendedfromgui.poll();
+            }while(message==null);
+
+            switch (message.getType()){
+                case NEXT_SCENE:
+                    Platform.runLater(()->{
+                    FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/numberOfPlayers.fxml")));
+                    loader.setController(this);
+                    Parent numPlayers = null;
+                    try {
+                        numPlayers = loader.load();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    Scene scene2 = new Scene(numPlayers, 480, 340);
+                    scene2.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
+                    stage.setScene(scene2);
+                    stage.show();});
+                    break;
+                case ERROR_MESSAGE:
+                    String error = ((ErrorMessage)message).getLabel();
+                    Platform.runLater(()->{
+                        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
+                        loader.setController(this);
+                        Parent errorscene = null;
+                        try {
+                            errorscene = loader.load();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        l1.setText(error);
+                        Scene scene3 = new Scene(errorscene, 480, 340);
+                        scene3.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
+                        stage.setScene(scene3);
+                        stage.show();});
+                    break;
+
+            }
+        });
+        kernel.start();
     }
 
-    public void login(ActionEvent e){
-        System.out.println("3");
+    public void login(ActionEvent e) throws IOException {
+
         username = text.getText();
         if(connection.getSelectedToggle()==socket){
             conn = "socket";
@@ -66,25 +133,28 @@ public class ViewHandler {
         else {
             conn = "rmi";
         }
+        MessageView message = new PayloadUsername(username,conn);
+        gui.addMessage(message);
         System.out.println("4");
-        client.data();
         //System.out.println("Username "+ username + "\nConnection selected: "+ conn);
         //send these info to the user interface when done.
         //if it is the first user to log in, it shows the number of players scene.
         //num of players scene.
         //if it is not the first user to log in, shows the game board etc..
-        //Parent game = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
+        Parent game = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
         /*Pane gamelayout = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/game.fxml")));
         boardgrid = (GridPane) gamelayout.getChildren().get(0);
         shelfgrid = (GridPane) gamelayout.getChildren().get(1);
         iw1 = (ImageView) boardgrid.getChildren().get(0);
-        iw1.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
-        Scene gameplay = new Scene(gamelayout, 800, 601);
+        iw1.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));*/
+        Scene gameplay = new Scene(game, 800, 601);
         stage = (Stage)(((Node)e.getSource()).getScene().getWindow());
         stage.setScene(gameplay);
-        stage.show();*/
+        stage.show();
     }
+
     public void numberOfPlayersController(ActionEvent e){
+
             if(numplayers.getSelectedToggle()==two){
                 nump=2;
             }
@@ -94,6 +164,8 @@ public class ViewHandler {
             else if(numplayers.getSelectedToggle()==four){
                 nump=4;
             }
+            MessageView message = new NumPlayers(nump);
+            gui.addMessage(message);
     }
     public void boardcellselected(ActionEvent e){
 
@@ -102,8 +174,8 @@ public class ViewHandler {
 
     }
 
-    public String getUsername(){
-        return username;
+    public String getUsername() {
+       return username;
     }
     public int getNump(){
         return nump;
@@ -111,4 +183,5 @@ public class ViewHandler {
     public Boolean getAnswer(){
         return answer;
     }
+
 }
