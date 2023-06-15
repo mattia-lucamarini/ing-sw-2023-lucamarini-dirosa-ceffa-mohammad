@@ -2,15 +2,21 @@ package it.polimi.ingsw.client;
 
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiInterface;
 import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
+import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 import it.polimi.ingsw.view.CLIInterface;
 import it.polimi.ingsw.view.UserInterface;
 import it.polimi.ingsw.view.View;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,9 +43,37 @@ public class Client {
     private static boolean gameOn;
 
     public static void main(String[] args) {
-        System.out.println("Welcome!\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
+        //SELECT NETWORK MODE AND INTERFACE TYPE
+        System.out.println("Welcome!\n Type 1 if you'd like to play using sockets\n Type 2 if you'd like to play using RMI");
         System.out.print("> ");
         Scanner sc = new Scanner(System.in);
+        Socket socket;
+        Registry registry;
+        RmiServerInterface RmiServer;
+        RmiInterface rmiClientService;
+        try {
+            switch (sc.nextLine()) {
+                case "1":
+                    socket = new Socket("127.0.0.1", 59090);
+                    clientHandler = new SocketClientHandler(socket);
+                    break;
+                case "2":
+                    registry = LocateRegistry.getRegistry();
+                    RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
+                    rmiClientService = RmiServer.getRmiClientService();
+                    clientHandler = new RmiClientHandler(rmiClientService);
+                    break;
+                default:
+                    System.out.println("Invalid option. Defaulting to sockets");
+                    socket = new Socket("127.0.0.1", 59090);
+                    clientHandler = new SocketClientHandler(socket);
+                    break;
+            }
+        } catch (Exception e){
+            System.out.println(e);
+        }
+        System.out.println("\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
+        System.out.print("> ");
         switch (sc.nextLine()){
             case "1":
                 userInterface = new CLIInterface();
@@ -51,14 +85,14 @@ public class Client {
                 break;
         }
 
-        try (Socket socket = new Socket("127.0.0.1", 59090)){
-            clientHandler = new SocketClientHandler(socket);
+        //CONNECT TO SERVER AND START GAME PROCESSING
+        try {
             clientHandler.receivingKernel();
             clientHandler.pingKernel();
 
-            while (!login(socket))
+            while (!login())
                 ;
-            while (!goalProcessing(socket))
+            while (!goalProcessing())
                 ;
             waitForOrder();
 
@@ -85,11 +119,11 @@ public class Client {
         }
     }
 
-    private static boolean login(Socket socket) {
+    private static boolean login() {
         //LOGIN REQUEST
         boolean flag = false;
         try {
-            flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), 1, 1);
+            flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e) {
             userInterface.printErrorMessage("Disconnected from the server before sending log in request.");
             return false;
@@ -106,7 +140,7 @@ public class Client {
         //RECEIVING NUMREQUEST
         Message message = null;
         try {
-            message = clientHandler.receivingWithRetry(2, 1);
+            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
         } catch (NoMessageToReadException e) {
             userInterface.printErrorMessage("No message received after sending the login request");
             return false;
@@ -116,7 +150,12 @@ public class Client {
         }
 
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
-            userInterface.askForNumOfPlayers(clientHandler);
+            try {
+                userInterface.askForNumOfPlayers(clientHandler);
+            } catch (IOException e) {
+                throw new RuntimeException("To implement");
+            }
+
             try {
                 message = clientHandler.receivingWithRetry(10, 2);
             } catch (NoMessageToReadException e) {
@@ -142,7 +181,7 @@ public class Client {
             return false;
         }
     }
-    private static boolean goalProcessing(Socket socket) {
+    private static boolean goalProcessing() {
         //PROCESS PERSONAL GOAL
         Message message;
         while (goalCard == null || commonGoals == null) {

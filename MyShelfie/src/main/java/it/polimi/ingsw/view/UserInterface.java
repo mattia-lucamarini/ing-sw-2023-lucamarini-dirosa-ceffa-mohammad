@@ -5,6 +5,7 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Tiles;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -15,7 +16,7 @@ public interface UserInterface {
 
     Player askForUsername();
 
-    int askForNumOfPlayers(ClientHandler cl);
+    int askForNumOfPlayers(ClientHandler cl) throws IOException;
 
     //void manageLogin(boolean status);
 

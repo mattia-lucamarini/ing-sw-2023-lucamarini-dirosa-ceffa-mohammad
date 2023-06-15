@@ -6,6 +6,20 @@ import org.junit.Test;
 import java.util.List;
 
 public class BoardTest {
+    public static Board rulesExBoard(int numplayers) {
+        return new Board(numplayers, List.of(
+                'I', 'I', 'I', '3', '4', 'I', 'I', 'I', 'I',
+                'I', 'I', 'I', 'V', 'V', '4', 'I', 'I', 'I',
+                'I', 'I', 'B', 'Y', 'B', 'L', '3', 'I', 'I',
+                'I', 'B', 'P', 'G', 'Y', 'Y', 'L', 'V', '3',
+                'P', 'P', 'G', 'Y', 'W', 'L', 'W', 'V', '4',
+                '3', 'V', 'V', 'W', 'P', 'L', 'V', '4', 'I',
+                'I', 'I', '3', 'V', 'Y', 'B', '3', 'I', 'I',
+                'I', 'I', 'I', 'G', 'L', 'B', 'I', 'I', 'I',
+                'I', 'I', 'I', 'I', '4', '3', 'I', 'I', 'I'
+        ));
+    }
+
     @Test
     public void testNoRefillAfterFirstMove() {
         // Make full board for 4 players.
@@ -28,15 +42,16 @@ public class BoardTest {
         Assert.assertFalse(board.checkStatus());
 
         // Remove tiles.
+        board.printBoard();
         for (int r = 0; r < 9; r += 2) {
             for (int c = 0; c < 9; c++) {
-                if (board.getTile(r, c) != Tiles.NOTVALID)
+                if (!List.of(Tiles.NOTVALID, Tiles.VALID).contains(board.getTile(r, c)))
                     board.takeTiles(List.of(Pair.of(r, c)));
             }
         }
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c += 2) {
-                if (board.getTile(r, c) != Tiles.NOTVALID)
+                if (!List.of(Tiles.NOTVALID, Tiles.VALID).contains(board.getTile(r, c)))
                     board.takeTiles(List.of(Pair.of(r, c)));
             }
         }

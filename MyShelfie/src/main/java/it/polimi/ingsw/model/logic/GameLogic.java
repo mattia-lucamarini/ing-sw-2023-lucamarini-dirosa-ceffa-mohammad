@@ -30,7 +30,7 @@ public class GameLogic implements Runnable, Logic {
     private HashMap<String, PersonalGoalCard> personalGoals;
     private ArrayList<String> playerOrder;
 
-    public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
+    public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
         this.numPlayers = clientList.size();
         this.gameID = gameID;
@@ -38,7 +38,13 @@ public class GameLogic implements Runnable, Logic {
         this.playerPoints = new HashMap<>();
         this.personalGoals = new HashMap<>();
         this.fullShelf = false;
+        this.board = board;
     }
+
+    public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
+        this(clientList, gameID, null);
+    }
+
     @Override
     public void run(){
         System.out.println("\nPreparing game " + gameID);
@@ -70,7 +76,7 @@ public class GameLogic implements Runnable, Logic {
                 if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
                     throw new NoMessageToReadException();
                 else
-                    System.out.println("[GAME " + gameID + "]" + username + " is ready");
+                    System.out.println("[GAME " + gameID + "] " + username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
@@ -137,6 +143,7 @@ public class GameLogic implements Runnable, Logic {
     }
 
     public void playTurn(String player){
+        // Broadcast player turn to others
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
@@ -239,6 +246,8 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
+
+            // TODO: Maybe needs to be surrounded by while?
             message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
             if (message.getMessageType() == MessageCode.SHELF_CHECK){
                 for (String pl : playerOrder){

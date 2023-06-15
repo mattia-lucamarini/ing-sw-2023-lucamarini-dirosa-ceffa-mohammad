@@ -225,7 +225,7 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void unknownCommand(){
-        System.out.println("Unknown command");
+        System.out.println("Unknown command.");
     }
     @Override
     public void commonGoalReached(int i, int goalScore){

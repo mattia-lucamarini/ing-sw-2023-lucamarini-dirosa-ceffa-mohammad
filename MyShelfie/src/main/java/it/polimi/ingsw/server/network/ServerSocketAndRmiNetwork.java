@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
  * Implementation of ServerNetworkManager using Socket network technology
  */
 public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
+    private static final int ATTEMPTS = 25;
+    private static final int WAITING_TIME = 5;
     private final int port;
     private final ServerSocket listener;
     private final RmiServerService accepter;
@@ -84,7 +86,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                 try {
                     LoginRequest message = null;
                     try{
-                        message = (LoginRequest) clientHandler.receivingWithRetry(2, 1);
+                        message = (LoginRequest) clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     }catch(NoMessageToReadException e){
                         throw new ClientDisconnectedException();
                     }
@@ -157,11 +159,11 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
      */
     private int askForNumPlayers(String username, ClientHandler clientHandler) throws ClientDisconnectedException {
         boolean status = clientHandler.sendingWithRetry(new Message(MessageCode.NUM_PLAYERS_REQUEST),
-                3,2);
+                ATTEMPTS,WAITING_TIME);
         if(!status ) throw new ClientDisconnectedException();
         NumPlayersMessage message = null;
         try {
-            message = (NumPlayersMessage) clientHandler.receivingWithRetry(30, 2);
+            message = (NumPlayersMessage) clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
         }catch(NoMessageToReadException e){
             throw new ClientDisconnectedException();  //if the client doesn't give us the number of players in a
             //reasonable time, we close the connection with him to avoid to create a queue of waiting clients
