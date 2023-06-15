@@ -76,7 +76,7 @@ public class GameLogic implements Runnable, Logic {
                 if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
                     throw new NoMessageToReadException();
                 else
-                    System.out.println("[GAME " + gameID + "]" + username + " is ready");
+                    System.out.println("[GAME " + gameID + "] " + username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
             } catch (NoMessageToReadException nme){
