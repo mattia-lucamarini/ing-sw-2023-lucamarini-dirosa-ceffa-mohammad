@@ -72,7 +72,7 @@ public class Client {
         } catch (Exception e){
             System.out.println(e);
         }
-        System.out.println("\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
+        System.out.println(" Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
         System.out.print("> ");
         switch (sc.nextLine()){
             case "1":

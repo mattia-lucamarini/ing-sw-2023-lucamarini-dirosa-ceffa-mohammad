@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 public class BoardTest {
-    public static Board rulesExBoard(int numplayers) {
+    public static Board rulesExampleBoard(int numplayers) {
         return new Board(numplayers, List.of(
                 'I', 'I', 'I', '3', '4', 'I', 'I', 'I', 'I',
                 'I', 'I', 'I', 'V', 'V', '4', 'I', 'I', 'I',
