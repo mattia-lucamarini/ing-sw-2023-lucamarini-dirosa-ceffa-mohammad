@@ -7,6 +7,7 @@ import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -97,9 +98,12 @@ public class GraphicLogic {
         }
 
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
-            userInterface.askForNumOfPlayers(clientHandler);
             try {
+                userInterface.askForNumOfPlayers(clientHandler);
                 message = clientHandler.receivingWithRetry(10, 2);
+            } catch (IOException e) {
+                userInterface.printErrorMessage("Input output error");
+                return false;
             } catch (NoMessageToReadException e) {
                 userInterface.printErrorMessage("No message received after sending the num player message");
                 return false;

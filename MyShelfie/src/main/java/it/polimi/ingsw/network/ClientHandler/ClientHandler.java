@@ -52,7 +52,7 @@ abstract public class ClientHandler {
      * @throws ClientDisconnectedException if there is no message to read and the client is no more connected
      */
     public Message receive() throws NoMessageToReadException, ClientDisconnectedException {
-        if(! this.messageQueue.isEmpty()){
+        if(!this.messageQueue.isEmpty()){
             return this.messageQueue.poll();
         }
         else{

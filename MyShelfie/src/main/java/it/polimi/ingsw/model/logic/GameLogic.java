@@ -45,11 +45,20 @@ public class GameLogic implements Runnable, Logic {
         this(clientList, gameID, null);
     }
 
+    public Board getBoard() {
+        return board;
+    }
+
     @Override
     public void run(){
         System.out.println("\nPreparing game " + gameID);
-        this.board = new Board(numPlayers);
         this.bag = new Bag();
+
+        //DISTRIBUTE TILES
+        if (board == null) {
+            this.board = new Board(numPlayers);
+            board.refillBoard();
+        }
 
         //SEND PERSONAL AND COMMON GOALS
         commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
@@ -83,8 +92,6 @@ public class GameLogic implements Runnable, Logic {
                 System.out.println("[GAME " + gameID + "] No Personal Goal confirmation was received");
             }
         }
-        //DISTRIBUTE TILES
-        board.refillBoard();
 
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
@@ -108,8 +115,8 @@ public class GameLogic implements Runnable, Logic {
         //START TURNS
         while (!fullShelf){
             System.out.println("[GAME " + gameID + "] Starting round");
-        for (String pl : playerOrder)
-            playTurn(pl);
+            for (String pl : playerOrder)
+                playTurn(pl);
         }
 
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
@@ -133,10 +140,12 @@ public class GameLogic implements Runnable, Logic {
             }
         }
     }
+
     @Override
     public boolean isActive() {
         return isActive;
     }
+
     @Override
     public boolean reconnectPlayer(String username, ClientHandler clientHandler) { //  -- to implement --
         return false;
@@ -250,7 +259,7 @@ public class GameLogic implements Runnable, Logic {
             // TODO: Maybe needs to be surrounded by while?
             message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
             if (message.getMessageType() == MessageCode.SHELF_CHECK){
-                for (String pl : playerOrder){
+                for (String pl : clientList.keySet()){
                     if (!pl.equals(player))
                         clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
                 }

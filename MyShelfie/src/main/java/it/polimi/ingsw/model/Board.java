@@ -1,9 +1,10 @@
 package it.polimi.ingsw.model;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.List;
+import java.sql.SQLOutput;
+import java.util.*;
 
 /**
  * Class: Board
@@ -90,6 +91,29 @@ public class Board implements Serializable {
                 this.grid[r][c].assignValue(Tiles.fromChar(initMatrix.get(i)));
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board = (Board) o;
+        return Arrays.deepEquals(grid, board.grid) && bag.equals(board.bag);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(bag);
+        result = 31 * result + Arrays.deepHashCode(grid);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Board{\n" +
+                "grid:\n" + gridToString() + ",\n" +
+                "bag=" + bag + "\n" +
+                "}";
     }
 
     public Tiles getTile(int row, int column) {
@@ -281,23 +305,30 @@ public class Board implements Serializable {
         }
     }
 
-    public void printBoard(){
+    public String gridToString(){
+        var buf = new StringBuffer();
         for(int i = 0 ; i < 9; ++i){
-            System.out.print(i + "\t");
+            buf.append(i).append("\t");
             for(int j = 0; j < 9; ++j){
                 if (grid[i][j].getTile() == Tiles.NOTVALID)
-                    System.out.print(" ");
+                    buf.append(" ");
                 else if (grid[i][j].getTile() == Tiles.VALID)
-                    System.out.print("-");
+                    buf.append("-");
                 else
-                    System.out.print(grid[i][j].getTile().toString().charAt(0));
-                System.out.print(" ");
-                }
-            System.out.print("\n");
+                    buf.append(grid[i][j].getTile().toString().charAt(0));
+                buf.append(" ");
             }
-        System.out.print("    ");
-        for (int i = 0; i < 9; i++)
-            System.out.print(i + " ");
-        System.out.print("\n");
+            buf.append("\n");
         }
+        buf.append("    ");
+        for (int i = 0; i < 9; i++)
+            buf.append(i).append(" ");
+        buf.append("\n");
+
+        return buf.toString();
     }
+
+    public void printBoard() {
+        System.out.println(gridToString());
+    }
+}
