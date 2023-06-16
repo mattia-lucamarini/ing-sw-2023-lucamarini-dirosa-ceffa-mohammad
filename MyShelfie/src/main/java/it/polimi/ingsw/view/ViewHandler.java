@@ -113,12 +113,24 @@ public class ViewHandler {
                             e.printStackTrace();
                         }
                         l1.setText(error);
+                        l1.setAlignment(Pos.CENTER);
                         Scene scene3 = new Scene(errorscene, 480, 340);
                         scene3.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene3);
                         stage.show();});
                     break;
-
+                case GENERIC_MESSAGE:
+                    String msg = ((NotificationMessage) message).getText();
+                    Platform.runLater(()->{
+                        Popup popup = new Popup();
+                        popup.setAutoHide(true);
+                        Label label = new Label(msg);
+                        popup.getContent().add(label);
+                        while(!popup.isShowing()){
+                            popup.show(stage);
+                        }
+                        popup.hide();
+                    });
             }
         });
         kernel.start();
@@ -141,15 +153,15 @@ public class ViewHandler {
         //if it is the first user to log in, it shows the number of players scene.
         //num of players scene.
         //if it is not the first user to log in, shows the game board etc..
-        Parent game = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
+        Parent waiting = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
         /*Pane gamelayout = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/game.fxml")));
         boardgrid = (GridPane) gamelayout.getChildren().get(0);
         shelfgrid = (GridPane) gamelayout.getChildren().get(1);
         iw1 = (ImageView) boardgrid.getChildren().get(0);
         iw1.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));*/
-        Scene gameplay = new Scene(game, 800, 601);
+        Scene waitingScene = new Scene(waiting, 480, 340);
         stage = (Stage)(((Node)e.getSource()).getScene().getWindow());
-        stage.setScene(gameplay);
+        stage.setScene(waitingScene);
         stage.show();
     }
 

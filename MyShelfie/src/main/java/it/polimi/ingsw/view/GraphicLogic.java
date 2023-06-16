@@ -2,12 +2,18 @@ package it.polimi.ingsw.view;
 
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
+import it.polimi.ingsw.network.ClientHandler.RmiServices.RmiInterface;
 import it.polimi.ingsw.network.ClientHandler.SocketClientHandler;
 import it.polimi.ingsw.network.message.*;
+import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +24,7 @@ public class GraphicLogic {
     private static final int WAITING_TIME = 5;
     public static Player player;
     public static ClientHandler clientHandler;
-    private static UserInterface userInterface;
+    private static GUIInterface userInterface;
     public static PersonalGoalCard goalCard;
     private static Pair<CommonGoal, CommonGoal> commonGoals;
     private static ArrayList<CommonGoal> goalList;
@@ -32,15 +38,38 @@ public class GraphicLogic {
     }
 
     public void init(){
-        player = userInterface.askForUsername();
-        try (Socket socket = new Socket("127.0.0.1", 59090)){
+        Socket socket;
+        Registry registry;
+        RmiServerInterface RmiServer;
+        RmiInterface rmiClientService;
+        Pair<String, String> credentials = userInterface.askForUsername();
+        player = new Player(credentials.getFirst());
+        String connection = credentials.getSecond();
+        try{
+        if(connection == "socket"){
+            socket = new Socket("127.0.0.1", 59090);
             clientHandler = new SocketClientHandler(socket);
+        }
+        else if(connection == "rmi"){
+            registry = LocateRegistry.getRegistry();
+            RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
+            rmiClientService = RmiServer.getRmiClientService();
+            clientHandler = new RmiClientHandler(rmiClientService);
+        }
+        else{
+            userInterface.printMessage("Invalid option. Defaulting to sockets");
+            socket = new Socket("127.0.0.1", 59090);
+            clientHandler = new SocketClientHandler(socket);}
+        } catch (Exception e){
+            System.out.println(e);
+        }
+        try {
             clientHandler.receivingKernel();
             clientHandler.pingKernel();
 
-            while (!login(socket))
+            while (!login())
                 ;
-            while (!goalProcessing(socket))
+            while (!goalProcessing())
                 ;
             waitForOrder();
 
@@ -66,11 +95,12 @@ public class GraphicLogic {
             System.out.println(e);
         }
     }
-    private static boolean login(Socket socket) {
+
+    private static boolean login() {
         //LOGIN REQUEST
         boolean flag = false;
         try {
-            flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), 1, 1);
+            flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e) {
             userInterface.printErrorMessage("Disconnected from the server before sending log in request.");
             return false;
@@ -87,7 +117,7 @@ public class GraphicLogic {
         //RECEIVING NUMREQUEST
         Message message = null;
         try {
-            message = clientHandler.receivingWithRetry(2, 1);
+            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
         } catch (NoMessageToReadException e) {
             userInterface.printErrorMessage("No message received after sending the login request");
             return false;
@@ -97,7 +127,12 @@ public class GraphicLogic {
         }
 
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
-            userInterface.askForNumOfPlayers(clientHandler);
+            try {
+                userInterface.askForNumOfPlayers(clientHandler);
+            } catch (IOException e) {
+                throw new RuntimeException("To implement");
+            }
+
             try {
                 message = clientHandler.receivingWithRetry(10, 2);
             } catch (NoMessageToReadException e) {
@@ -123,7 +158,7 @@ public class GraphicLogic {
             return false;
         }
     }
-    private static boolean goalProcessing(Socket socket) {
+    private static boolean goalProcessing() {
         //PROCESS PERSONAL GOAL
         Message message;
         while (goalCard == null || commonGoals == null) {
@@ -303,5 +338,4 @@ public class GraphicLogic {
             userInterface.finalRank(playerPoints);
         }
     }
-
 }
