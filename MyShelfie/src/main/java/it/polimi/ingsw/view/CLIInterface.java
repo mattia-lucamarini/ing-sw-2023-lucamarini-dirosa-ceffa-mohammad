@@ -10,7 +10,6 @@ import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -186,33 +185,43 @@ public class CLIInterface implements UserInterface{
     }
 
     @Override
-    public void insertCommand(ArrayList<Tiles> pickedTiles){
+    public void insertCommand(ArrayList<Tiles> pickedTiles) {
         if (pickedTiles.size() == 0) {
             System.out.println("You have no available tiles to insert.");
             return;
         }
-        System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.");
-        System.out.println("Your tiles: ");
-        for (int i = 0; i < pickedTiles.size(); i++)
-            System.out.println(i + ": " + pickedTiles.get(i));
+        System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
 
         tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");
-        System.out.print("\t> ");
-        String shelfMove = sc.nextLine();
-        if (shelfMove.equals("cancel")) {
-            return;
-        } else if (tilePattern.matcher(shelfMove).find() && totalPick.size() <= 3) {
-            Scanner pickScanner = new Scanner(shelfMove);
-            int moveIndex = pickScanner.nextInt();
-            Tiles pick = pickedTiles.get(moveIndex);
-            Pair<Integer, Integer> pickPosition = Pair.of(pickScanner.nextInt(), pickScanner.nextInt());
-            try {
-                Client.player.getShelf().insertTiles(new ArrayList<>(List.of(pickPosition)), new ArrayList<>(List.of(pick)));
-                pickedTiles.remove(moveIndex);
-                System.out.println("Done.");
-            } catch (RuntimeException e) {
-                System.out.println(e.getMessage());
+        ArrayList<Pair<Integer, Integer>> finalPositions = new ArrayList<>();
+        ArrayList<Tiles> finalTiles = new ArrayList<>();
+        ArrayList<Tiles> tempTiles = new ArrayList<>(pickedTiles.size());
+        tempTiles.addAll(pickedTiles);
+
+        for (int i = 0; i < pickedTiles.size(); i++) {
+            for (int j = 0; j < tempTiles.size(); j++)
+                System.out.println("\t" + j + ": " + tempTiles.get(j));
+            System.out.print("\t> ");
+            String shelfMove = sc.nextLine();
+            if (shelfMove.equals("cancel")) {
+                return;
+            } else if (tilePattern.matcher(shelfMove).find() && totalPick.size() <= 3) {
+                Scanner pickScanner = new Scanner(shelfMove);
+                int moveIndex = pickScanner.nextInt();
+                finalTiles.add(tempTiles.get(moveIndex));
+                finalPositions.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+                tempTiles.remove(moveIndex);
+            } else {
+                System.out.println("\tUnknown command, try again.");
+                i--;
             }
+        }
+        try {
+            Client.player.getShelf().insertTiles(finalPositions, finalTiles);
+            pickedTiles.clear();
+            System.out.println("Done.");
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
     @Override

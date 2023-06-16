@@ -18,7 +18,7 @@ public class Shelf implements Serializable {
     /**
      * Method: Shelf
      * Construct an empty shelf, validating the bottom row for tile placement.
-     * */
+     */
     public Shelf() {
         // Initialize matrix. Initially, you can only place tiles in bottom row (0).
         matrix = new Tiles[6][5];
@@ -35,7 +35,7 @@ public class Shelf implements Serializable {
         totalTiles = 0;
     }
 
-    public boolean isCellEmpty(int x, int y){
+    public boolean isCellEmpty(int x, int y) {
         return matrix[x][y].isEmpty();
     }
 
@@ -45,34 +45,41 @@ public class Shelf implements Serializable {
 
     /**
      * Method: insertTiles
+     *
      * @param positions list of positions to place the tiles
-     * @param colors colors of tiles that are placed (must be the same length as "positions")
-     * This method places tiles on the shelf. It throws an exception if the tiles aren't placed in a valid cell.
-     * It transforms the cells above the tiles that are placed into valid cells.
-     * */
+     * @param colors    colors of tiles that are placed (must be the same length as "positions")
+     *                  This method places tiles on the shelf. It throws an exception if the tiles aren't placed in a valid cell.
+     *                  It transforms the cells above the tiles that are placed into valid cells.
+     */
     public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors) {
         insertTiles(positions, colors, false);
     }
+
     public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors, boolean testMode) {
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
 
+        for (int i = 1; i < positions.size(); i++) {    //SAME COLUMN TEST
+            if (positions.get(i).getSecond() != positions.get(i - 1).getSecond()) {
+                throw new UnsupportedOperationException("All tiles need to be on the same column.");
+            }
+        }
         for (int i = 0; i < positions.size(); i++) {
             int x = positions.get(i).getFirst();
             int y = positions.get(i).getSecond();
 
             if (!testMode && !isCellValid(x, y)) {
-                throw new RuntimeException("Can't insert tile without other tiles underneath.");
+                throw new RuntimeException("Invalid position (" + x + ", " + y + ")");
             }
-            else {
-                matrix[x][y] = colors.get(i);
-                if (!testMode && x < 5) {
-                    matrix[x + 1][y] = Tiles.VALID;
-                }
-            }
+
+            matrix[x][y] = colors.get(i);
+            if (!testMode && x < 5)
+                matrix[x + 1][y] = Tiles.VALID;
         }
     }
+
+
 
 
     /**
@@ -217,3 +224,4 @@ public class Shelf implements Serializable {
     private Tiles[][] matrix;
     private int totalTiles;
 }
+
