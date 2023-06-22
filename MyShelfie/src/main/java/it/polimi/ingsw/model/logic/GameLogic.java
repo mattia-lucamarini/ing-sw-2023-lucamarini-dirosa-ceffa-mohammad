@@ -174,6 +174,7 @@ public class GameLogic implements Runnable, Logic {
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
+            // Make client pick tiles until turn end.
             while (!moveNotificationReceived){
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
@@ -220,7 +221,6 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-
             while (!fullShelfNotificationReceived) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
@@ -255,7 +255,6 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-
             // TODO: Maybe needs to be surrounded by while?
             message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
             if (message.getMessageType() == MessageCode.SHELF_CHECK){
