@@ -25,7 +25,7 @@ public class PersonalGoal implements Goal, Serializable {
      * Return constraint.
      * */
     @Override
-    public Object getConstraint() {
+    public HashMap<Pair<Integer, Integer>, Tiles> getConstraint() {
         return constraint;
     }
 

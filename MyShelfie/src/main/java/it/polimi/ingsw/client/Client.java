@@ -15,11 +15,11 @@ import it.polimi.ingsw.view.View;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -31,12 +31,11 @@ import java.util.concurrent.TimeUnit;
 public class Client {
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
-    public static Player player;
     public static ClientHandler clientHandler;
     private static UserInterface userInterface;
+    public static Player player;
     public static PersonalGoalCard goalCard;
-    private static Pair<CommonGoal, CommonGoal> commonGoals;
-    private static ArrayList<CommonGoal> goalList;
+    private static Pair<CommonGoalCard, CommonGoalCard> commonGoals;
     public static ArrayList<String> playerOrder;
     public static HashMap<String, Shelf> playerShelves;
     public static Board board;
@@ -47,7 +46,6 @@ public class Client {
         System.out.println("Welcome to My Shelfie!\n Type 1 if you'd like to play by using a TUI\n Type 2 if you'd like to play by using a GUI ");
         System.out.print("> ");
         Scanner sc = new Scanner(System.in);
-        Socket socket;
         Registry registry;
         RmiServerInterface RmiServer;
         RmiInterface rmiClientService;
@@ -60,8 +58,7 @@ public class Client {
                 try {
                     switch (sc.nextLine()) {
                         case "1":
-                            socket = new Socket("127.0.0.1", 59090);
-                            clientHandler = new SocketClientHandler(socket);
+                            connectSocket("127.0.0.1", 59090);
                             break;
                         case "2":
                             registry = LocateRegistry.getRegistry();
@@ -71,13 +68,12 @@ public class Client {
                             break;
                         default:
                             System.out.println("Invalid option. Defaulting to sockets");
-                            socket = new Socket("127.0.0.1", 59090);
-                            clientHandler = new SocketClientHandler(socket);
+                            connectSocket("127.0.0.1", 59090);
                             break;
                     }
-                player = userInterface.askForUsername();
+
                 } catch (Exception e){
-                    System.out.println(e);
+                    System.out.println("queso");
                 }
                 break;
             case "2":
@@ -101,9 +97,9 @@ public class Client {
             try {
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
-                userInterface.printErrorMessage("Not enough players to start a new game.");
+                userInterface.printErrorMessage("Didn't receive start message");
             } catch (ClientDisconnectedException e) {
-                userInterface.printErrorMessage("Disconnected from the server while waiting for other players.");
+                userInterface.printErrorMessage("Disconnected from the server while waiting for start message.");
             }
 
             if (message.getMessageType() == MessageCode.GAME_START) {
@@ -120,13 +116,33 @@ public class Client {
         }
     }
 
+
+    private static void connectSocket(String address, int port){
+        boolean connected = false;
+        while (!connected) {
+            try {
+                clientHandler = new SocketClientHandler(new Socket(address, port));
+                connected = true;
+            } catch (UnknownHostException e){
+                System.out.println("Could not determine " + address + ":" + port);
+                System.exit(1);
+            } catch (IOException e) {
+                System.out.println("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored){}
+            }
+        }
+    }
     private static boolean login() {
+
         //LOGIN REQUEST
         boolean flag = false;
+        player = userInterface.askForUsername();
         try {
             flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e) {
-            userInterface.printErrorMessage("Disconnected from the server before sending log in request.");
+            userInterface.printErrorMessage("Disconnected from the server while sending the log in request.");
             return false;
         }
         if (!flag) {
@@ -140,14 +156,15 @@ public class Client {
 
         //RECEIVING NUMREQUEST
         Message message = null;
-        try {
-            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-        } catch (NoMessageToReadException e) {
-            userInterface.printErrorMessage("No message received after sending the login request");
-            return false;
-        } catch (ClientDisconnectedException e) {
-            userInterface.printErrorMessage("Disconnected from the server after sending the login request.");
-            return false;
+        while (message == null){
+            try {
+                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+            } catch (NoMessageToReadException e) {
+                userInterface.printErrorMessage("No message received after sending the login request");
+            } catch (ClientDisconnectedException e) {
+                userInterface.printErrorMessage("Disconnected from the server after sending the login request.");
+                return false;
+            }
         }
 
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
@@ -156,15 +173,15 @@ public class Client {
             } catch (IOException e) {
                 throw new RuntimeException("To implement");
             }
-
-            try {
-                message = clientHandler.receivingWithRetry(10, 2);
-            } catch (NoMessageToReadException e) {
-                userInterface.printErrorMessage("No message received after sending the num player message");
-                return false;
-            } catch (ClientDisconnectedException e) {
-                userInterface.printErrorMessage("Disconnected from the server while waiting for log response after num player mess.");
-                return false;
+            while (message.getMessageType() != MessageCode.LOGIN_REPLY) {
+                try {
+                    message = clientHandler.receivingWithRetry(10, 2);
+                } catch (NoMessageToReadException e) {
+                    userInterface.printErrorMessage("No message received after sending the num player message");
+                } catch (ClientDisconnectedException e) {
+                    userInterface.printErrorMessage("Disconnected from the server while waiting for log response after num player mess.");
+                    return false;
+                }
             }
         }
 
@@ -211,7 +228,7 @@ public class Client {
             }
             if (message.getMessageType().equals(MessageCode.SET_COMMON_GOALS)) {
                 int numPlayers = ((SetCommonGoals) message).getNumPlayers();
-                commonGoals = new Pair<>(CommonGoal.all(numPlayers).get(((SetCommonGoals) message).getGoalsIndexes().getFirst()), CommonGoal.all(numPlayers).get(((SetCommonGoals) message).getGoalsIndexes().getFirst()));
+                commonGoals = new Pair<>(new CommonGoalCard(numPlayers, ((SetCommonGoals) message).getGoalsIndexes().getFirst()), new CommonGoalCard(numPlayers, ((SetCommonGoals) message).getGoalsIndexes().getSecond()));
                 userInterface.showCommonGoals(((SetCommonGoals) message).getGoalsIndexes().getFirst(), ((SetCommonGoals) message).getGoalsIndexes().getSecond());
             }
         }
@@ -228,7 +245,7 @@ public class Client {
     }
     private static void playTurn() throws ClientDisconnectedException, NoMessageToReadException {
                 Message message = new Message(MessageCode.GENERIC_MESSAGE);
-                do {
+                do {    //WAIT FOR EITHER PLAY_TURN MESSAGE OR END_GAME
                     try {
                         message = clientHandler.receivingWithRetry(100, WAITING_TIME);
                     } catch (NoMessageToReadException e) {
@@ -240,9 +257,9 @@ public class Client {
 
                 if (message.getMessageType() == MessageCode.PLAY_TURN) {
                     board = ((PlayTurn) message).getBoard();
-                    ArrayList<Tiles> pickedTiles = new ArrayList<>();
                     if (((PlayTurn) message).getUsername().equals(player.getUsername())) {  //OWN TURN
 
+                        ArrayList<Tiles> pickedTiles = new ArrayList<>();
                         //TEST ACTIONS
                         userInterface.turnNotification(player.getUsername());
                         boolean canContinue = false;
@@ -258,14 +275,18 @@ public class Client {
                                 case "help":
                                     userInterface.helpCommand();
                                     break;
-
+                                case "common":
+                                    userInterface.showCommonGoals(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex());
+                                    break;
+                                case "personal":
+                                    userInterface.showPersonalGoal(goalCard.getGoalIndex());
+                                    break;
                                 case "take":
                                     try {
                                         pickedTiles = userInterface.takeCommand();
                                     } catch (UnsupportedOperationException ignored) {
                                     }
                                     break;
-
                                 case "insert":
                                     userInterface.insertCommand(pickedTiles);
                                     break;
@@ -280,19 +301,24 @@ public class Client {
                         clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                         //CHECKING GOALS
                         boolean commonReached = false;
-                        goalList = new ArrayList<>(List.of(commonGoals.getFirst(), commonGoals.getSecond()));
-                        for (int i = 0; i < 2; i++) {
-                            if (goalList.get(i).checkGoal(player.getShelf()) == 1) {
-                                int goalScore = goalList.get(i).takePoints();
-                                if (goalScore > 0) {
-                                    commonReached = true;
-                                    userInterface.commonGoalReached(i, goalScore);
-                                    clientHandler.sendingWithRetry(new CommonGoalReached(i), ATTEMPTS, WAITING_TIME);
-                                }
+                        if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
+                            int goalScore = commonGoals.getFirst().getGoal().takePoints();
+                            if (goalScore > 0) {
+                                commonReached = true;
+                                userInterface.commonGoalReached(0, goalScore);
+                                clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
+                            }
+                        }
+                        if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1) {
+                            int goalScore = commonGoals.getSecond().getGoal().takePoints();
+                            if (goalScore > 0) {
+                                commonReached = true;
+                                userInterface.commonGoalReached(1, goalScore);
+                                clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
                             }
                         }
                         if (!commonReached)
-                            clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);
+                            clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
 
                         do {
                             message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -342,7 +368,10 @@ public class Client {
                                     System.out.println(e.getMessage());
                                 }
                             if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                                userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),((CommonGoalReached) message).getPosition(), goalList.get(((CommonGoalReached) message).getPosition()).takePoints());
+                                if (((CommonGoalReached) message).getPosition() == 0)
+                                    userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),((CommonGoalReached) message).getPosition(), commonGoals.getFirst().getGoal().takePoints());
+                                else if (((CommonGoalReached) message).getPosition() == 1)
+
                             if (message.getMessageType() == MessageCode.FULL_SHELF)
                                 userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                         } while (message.getMessageType() != MessageCode.TURN_OVER);

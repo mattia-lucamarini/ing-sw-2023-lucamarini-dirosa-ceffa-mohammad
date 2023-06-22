@@ -2,6 +2,7 @@ package it.polimi.ingsw.view;
 
 import it.polimi.ingsw.client.Client;
 import it.polimi.ingsw.model.Pair;
+import it.polimi.ingsw.model.PersonalGoal;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Tiles;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
@@ -10,6 +11,8 @@ import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -18,10 +21,13 @@ import static it.polimi.ingsw.client.Client.board;
 public class CLIInterface implements UserInterface{
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
+    private static final List<String> goalNames = List.of("6 groups of 2 equal tiles adjacent to each other", "4 tiles of the same type in each corner of the shelf", "6 groups of 4 equal tiles adjacent to each other", "2 squares of 4 equal tiles each", "3 columns of 6 tiles each having 1,2 or 3 different types", "8 equal tiles in any position on the shelf", "5 equal tiles diagonally placed", "4 rows of 5 tiles each having 1,2 or 3 different types", "2 columns each having 6 different tiles", "2 rows each having 5 different tiles", "5 equal tiles forming a cross", "5 columns in increasing or decreasing height forming a staircase with any type of tile");
     private Scanner sc = new Scanner(System.in);
     private ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
     private ArrayList<Tiles> pickedTiles = new ArrayList<>();
+    private List<PersonalGoal> personalGoals = PersonalGoal.all();
     Pattern tilePattern;
+
     @Override
     public Player askForUsername(){
         System.out.print("Insert your username: ");
@@ -60,11 +66,14 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void showPersonalGoal(int goalIndex){
-        System.out.println("Your personal goal is " + goalIndex);
+        System.out.println("Your personal goal is:");
+        for (Map.Entry<Pair<Integer, Integer>, Tiles> entry : personalGoals.get(goalIndex).getConstraint().entrySet()){
+            System.out.println("\t" + entry.getValue() + " in (" + entry.getKey().getFirst() + "," + entry.getKey().getSecond() + ")");
+        }
     }
     @Override
     public void showCommonGoals(int goal1, int goal2){
-        System.out.println("The common goals are " + goal1 + " and " + goal2);
+        System.out.println("The common goals are:\n\t" + goalNames.get(goal1) + "\n\t" + goalNames.get(goal2));
     }
     @Override
     public ArrayList<String> waitForOtherPlayers(ClientHandler clientHandler){
@@ -127,6 +136,8 @@ public class CLIInterface implements UserInterface{
         System.out.println("""
                                                 board: print board
                                                 shelf: print shelf
+                                                common: print common goals
+                                                personal: print personal goal
                                                 take: extract the tiles specified by your coordinates
                                                 insert: put your tiles into the shelf
                                                 done: end your turn""");

@@ -51,7 +51,7 @@ public class GameLogic implements Runnable, Logic {
 
     @Override
     public void run(){
-        System.out.println("\nPreparing game " + gameID);
+        System.out.println("\nPreparing [GAME " + gameID + "]");
         this.bag = new Bag();
 
         //DISTRIBUTE TILES
@@ -255,12 +255,13 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-            // TODO: Maybe needs to be surrounded by while?
-            message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-            if (message.getMessageType() == MessageCode.SHELF_CHECK){
-                for (String pl : clientList.keySet()){
-                    if (!pl.equals(player))
-                        clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
+            while (message.getMessageType() != MessageCode.SHELF_CHECK) {
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                if (message.getMessageType() == MessageCode.SHELF_CHECK) {
+                    for (String pl : clientList.keySet()) {
+                        if (!pl.equals(player))
+                            clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
+                    }
                 }
             }
         } catch (NoMessageToReadException ignored){}
