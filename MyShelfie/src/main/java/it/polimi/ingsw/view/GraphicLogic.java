@@ -63,6 +63,7 @@ public class GraphicLogic {
         } catch (Exception e){
             System.out.println(e);
         }
+
         try {
             clientHandler.receivingKernel();
             clientHandler.pingKernel();
@@ -143,9 +144,10 @@ public class GraphicLogic {
                 return false;
             }
         }
-
+        userInterface.showGameScene();
         //RECEIVING LOGIN REPLY
         if (message.getMessageType().equals(MessageCode.LOGIN_REPLY)) {
+
             if (((LoginReply) message).getOutcome()) {
                 userInterface.printMessage("\nClient added!");
                 return true;
@@ -216,15 +218,18 @@ public class GraphicLogic {
 
         if (message.getMessageType() == MessageCode.PLAY_TURN) {
             board = ((PlayTurn) message).getBoard();
+            userInterface.boardCommand();
             ArrayList<Tiles> pickedTiles = new ArrayList<>();
             if (((PlayTurn) message).getUsername().equals(player.getUsername())) {  //OWN TURN
 
                 //TEST ACTIONS
+                userInterface.setIsmyturn(true);
                 userInterface.turnNotification(player.getUsername());
                 boolean canContinue = false;
-                while (!canContinue) {
-                    String command = userInterface.getCommand();
-                    switch (command) {
+                canContinue = userInterface.getCommand();
+                if(!canContinue){
+                    canContinue = userInterface.getCommand();
+                    /*switch (command) {
                         case "board":
                             userInterface.boardCommand();
                             break;
@@ -250,9 +255,9 @@ public class GraphicLogic {
                             break;
                         default:
                             userInterface.unknownCommand();
-                    }
+                    }*/
                 }
-
+                System.out.println("if i show up too fast i did not stop");
                 clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                 //CHECKING GOALS
                 boolean commonReached = false;
@@ -337,5 +342,8 @@ public class GraphicLogic {
             ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
             userInterface.finalRank(playerPoints);
         }
+    }
+    public int getNumPlayers(){
+        return playerOrder.size();
     }
 }

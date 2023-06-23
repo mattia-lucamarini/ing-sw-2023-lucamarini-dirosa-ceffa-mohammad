@@ -331,4 +331,8 @@ public class Board implements Serializable {
     public void printBoard() {
         System.out.println(gridToString());
     }
+
+    public Cell[][] getGrid() {
+        return grid;
+    }
 }
