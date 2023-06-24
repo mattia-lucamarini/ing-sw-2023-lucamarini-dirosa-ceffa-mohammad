@@ -175,6 +175,7 @@ public class GameLogic implements Runnable, Logic {
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
             // Make client pick tiles until turn end.
+            // TODO: Player shouldn't be able to pick multiple disconnected tile-rows during the same turn.
             while (!moveNotificationReceived){
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {

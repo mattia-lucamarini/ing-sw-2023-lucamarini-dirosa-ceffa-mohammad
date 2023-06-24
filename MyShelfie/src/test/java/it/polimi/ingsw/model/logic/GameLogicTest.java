@@ -64,7 +64,7 @@ public class GameLogicTest {
     }
 
     @Test
-    public void testMarcoTakes2IntoEmptyShelf() throws NoMessageToReadException, ClientDisconnectedException {
+    public void testMarcoTakes2IntoEmptyShelfAndCheckNotifications() throws NoMessageToReadException, ClientDisconnectedException {
         var players = new ConcurrentHashMap<String, ClientHandler>();
 
         // Define Marco's turn: He takes 2 tiles, then 1 tile, then ends turn.
@@ -102,7 +102,7 @@ public class GameLogicTest {
         // Make Marco have 1 turn.
         gameLogic.playTurn("Marco");
 
-        // Check that client shelves have been updated with correct shelf.
+        // Check that other players receive the correct notifications from Marco's turn.
         for (var entry : players.entrySet()) {
             if (entry.getKey().equals("Marco")) continue;
 
