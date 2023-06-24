@@ -60,6 +60,14 @@ public class GameLogic implements Runnable, Logic {
         return board;
     }
 
+    public HashMap<String, Integer> getPlayerPoints() {
+        return new HashMap<>(playerPoints);
+    }
+
+    public Pair<CommonGoalCard, CommonGoalCard> getCommonGoals() {
+        return new Pair<>(commonGoals.getFirst(), commonGoals.getSecond());
+    }
+
     @Override
     public void run(){
         System.out.println("\nPreparing [GAME " + gameID + "]");
@@ -124,6 +132,7 @@ public class GameLogic implements Runnable, Logic {
                 playTurn(pl);
         }
 
+        //GAME END, CREATE PLAYER RANKING AND SEND TO ALL CLIENTS
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
         for (String pl : playerOrder)
             assignPoints(pl);
@@ -231,7 +240,7 @@ public class GameLogic implements Runnable, Logic {
                 }
             }
 
-            // Check if player has completed shelf (NB. game end)
+            // Check if player has completed shelf (NB. game end).
             while (!fullShelfNotificationReceived) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {

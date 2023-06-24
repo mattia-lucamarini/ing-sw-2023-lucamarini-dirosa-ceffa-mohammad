@@ -61,6 +61,14 @@ public class CommonGoal implements Goal {
         }
     }
 
+    public int peekPoints() {
+        try {
+            return points.peek();
+        } catch (EmptyStackException e){
+            return 0;
+        }
+    }
+
     /**
      * Method: all
      * This method creates and returns all 12 common goals that are present in the game, giving each an independent point

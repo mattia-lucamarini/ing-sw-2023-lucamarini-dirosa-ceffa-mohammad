@@ -149,14 +149,20 @@ public class GameLogicTest {
         players.put("Giorgio", mock(ClientHandler.class));
 
         // Build GameLogic with example board from rules.
-        var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
+        var game = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
+        var scoredPoints = game.getCommonGoals().getFirst().getGoal().peekPoints();
 
         // Make Marco have 1 turn.
-        gameLogic.playTurn("Marco");
+        game.playTurn("Marco");
+
+        // Check that common goal points have been attributed.
+        Assert.assertEquals(scoredPoints, game.getPlayerPoints().get("Marco").intValue());
 
         // Check that other players receive the correct notifications from Marco's turn.
         for (var entry : players.entrySet()) {
             if (entry.getKey().equals("Marco")) continue;
+
+            Assert.assertEquals(0, game.getPlayerPoints().get(entry.getKey()).intValue());
 
             var msgs = getMessagesFromMockClient(entry.getValue(), 5);
             Assert.assertEquals(MessageCode.PLAY_TURN,           msgs.get(0).getMessageType());
@@ -190,14 +196,19 @@ public class GameLogicTest {
         players.put("Giorgio", mock(ClientHandler.class));
 
         // Build GameLogic with example board from rules.
-        var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
+        var game = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
 
         // Make Marco have 1 turn.
-        gameLogic.playTurn("Marco");
+        game.playTurn("Marco");
+
+        // Check that common goal points have been attributed.
+        Assert.assertEquals(1, game.getPlayerPoints().get("Marco").intValue());
 
         // Check that other players receive the correct notifications from Marco's turn.
         for (var entry : players.entrySet()) {
             if (entry.getKey().equals("Marco")) continue;
+
+            Assert.assertEquals(0, game.getPlayerPoints().get(entry.getKey()).intValue());
 
             var msgs = getMessagesFromMockClient(entry.getValue(), 5);
             Assert.assertEquals(MessageCode.PLAY_TURN,           msgs.get(0).getMessageType());
