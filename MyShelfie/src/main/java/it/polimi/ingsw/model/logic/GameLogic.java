@@ -39,6 +39,17 @@ public class GameLogic implements Runnable, Logic {
         this.personalGoals = new HashMap<>();
         this.fullShelf = false;
         this.board = board;
+
+        // Initialize common goals.
+        commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
+        while(commonGoals.getFirst().getGoalIndex() == commonGoals.getSecond().getGoalIndex()){
+            //System.out.println("Goals index are the same, picking another one");
+            commonGoals = Pair.of(commonGoals.getFirst(), new CommonGoalCard(numPlayers));
+        }
+
+        // Initialize player points.
+        for (var username : clientList.keySet())
+            playerPoints.put(username, 0);
     }
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
@@ -61,14 +72,8 @@ public class GameLogic implements Runnable, Logic {
         }
 
         //SEND PERSONAL AND COMMON GOALS
-        commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
-        while(commonGoals.getFirst().getGoalIndex() == commonGoals.getSecond().getGoalIndex()){
-            //System.out.println("Goals index are the same, picking another one");
-            commonGoals = Pair.of(commonGoals.getFirst(), new CommonGoalCard(numPlayers));
-        }
         for (String username : clientList.keySet()){
             try {
-                playerPoints.put(username, 0);
                 System.out.println("[GAME " + gameID + "] Sending goals to " + username);
                 personalGoals.put(username, new PersonalGoalCard());
                 clientList.get(username)
@@ -151,12 +156,12 @@ public class GameLogic implements Runnable, Logic {
         return false;
     }
 
-    public void playTurn(String player){
+    public void playTurn(String player) {
         // Broadcast player turn to others
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
-        for (String username : clientList.keySet()){
+        for (String username : clientList.keySet()) {
             try {
                 clientList.get(username).sendingWithRetry(message, ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e) {
@@ -166,7 +171,7 @@ public class GameLogic implements Runnable, Logic {
             }
         }
 
-        try{
+        try {
             boolean moveNotificationReceived = false;
             boolean goalNotificationReceived = false;
             boolean fullShelfNotificationReceived = false;
@@ -174,7 +179,7 @@ public class GameLogic implements Runnable, Logic {
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
-            // Make client pick tiles until turn end.
+            // Make client pick tiles from board until turn end.
             // TODO: Player shouldn't be able to pick multiple disconnected tile-rows during the same turn.
             while (!moveNotificationReceived){
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -199,10 +204,13 @@ public class GameLogic implements Runnable, Logic {
                     moveNotificationReceived = true;
                 }
             }
+
+            // Check if player completes common goal.
             while (!goalNotificationReceived) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
                     goalNotificationReceived = true;
+                    // NB. 2 means goal not reached.
                     if (((CommonGoalReached) message).getPosition() != 2) {
                         System.out.println("[GAME " + gameID + "] " + player + " completed goal " + ((CommonGoalReached) message).getPosition());
                         switch (((CommonGoalReached) message).getPosition()) {
@@ -222,6 +230,8 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
+
+            // Check if player has completed shelf (NB. game end)
             while (!fullShelfNotificationReceived) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.FULL_SHELF && ((FullShelf) message).getOutcome()) {
@@ -243,6 +253,8 @@ public class GameLogic implements Runnable, Logic {
                     clientList.get(player).sendingWithRetry(new FullShelf(player, false), ATTEMPTS, WAITING_TIME);
                 }
             }
+
+            // Wait for turn over message from player to end turn.
             while (!turnOverNotificationReceived) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.TURN_OVER) {
@@ -256,6 +268,8 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
+
+            // Wait for updated shelf from player (send to other players to update their clients).
             while (message.getMessageType() != MessageCode.SHELF_CHECK) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.SHELF_CHECK) {
@@ -265,13 +279,14 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-        } catch (NoMessageToReadException ignored){}
-        catch (ClientDisconnectedException e){
+        }
+        catch (NoMessageToReadException ignored) {}
+        catch (ClientDisconnectedException e) {
             System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
         }
     }
 
-    public void assignPoints(String player){
+    public void assignPoints(String player) {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         do {
             try {
