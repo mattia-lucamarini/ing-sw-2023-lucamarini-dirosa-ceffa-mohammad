@@ -230,7 +230,14 @@ public class Board implements Serializable {
         int x, y, latestX = -2, latestY= -2;
         List<Pair<Integer, Integer>> sides;
         List<Tiles> tilevalues = new ArrayList<>();
-
+        int first_x = positions.get(0).getFirst();
+        int first_y = positions.get(0).getSecond();
+        int i=1;
+        if(!areInLineHorizontally(positions)){
+            if(!areInLineVertically(positions)){
+                throw new RuntimeException("Tiles are not on the same line");
+            }
+        }
         for(int k = 0; k < positions.size(); ++k){
             x = positions.get(k).getFirst();
             y = positions.get(k).getSecond();
@@ -303,6 +310,50 @@ public class Board implements Serializable {
             int y = moves.get(i).getSecond();
             grid[x][y].assignValue(t.get(i));
         }
+    }
+
+    public boolean areInLineHorizontally(List<Pair<Integer, Integer>> positions){
+        int temp_x = 0, temp_y=0;
+        if(positions.size()==1){
+            return true;
+        }
+        int i = 0;
+        while(i<positions.size()-1){
+            temp_x= positions.get(i+1).getFirst();
+            temp_y= positions.get(i+1).getSecond();
+            if(temp_x!=positions.get(i).getFirst()){
+                return false;
+            }
+            else{
+                if(temp_y != positions.get(i).getSecond()+1){
+                    return false;
+                }
+            }
+            ++i;
+        }
+        return true;
+    }
+
+    public boolean areInLineVertically(List<Pair<Integer, Integer>> positions){
+        int temp_x = 0, temp_y=0;
+        if(positions.size()==1){
+            return true;
+        }
+        int i = 0;
+        while(i<positions.size()-1){
+            temp_x= positions.get(i+1).getFirst();
+            temp_y= positions.get(i+1).getSecond();
+            if(temp_y!=positions.get(i).getSecond()){
+                return false;
+            }
+            else{
+                if(temp_x != positions.get(i).getFirst()+1){
+                    return false;
+                }
+            }
+            ++i;
+        }
+        return true;
     }
 
     public String gridToString(){
