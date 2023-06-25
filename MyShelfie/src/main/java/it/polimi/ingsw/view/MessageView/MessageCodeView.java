@@ -15,4 +15,7 @@ public enum MessageCodeView {
     SHOW_TILE,
     COMMON_REACHED,
     UPDATE_BOARD,
+    LABEL_CHANGE,
+    COMMAND,
+    LOGIN_SCREEN,
 }
