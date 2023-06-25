@@ -38,9 +38,11 @@ public class GameLogicTest {
         return captor.getAllValues();
     }
 
-    // TODO: this shouldn't pass. Wait for client fix.
     @Test
     public void testMarcoTakes2Then1Tiles() throws NoMessageToReadException, ClientDisconnectedException {
+        // TODO: this shouldn't pass. Wait for client fix.
+        Assert.assertFalse(true);
+
         var players = new ConcurrentHashMap<String, ClientHandler>();
 
         // Define Marco's turn. He takes 2 tiles, the 1 tile, then ends turn.
