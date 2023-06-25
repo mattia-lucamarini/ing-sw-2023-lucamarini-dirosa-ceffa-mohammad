@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
-    private final int port;
     private final ServerSocket listener;
     private final RmiServerService accepter;
     private final ConcurrentLinkedQueue<ClientHandler> waitingList;
@@ -39,14 +38,14 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
     /**
      * Default constructor
      *
-     * @param port specifies the port of the ServerSocket
+     * @param socketPort specifies the port of the ServerSocket
+     * @param rmiPort specifies the port of the RmiServerService
      * @throws IOException if the ServerSocket it's not correctly instantiated
      */
-    public ServerSocketAndRmiNetwork(int port) throws IOException {
-        this.port = port;
-        this.listener = new ServerSocket(this.port);
+    public ServerSocketAndRmiNetwork(int socketPort, int rmiPort) throws IOException {
+        this.listener = new ServerSocket(socketPort);
         this.accepter = new RmiServerService();
-        Registry registry = LocateRegistry.createRegistry(1099);
+        Registry registry = LocateRegistry.createRegistry(rmiPort);
         registry.rebind("RmiServer", this.accepter);
         this.waitingList = new ConcurrentLinkedQueue<>();
 

@@ -17,9 +17,21 @@ public class ServerMainApp {
         System.out.println("|_| |_|\\___|_|_|\\___/");
         System.out.println();
         System.out.println("Welcome to the Server Command Line Interface!");
-        System.out.println();
+        int numParameters = args.length;
+        int socketPort;
+        int rmiPort;
+        if(numParameters != 2) {
+            System.out.println("Warning: Bad input parameters. Using default ports.");
+            socketPort = 59090;
+            rmiPort = 1099;
+        }
+        else{
+            socketPort = Integer.parseInt(args[0]);
+            rmiPort = Integer.parseInt(args[1]);
+        }
         try {
-            WebServer webServer = new WebServer("production");
+            int[] ports = {socketPort, rmiPort};
+            WebServer webServer = new WebServer("production", ports);
             webServer.launchKernel();
         }
         catch(Exception a){

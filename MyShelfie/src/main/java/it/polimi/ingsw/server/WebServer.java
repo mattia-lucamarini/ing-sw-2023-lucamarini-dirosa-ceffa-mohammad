@@ -33,15 +33,18 @@ public class WebServer {
     /**
      * Default constructor.
      *
-     * @throws IOException if the ServerSocket is not correctly instantiated
+     * @param executionMode defines the execution mode of the server, test or production, running the
+     * consequent GameLogic.
+     * @param ports defines the set of ports used by the network managers.
+     * @throws IOException if the ServerSocketAndRmiNetwork is not correctly instantiated.
      */
-    public WebServer(String executionMode) throws IOException {
+    public WebServer(String executionMode, int[] ports) throws IOException {
 
         this.gamesCounter = 0;
         this.activeGames = new ConcurrentHashMap<>();
         this.activePlayers = new ConcurrentHashMap<>();
         this.clientHandlers = new ConcurrentHashMap<>();
-        this.mainNetworkManager = new ServerSocketAndRmiNetwork(59090);
+        this.mainNetworkManager = new ServerSocketAndRmiNetwork(ports[0], ports[1]);
         this.mainNetworkManager.establishSocketConnectionKernel();
         this.mainNetworkManager.establishRmiConnectionKernel();
         if (!executionMode.equals("test") && !executionMode.equals("production")){
