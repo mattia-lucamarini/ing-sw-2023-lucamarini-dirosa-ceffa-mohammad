@@ -40,10 +40,10 @@ public class PersonalGoalCard extends Card implements Serializable {
     public PersonalGoalCard(PersonalGoal goal){
         this.goal = goal;
     }
-    public PersonalGoalCard(){
+    public PersonalGoalCard() {
         generateGoal();
     }
-    public PersonalGoalCard(int index){
+    public PersonalGoalCard(int index) {
         generateGoal(index);
     }
     @Override
