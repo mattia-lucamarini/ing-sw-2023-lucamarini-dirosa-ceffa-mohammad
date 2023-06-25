@@ -80,7 +80,7 @@ public class TestGameLogic implements Runnable, Logic {
      * @return the status of the reconnection
      */
     @Override
-    public boolean reconnectPlayer(String username, ClientHandler clientHandler) {
+    public boolean reconnectPlayer(String username, ClientHandler clientHandler, String gameStatus) {
         if(clientList.containsKey(username)){
             System.out.println("*Game " + this.gameID + "* Error ! it's connected yet: " + username);
             return false;

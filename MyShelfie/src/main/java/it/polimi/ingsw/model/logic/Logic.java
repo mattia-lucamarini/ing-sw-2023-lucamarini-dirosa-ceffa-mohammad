@@ -15,7 +15,7 @@ public interface Logic {
      * @return the status of the game
      *
      */
-    public boolean isActive();
+    boolean isActive();
 
     /**
      * Method to reconnect a player to the game. It used by the webserver during the login phase
@@ -24,7 +24,7 @@ public interface Logic {
      * @param clientHandler the object to manage the communication. It should be updated in the Game instance
      * @return the status of the reconnection
      */
-    public boolean reconnectPlayer(String username, ClientHandler clientHandler);
+    boolean reconnectPlayer(String username, ClientHandler clientHandler, String gameStatus);
 
     }
 
