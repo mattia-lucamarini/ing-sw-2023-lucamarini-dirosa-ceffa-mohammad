@@ -5,7 +5,7 @@ package it.polimi.ingsw.network.message;
  * This is a Message subclass used to give a unique personal goal to every player.
  * @author Mattia Lucamarini
  */
-public class SetPersonalGoal extends Message{
+public class SetPersonalGoal extends Message {
     private int goalNumber;
     private final boolean reply;
     public SetPersonalGoal(int index) {

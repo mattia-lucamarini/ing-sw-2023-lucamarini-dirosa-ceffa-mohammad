@@ -197,6 +197,19 @@ public class Shelf implements Serializable {
         }
     }
 
+    public static int scoreGroup(Pair<Tiles, Integer> group) {
+        int gainedPoints = 0;
+        if (group.getSecond() == 3)
+            gainedPoints = 2;
+        else if (group.getSecond() == 4)
+            gainedPoints = 3;
+        else if (group.getSecond() == 5)
+            gainedPoints = 5;
+        else if (group.getSecond() >= 6)
+            gainedPoints = 8;
+        return gainedPoints;
+    }
+
     public void printShelf(){
         for(int i = ROWS-1 ; i >= 0; --i){
             System.out.print(i + " ");
@@ -223,5 +236,6 @@ public class Shelf implements Serializable {
 
     private Tiles[][] matrix;
     private int totalTiles;
+
 }
 

@@ -217,6 +217,7 @@ public class Client {
                 int goalNumber = ((SetPersonalGoal) message).getGoalNumber();
                 userInterface.showPersonalGoal(goalNumber);
                 try {
+                    // Send awk.
                     clientHandler.sendingWithRetry(new SetPersonalGoal(), 1, 1);
                 } catch (Exception e) {
                     userInterface.printErrorMessage(e.toString());

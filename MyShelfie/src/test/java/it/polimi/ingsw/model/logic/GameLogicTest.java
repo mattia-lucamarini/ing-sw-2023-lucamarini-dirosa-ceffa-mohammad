@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -283,5 +284,51 @@ public class GameLogicTest {
             Assert.assertEquals(MessageCode.PLAY_TURN,           msgs.get(0).getMessageType());
             Assert.assertEquals(MessageCode.CHOSEN_TILES,        msgs.get(1).getMessageType());
         }
+    }
+
+    @Test
+    public void testPersonalGoalsAndGroupsPointsConsistency() throws NoMessageToReadException, ClientDisconnectedException {
+        var players = new ConcurrentHashMap<String, ClientHandler>();
+
+        // Create mock of client.
+        var marcoShelf = ShelfTest.stairsShelf();
+        var marcoClient = mock(ClientHandler.class);
+        // Messages to send to server in order.
+        when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
+                .thenReturn(new SetPersonalGoal(), new ShelfCheck(marcoShelf));
+        players.put("Marco", marcoClient);
+
+        players.put("Luigi", mock(ClientHandler.class));
+        players.put("Giorgio", mock(ClientHandler.class));
+        for (var entry : players.entrySet()) {
+            if (entry.getKey().equals("Marco")) continue;
+            when(entry.getValue().receivingWithRetry(anyInt(), anyInt()))
+                    .thenReturn(new SetPersonalGoal());
+        }
+
+        // Build GameLogic with example board from rules.
+        var game = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
+
+        // Game end + assign points from groups and personal goals to Marco (he has a stairs shelf).
+        game.sendGoalsToClients();
+        game.assignPoints("Marco");
+
+        // Check that other players receive the correct notifications from Marco's turn.
+        var msgs = getMessagesFromMockClient(players.get("Marco"), 3);
+        Assert.assertEquals(MessageCode.SET_PERSONAL_GOAL, msgs.get(0).getMessageType());
+        var msg = (SetPersonalGoal) msgs.get(0);
+        var personalGoalSent = new PersonalGoalCard(msg.getGoalNumber());
+        var pgPoints = personalGoalSent.getGoal().checkGoal(marcoShelf);
+        var tgPoints = marcoShelf.findTileGroups().stream()
+                .map(Shelf::scoreGroup)
+                .mapToInt(Integer::intValue)
+                .sum();
+        Assert.assertEquals(
+                pgPoints + tgPoints,
+                game.getPlayerPoints().get("Marco").intValue()
+        );
+
+        Assert.assertEquals(MessageCode.SET_COMMON_GOALS,  msgs.get(1).getMessageType());
+        Assert.assertEquals(MessageCode.END_GAME,          msgs.get(2).getMessageType());
     }
 }

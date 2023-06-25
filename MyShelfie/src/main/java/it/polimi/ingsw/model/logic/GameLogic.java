@@ -47,9 +47,12 @@ public class GameLogic implements Runnable, Logic {
             commonGoals = Pair.of(commonGoals.getFirst(), new CommonGoalCard(numPlayers));
         }
 
-        // Initialize player points.
-        for (var username : clientList.keySet())
+        // Initialize player points and personal goals.
+        PersonalGoalCard.resetGoalDeck();
+        for (var username : clientList.keySet()) {
             playerPoints.put(username, 0);
+            personalGoals.put(username, new PersonalGoalCard());
+        }
     }
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID){
@@ -80,31 +83,7 @@ public class GameLogic implements Runnable, Logic {
         }
 
         //SEND PERSONAL AND COMMON GOALS
-        for (String username : clientList.keySet()){
-            try {
-                System.out.println("[GAME " + gameID + "] Sending goals to " + username);
-                personalGoals.put(username, new PersonalGoalCard());
-                clientList.get(username)
-                        .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
-                clientList.get(username)
-                        .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
-                //System.out.println("[GAME " + gameID + "] Sent Personal goal to " + username);
-            }
-            catch (ClientDisconnectedException e){
-                System.out.println("[GAME " + gameID + "] Couldn't send Personal Goal to " + username);
-            }
-            try {
-                Message reply = clientList.get(username).receivingWithRetry(10, 5);
-                if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
-                    throw new NoMessageToReadException();
-                else
-                    System.out.println("[GAME " + gameID + "] " + username + " is ready");
-            } catch (ClientDisconnectedException cde){
-                System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
-            } catch (NoMessageToReadException nme){
-                System.out.println("[GAME " + gameID + "] No Personal Goal confirmation was received");
-            }
-        }
+        sendGoalsToClients();
 
         //CHOOSE FIRST PLAYER
         playerOrder = new ArrayList<>(clientList.keySet().stream().toList());
@@ -151,6 +130,37 @@ public class GameLogic implements Runnable, Logic {
                 clientList.get(pl).sendingWithRetry(new FinalScore(orderedPoints), ATTEMPTS, WAITING_TIME);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    public void sendGoalsToClients() {
+        for (String username : clientList.keySet()){
+            // Send personal and common goals.
+            try {
+                System.out.println("[GAME " + gameID + "] Sending goals to " + username);
+                // TODO: Why call the constructor again? Shouldn't it be the same from the hashmap?
+                clientList.get(username)
+                        .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
+                clientList.get(username)
+                        .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
+                //System.out.println("[GAME " + gameID + "] Sent Personal goal to " + username);
+            }
+            catch (ClientDisconnectedException e){
+                System.out.println("[GAME " + gameID + "] Couldn't send Personal Goal to " + username);
+            }
+
+            // Wait for awk from clients.
+            try {
+                Message reply = clientList.get(username).receivingWithRetry(10, 5);
+                if (!reply.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL) || !((SetPersonalGoal) reply).getReply())
+                    throw new NoMessageToReadException();
+                else
+                    System.out.println("[GAME " + gameID + "] " + username + " is ready");
+            } catch (ClientDisconnectedException cde){
+                System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
+            } catch (NoMessageToReadException nme){
+                System.out.println("[GAME " + gameID + "] No Personal Goal confirmation was received");
             }
         }
     }
@@ -296,6 +306,7 @@ public class GameLogic implements Runnable, Logic {
     }
 
     public void assignPoints(String player) {
+        // Send END_GAME msg and wait for SHELF_CHECK msg with Shelf info.
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         do {
             try {
@@ -307,25 +318,18 @@ public class GameLogic implements Runnable, Logic {
                 System.out.println("[GAME " + gameID + "]" + player + " disconnected during point assignment.");
             }
         } while (message.getMessageType() != MessageCode.SHELF_CHECK);
+
+        // Calculate personal goal scores on shelf.
         int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(((ShelfCheck) message).getShelf());
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
         System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
-        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) ((ShelfCheck) message).getShelf().findTileGroups();
-
-        for (Pair<Tiles, Integer> group : tileGroups){
-            int gainedPoints = 0;
-            if (group.getSecond() == 3)
-                gainedPoints = 2;
-            else if (group.getSecond() == 4)
-                gainedPoints = 3;
-            else if (group.getSecond() == 5)
-                gainedPoints = 5;
-            else if (group.getSecond() >= 6)
-                gainedPoints = 8;
+        // Calculate points due to same color groups on shelf.
+        var groups =  ((ShelfCheck) message).getShelf().findTileGroups();
+        for (var group : groups) {
+            int gainedPoints = Shelf.scoreGroup(group);
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);
             System.out.println("[GAME " + gameID + "] " + player + " has gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
         }
-
     }
 }

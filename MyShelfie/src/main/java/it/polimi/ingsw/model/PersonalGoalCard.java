@@ -14,6 +14,13 @@ public class PersonalGoalCard extends Card implements Serializable {
     private int goalIndex;
     static List<PersonalGoal> personalpointer = PersonalGoal.all();
 
+    /** Method: resetGoalDeck
+     * @author Shaffaeet Mohammad
+     * This method resets the deck so that the constructor starts fishing from a fresh deck again. */
+    public static void resetGoalDeck() {
+        personalpointer = PersonalGoal.all();
+    }
+
     /** Method: getGoal()
      * @author Angelo Di Rosa
      * This method overrides the superclass method.

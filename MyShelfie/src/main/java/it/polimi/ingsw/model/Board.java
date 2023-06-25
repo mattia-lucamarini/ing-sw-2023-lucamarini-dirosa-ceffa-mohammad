@@ -230,14 +230,6 @@ public class Board implements Serializable {
         int x, y, latestX = -2, latestY= -2;
         List<Pair<Integer, Integer>> sides;
         List<Tiles> tilevalues = new ArrayList<>();
-        int first_x = positions.get(0).getFirst();
-        int first_y = positions.get(0).getSecond();
-        int i=1;
-        if(!areInLineHorizontally(positions)){
-            if(!areInLineVertically(positions)){
-                throw new RuntimeException("Tiles are not on the same line");
-            }
-        }
         for(int k = 0; k < positions.size(); ++k){
             x = positions.get(k).getFirst();
             y = positions.get(k).getSecond();
