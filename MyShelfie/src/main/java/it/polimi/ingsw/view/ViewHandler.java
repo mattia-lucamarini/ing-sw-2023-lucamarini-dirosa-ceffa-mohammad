@@ -1,13 +1,13 @@
 package it.polimi.ingsw.view;
 
 import com.sun.javafx.scene.control.skin.FXVK;
-import it.polimi.ingsw.model.Pair;
-import it.polimi.ingsw.model.Player;
-import it.polimi.ingsw.model.Tiles;
+import it.polimi.ingsw.model.*;
+import it.polimi.ingsw.model.Cell;
 import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.view.MessageView.*;
-import it.polimi.ingsw.model.Cell;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,6 +22,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
@@ -29,11 +30,9 @@ import javax.management.Notification;
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Pattern;
 
 
 public class ViewHandler {
@@ -51,11 +50,11 @@ public class ViewHandler {
     private Cell[][] grid;
     private int count=0;
     @FXML
-    TextField text;
+    TextField text,move;
     @FXML
     RadioButton socket, rmi, two, three, four;
     @FXML
-    Button button, donebutton;
+    Button donebutton, endturn, takebutton, insertbutton;
     @FXML
     ToggleGroup connection, numplayers;
     @FXML
@@ -65,13 +64,11 @@ public class ViewHandler {
     @FXML
     GridPane shelfgrid;
     @FXML
-    ImageView commongoal1;
+    ImageView stack1, stack2, playerpoints, commongoal1, commongoal2, takentile0, takentile1,getTakentile2;
     @FXML
-    ImageView commongoal2;
+    Label l1, whattodo,playerorder;
     @FXML
-    ImageView stack1, stack2, iw1;
-    @FXML
-    Label l1;
+    ComboBox comboBox;
 
 
     public ViewHandler(Stage stage, View view){
@@ -88,8 +85,24 @@ public class ViewHandler {
             do{
                 message = sendedfromgui.poll();
             if(message != null){
-            System.out.println("sono viewHandler e ho trovato un messaggio di tipo" + message.getType());
+            System.out.println("sono viewHandler e ho trovato un messaggio di tipo: " + message.getType());
             switch (message.getType()){
+                case LOGIN_SCREEN:
+                    Platform.runLater(()->{
+                        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/login.fxml")));
+                        //GUIClient client = new GUIClient(this);
+                        loader.setController(this);
+                        Parent login = null;
+                        try {
+                            login = loader.load();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        Scene scene1 = new Scene(login, 480, 340);
+                        scene1.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
+                        stage.setScene(scene1);
+                        stage.show();});
+                    break;
                 case NEXT_SCENE:
                     Platform.runLater(()->{
                         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/numberOfPlayers.fxml")));
@@ -118,7 +131,7 @@ public class ViewHandler {
                             e.printStackTrace();
                         }
                         l1.setText(error);
-                        l1.setAlignment(Pos.CENTER);
+                        l1.setAlignment(Pos.TOP_LEFT);
                         Scene scene4 = new Scene(errorscene, 480, 400);
                         scene4.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene4);
@@ -135,15 +148,22 @@ public class ViewHandler {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        donebutton = (Button) gamelayout.getChildren().get(9);
+                        donebutton = (Button) gamelayout.getChildren().get(11);
                         donebutton.setVisible(false);
+                        whattodo.setVisible(false);
+                        move.setVisible(false);
+                        takebutton.setVisible(false);
+                        insertbutton.setVisible(false);
+                        endturn.setVisible(false);
+                        playerpoints = (ImageView) gamelayout.getChildren().get(7);
+                        playerpoints.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm()));
                         boardgrid = (GridPane) gamelayout.getChildren().get(0);
                         stack1 = (ImageView) gamelayout.getChildren().get(4);
                         stack2 = (ImageView) gamelayout.getChildren().get(5);
                         stack1.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
                         stack2.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
 
-                        Scene scene5 = new Scene(gamescene, 480, 529);
+                        Scene scene5 = new Scene(gamescene, 650, 550);
                         scene5.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene5);
                         stage.show();
@@ -214,17 +234,8 @@ public class ViewHandler {
                     ArrayList<String> players = ((PlayerOrderView)message).getOrder();
                     Platform.runLater(()->{
                         String order = players.toString();
-                        Label label = new Label();
-                        label.setText("The order is: "+order);
-                        Popup popup = new Popup();
-                        popup.setAutoHide(true);
-                        popup.getContent().add(label);
-                        if(!popup.isShowing()){
-                            popup.show(stage);
-                        }
-                        else{
-                            popup.hide();
-                        }
+                        playerorder = (Label) gamelayout.getChildren().get(8);
+                        playerorder.setText("The order is: "+order);
                     });
                     break;
                 case COMMON_GOAL:
@@ -331,21 +342,25 @@ public class ViewHandler {
                         }
                     });
                     break;
+                case INIT_COMBOBOX:
+                    ArrayList<String> usernames = ((SetComboBox) message).getComboItems();
+                    Platform.runLater(
+                            ()->{
+                        comboBox = (ComboBox) gamelayout.getChildren().get(16);
+                        ObservableList<String> items = FXCollections.observableList(usernames);
+                        comboBox.setItems(items);
+                    });
+                    break;
+
                 case SHOW_TILE:
-                    List<Tiles> tiles = ((ShowTile)message).getTilesToShow();
-                    ArrayList<Pair<Integer, Integer>> positions = ((ShowTile)message).getPositionsToShow();
+                    Shelf shelf = ((ShowTile) message).getShelf();
                     Platform.runLater(()->{
-                        shelfgrid = (GridPane) gamelayout.getChildren().get(1);
-                        for(int k =0; k < positions.size(); ++k){
-                            int row = positions.get(k).getFirst();
-                            int column = positions.get(k).getSecond();
-                            switch(tiles.get(k)){
-                                case BLUE -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm())),row,column);
-                                case WHITE -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm())),row,column);
-                                case GREEN -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm())),row,column);
-                                case LIGHTBLUE -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm())),row,column);
-                                case PURPLE -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm())),row,column);
-                                case YELLOW -> shelfgrid.add(new ImageView(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm())),row,column);
+                        int k = 0;
+                        for(int r = 0 ; r < 6; ++r){
+                            for(int c = 0 ; c < 5 ; ++c){
+                                int m = 25-(5*r)+c;
+                                ImageView imgvw = (ImageView) shelfgrid.getChildren().get(m);
+                                imgvw.setImage(selectImageFromTile(shelf.getTile(r,c)));
                             }
                         }
                     });
@@ -354,6 +369,8 @@ public class ViewHandler {
                     int numplayers = glogic.getNumPlayers();
                     int numgoal = ((CommonReached) message).getNumgoal();
                     int points = ((CommonReached)message).getPoints();
+                    String username =((CommonReached)message).getUsername();
+
                    Platform.runLater(()->{
                        ImageView stack;
                        if(numgoal == 0){
@@ -361,6 +378,10 @@ public class ViewHandler {
                        }
                        else{
                            stack = (ImageView) boardgrid.getChildren().get(5);
+                       }
+                       if(username.equals(glogic.player.getUsername())){
+                           playerpoints= (ImageView) gamelayout.getChildren().get(7);
+                           playerpoints.setImage(stack.getImage());
                        }
                        if(numplayers==2 && points==8){
                            stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm()));
@@ -390,48 +411,72 @@ public class ViewHandler {
                 case UPDATE_BOARD:
                     grid = ((UpdateBoard) message).getBoard().getGrid();
                     Platform.runLater(()->{
-                        int k = 0;
+                        int k=0;
+                        if(gui.getIsmyturn()){
+                            takebutton.setVisible(true);
+                            insertbutton.setVisible(true);
+                            endturn.setVisible(true);
+                            donebutton.setVisible(true);
+                            whattodo.setVisible(true);
+                            move.setVisible(true);
+
+                        }
+                        else{
+                            takebutton.setVisible(false);
+                            insertbutton.setVisible(false);
+                            endturn.setVisible(false);
+                            donebutton.setVisible(false);
+                            whattodo.setVisible(false);
+                            move.setVisible(false);
+                        }
                         for(int r = 0 ; r < 9; ++r){
                             for(int c = 0 ; c < 9 ; ++c){
-                                ImageView imgvw = (ImageView) boardgrid.getChildren().get(k);
-
-                                switch(grid[r][c].getTile()){
-                                    case BLUE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case WHITE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case GREEN :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case LIGHTBLUE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case PURPLE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case YELLOW :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case VALID :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case NOTVALID:
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                }
+                                ImageView imagvw = (ImageView) boardgrid.getChildren().get(k);
+                                imagvw.setImage(selectImageFromTile(grid[r][c].getTile()));
+                                ++k;
                             }
                         }
                     });
+                    break;
+                case LABEL_CHANGE:
+                    String texttoshow = ((LabelChange)message).getText();
+                    Platform.runLater(()->{
+                        whattodo = (Label) gamelayout.getChildren().get(10);
+                        whattodo.setText(texttoshow);
+                    });
+
+                    break;
+                case PICKED_TILES:
+                    List<Tiles> tiles = ((ShowPickedTiles)message).getPickedTiles();
+                    Platform.runLater(()->{
+                        int l=0;
+                        for(Tiles tile : tiles){
+                            ImageView imgvw = (ImageView) gamelayout.getChildren().get(13+l);
+                            imgvw.setImage(selectImageFromTile(tile));
+                            ++l;
+                        }
+                        if(tiles.size()==2){
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                        else if(tiles.size()==1){
+                            ImageView pickedtile1 = (ImageView) gamelayout.getChildren().get(14);
+                            pickedtile1.setImage(null);
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                        else if(tiles.size()==0){
+                            ImageView pickedtile0 = (ImageView) gamelayout.getChildren().get(13);
+                            pickedtile0.setImage(null);
+                            ImageView pickedtile1 = (ImageView) gamelayout.getChildren().get(14);
+                            pickedtile1.setImage(null);
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                    });
+
+
+                    break;
             }
             }}while(partitainiziata);
         });
@@ -495,9 +540,10 @@ public class ViewHandler {
     }
 
     public void boardcellselected(ActionEvent e){
+            System.out.println("eccomi nell'event handler");
             donebutton.setVisible(true);
             GridPane boardgrid = (GridPane) gamelayout.getChildren().get(0);
-            Node node = (Node) e.getTarget();
+            ImageView node = (ImageView) e.getTarget();
             int i = GridPane.getRowIndex(node);
             int j = GridPane.getColumnIndex(node);
             MessageView message = new SelectedTile(i,j);
@@ -512,14 +558,113 @@ public class ViewHandler {
         gui.addMessage(message);
     }
     public void endTurn(ActionEvent e){
-        MessageView message = new MessageView(MessageCodeView.END_TURN);
+        MessageView message = new GetCommand("endturn");
         gui.addMessage(message);
     }
-    public void doneMove(ActionEvent e){ //to stop choosing from the board
-        MessageView message = new MessageView(MessageCodeView.DONE);
-        gui.addMessage(message);
+    public void send(ActionEvent e){ //to stop choosing from the board
+        if(gui.getIsmyturn()){
+            String string = move.getText();
+            move.clear();
+            MessageView message = new GetCommand(string);
+            gui.addMessage(message);}
+        else{
+            gui.printMessage("it's not your turn.");
+        }
     }
-    public void showShelf(ActionEvent e){
 
+    public void select(ActionEvent e){
+        Shelf shelf;
+        String username = comboBox.getSelectionModel().getSelectedItem().toString();
+        if(username.equals(glogic.player.getUsername())){
+             shelf = glogic.player.getShelf();
+        }
+        else{
+             shelf = glogic.playerShelves.get(username);
+        }
+        int k = 0;
+        for(int r = 0 ; r < 6; ++r){
+            for(int c = 0 ; c < 5 ; ++c){
+                int m = 25-(5*r)+c;
+                ImageView imgvw = (ImageView) shelfgrid.getChildren().get(m);
+                switch(shelf.getTile(r,c)){
+                        case BLUE :
+                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
+                        ++k;
+                        break;
+                        case WHITE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case GREEN :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case LIGHTBLUE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case PURPLE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case YELLOW :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case VALID :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case NOTVALID:
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
+                            ++k;
+                            break;
+                }
+            }
+        }
     }
+    public void insertCommand(ActionEvent e){
+        MessageView message = new GetCommand("insert");
+        gui.addMessage(message);
+    }
+    public void takeCommand(ActionEvent e){
+        MessageView message = new GetCommand("take");
+        gui.addMessage(message);
+    }
+
+    public Image selectImageFromTile(Tiles tile){
+        Image image;
+        switch(tile){
+            case BLUE :
+                image= new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm());
+                break;
+            case WHITE :
+                image= new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm());
+                break;
+            case GREEN :
+                image= new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm());
+                break;
+            case LIGHTBLUE :
+                image= new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm());
+                break;
+            case PURPLE :
+                image= new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm());
+                break;
+            case YELLOW :
+                image= new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm());
+                break;
+            case VALID :
+                image= new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm());
+                break;
+            case NOTVALID:
+                image= new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + tile);
+        }
+        return image;
+    }
+
+
+
 }

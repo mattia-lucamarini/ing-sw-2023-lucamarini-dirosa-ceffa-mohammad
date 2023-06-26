@@ -242,7 +242,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                                           Logic activeGames)
             throws ClientDisconnectedException {
         clientHandlers.replace(username, clientHandler);
-        boolean status = activeGames.reconnectPlayer(username, clientHandler);
+        boolean status = activeGames.reconnectPlayer(username, clientHandler, "generic");
         if(status) status = clientHandler.sendingWithRetry(new LoginReply(true),3, 1);
         return status;
     }

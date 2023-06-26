@@ -9,6 +9,7 @@ public  enum MessageCode {
     PING_MESSAGE,
     LOGIN_REQUEST,
     LOGIN_REPLY,
+    RECONNECT,
     NUM_PLAYERS_REQUEST,
     NUM_PLAYERS_RESPONSE,
     SET_PERSONAL_GOAL,
@@ -25,5 +26,5 @@ public  enum MessageCode {
     MOVE_LEGAL,
     MOVE_ILLEGAL,
     FINAL_SCORE,
-    BAD_RESPONSE;
+    BAD_RESPONSE
 }

@@ -10,10 +10,7 @@ import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static it.polimi.ingsw.client.Client.board;
@@ -43,13 +40,21 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public int askForNumOfPlayers(ClientHandler clientHandler){
+        //TODO: Limit number of players
         Scanner t = new Scanner(System.in);
+        int num = 0;
         System.out.print("Insert player number: ");
-        int num = t.nextInt();
-        while (num < 1 || num > 4) {
-            System.out.println("The number of players must be between 1-4!");
-            System.out.print("Insert player number: ");
-            num = t.nextInt();
+        while (num == 0) {
+            try {
+                num = t.nextInt();
+                while (num < 1 || num > 4) {
+                    System.out.println("The number of players must be between 1-4!");
+                    System.out.print("Insert player number: ");
+                    num = t.nextInt();
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Please insert an actual number.");
+            }
         }
         boolean flag;
         try {
@@ -66,7 +71,7 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void showPersonalGoal(int goalIndex){
-        System.out.println("Your personal goal is:");
+        System.out.println("Your personal goal is: " + goalIndex);
         for (Map.Entry<Pair<Integer, Integer>, Tiles> entry : personalGoals.get(goalIndex).getConstraint().entrySet()){
             System.out.println("\t" + entry.getValue() + " in (" + entry.getKey().getFirst() + "," + entry.getKey().getSecond() + ")");
         }
@@ -134,20 +139,20 @@ public class CLIInterface implements UserInterface{
     @Override
     public void helpCommand(){
         System.out.println("""
-                                                board: print board
-                                                shelf: print shelf
-                                                common: print common goals
-                                                personal: print personal goal
-                                                take: extract the tiles specified by your coordinates
-                                                insert: put your tiles into the shelf
-                                                done: end your turn""");
+                                                \tboard: print board
+                                                \tshelf: print shelf
+                                                \tcommon: print common goals
+                                                \tpersonal: print personal goal
+                                                \ttake: extract the tiles specified by your coordinates
+                                                \tinsert: put your tiles into the shelf
+                                                \tdone: end your turn""");
     }
 
     @Override
     public ArrayList<Tiles> takeCommand() throws UnsupportedOperationException {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         if (totalPick.size() == 0) {
-            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type cancel to redo your move\n Type 'done' if you are done.");
+            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type 'cancel' to redo your move\n Type 'done' if you are done.");
             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                 System.out.print("\t" + (i + 1) + "> ");
                 String tilePick = sc.nextLine();
@@ -285,7 +290,7 @@ public class CLIInterface implements UserInterface{
     public void finalScore(){
         System.out.println("\nThe game is over.\n");
         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) Client.player.getShelf().findTileGroups();
-        this.showPersonalGoalAchievement(Client.goalCard.getGoal().checkGoal(Client.player.getShelf()));
+        this.showPersonalGoalAchievement(Client.personalGoal.getGoal().checkGoal(Client.player.getShelf()));
         for (Pair<Tiles, Integer> group : tileGroups) {
             int gainedPoints = 0;
             if (group.getSecond() == 3)
