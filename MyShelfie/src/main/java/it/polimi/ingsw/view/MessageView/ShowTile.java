@@ -9,7 +9,7 @@ import javafx.scene.layout.GridPane;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ShowTile extends MessageView{ private Board board;
+public class ShowTile extends MessageView{
     private Shelf shelf;
     public ShowTile(Shelf shelf){
         super(MessageCodeView.SHOW_TILE);

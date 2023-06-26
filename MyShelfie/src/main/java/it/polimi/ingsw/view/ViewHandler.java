@@ -6,6 +6,8 @@ import it.polimi.ingsw.model.Cell;
 import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.view.MessageView.*;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -52,7 +54,7 @@ public class ViewHandler {
     @FXML
     RadioButton socket, rmi, two, three, four;
     @FXML
-    Button button, donebutton, showplayerShelf;
+    Button donebutton, endturn, takebutton, insertbutton;
     @FXML
     ToggleGroup connection, numplayers;
     @FXML
@@ -62,13 +64,11 @@ public class ViewHandler {
     @FXML
     GridPane shelfgrid;
     @FXML
-    ImageView commongoal1;
+    ImageView stack1, stack2, playerpoints, commongoal1, commongoal2, takentile0, takentile1,getTakentile2;
     @FXML
-    ImageView commongoal2;
+    Label l1, whattodo,playerorder;
     @FXML
-    ImageView stack1, stack2, iw1;
-    @FXML
-    Label l1, whattodo;
+    ComboBox comboBox;
 
 
     public ViewHandler(Stage stage, View view){
@@ -85,7 +85,7 @@ public class ViewHandler {
             do{
                 message = sendedfromgui.poll();
             if(message != null){
-            System.out.println("sono viewHandler e ho trovato un messaggio di tipo" + message.getType());
+            System.out.println("sono viewHandler e ho trovato un messaggio di tipo: " + message.getType());
             switch (message.getType()){
                 case LOGIN_SCREEN:
                     Platform.runLater(()->{
@@ -131,7 +131,7 @@ public class ViewHandler {
                             e.printStackTrace();
                         }
                         l1.setText(error);
-                        l1.setAlignment(Pos.CENTER);
+                        l1.setAlignment(Pos.TOP_LEFT);
                         Scene scene4 = new Scene(errorscene, 480, 400);
                         scene4.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene4);
@@ -152,13 +152,18 @@ public class ViewHandler {
                         donebutton.setVisible(false);
                         whattodo.setVisible(false);
                         move.setVisible(false);
+                        takebutton.setVisible(false);
+                        insertbutton.setVisible(false);
+                        endturn.setVisible(false);
+                        playerpoints = (ImageView) gamelayout.getChildren().get(7);
+                        playerpoints.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm()));
                         boardgrid = (GridPane) gamelayout.getChildren().get(0);
                         stack1 = (ImageView) gamelayout.getChildren().get(4);
                         stack2 = (ImageView) gamelayout.getChildren().get(5);
                         stack1.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
                         stack2.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
 
-                        Scene scene5 = new Scene(gamescene, 480, 529);
+                        Scene scene5 = new Scene(gamescene, 650, 550);
                         scene5.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene5);
                         stage.show();
@@ -229,17 +234,8 @@ public class ViewHandler {
                     ArrayList<String> players = ((PlayerOrderView)message).getOrder();
                     Platform.runLater(()->{
                         String order = players.toString();
-                        Label label = new Label();
-                        label.setText("The order is: "+order);
-                        Popup popup = new Popup();
-                        popup.setAutoHide(true);
-                        popup.getContent().add(label);
-                        if(!popup.isShowing()){
-                            popup.show(stage);
-                        }
-                        else{
-                            popup.hide();
-                        }
+                        playerorder = (Label) gamelayout.getChildren().get(8);
+                        playerorder.setText("The order is: "+order);
                     });
                     break;
                 case COMMON_GOAL:
@@ -346,6 +342,16 @@ public class ViewHandler {
                         }
                     });
                     break;
+                case INIT_COMBOBOX:
+                    ArrayList<String> usernames = ((SetComboBox) message).getComboItems();
+                    Platform.runLater(
+                            ()->{
+                        comboBox = (ComboBox) gamelayout.getChildren().get(16);
+                        ObservableList<String> items = FXCollections.observableList(usernames);
+                        comboBox.setItems(items);
+                    });
+                    break;
+
                 case SHOW_TILE:
                     Shelf shelf = ((ShowTile) message).getShelf();
                     Platform.runLater(()->{
@@ -354,40 +360,7 @@ public class ViewHandler {
                             for(int c = 0 ; c < 5 ; ++c){
                                 int m = 25-(5*r)+c;
                                 ImageView imgvw = (ImageView) shelfgrid.getChildren().get(m);
-                                switch(shelf.getTile(r,c)){
-                                    case BLUE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case WHITE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case GREEN :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case LIGHTBLUE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case PURPLE :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case YELLOW :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case VALID :
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case NOTVALID:
-                                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                }
+                                imgvw.setImage(selectImageFromTile(shelf.getTile(r,c)));
                             }
                         }
                     });
@@ -396,6 +369,8 @@ public class ViewHandler {
                     int numplayers = glogic.getNumPlayers();
                     int numgoal = ((CommonReached) message).getNumgoal();
                     int points = ((CommonReached)message).getPoints();
+                    String username =((CommonReached)message).getUsername();
+
                    Platform.runLater(()->{
                        ImageView stack;
                        if(numgoal == 0){
@@ -403,6 +378,10 @@ public class ViewHandler {
                        }
                        else{
                            stack = (ImageView) boardgrid.getChildren().get(5);
+                       }
+                       if(username.equals(glogic.player.getUsername())){
+                           playerpoints= (ImageView) gamelayout.getChildren().get(7);
+                           playerpoints.setImage(stack.getImage());
                        }
                        if(numplayers==2 && points==8){
                            stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm()));
@@ -434,51 +413,27 @@ public class ViewHandler {
                     Platform.runLater(()->{
                         int k=0;
                         if(gui.getIsmyturn()){
-                            donebutton = (Button) gamelayout.getChildren().get(11);
+                            takebutton.setVisible(true);
+                            insertbutton.setVisible(true);
+                            endturn.setVisible(true);
                             donebutton.setVisible(true);
-                            whattodo = (Label) gamelayout.getChildren().get(10);
                             whattodo.setVisible(true);
-                            move = (TextField) gamelayout.getChildren().get(9);
                             move.setVisible(true);
 
+                        }
+                        else{
+                            takebutton.setVisible(false);
+                            insertbutton.setVisible(false);
+                            endturn.setVisible(false);
+                            donebutton.setVisible(false);
+                            whattodo.setVisible(false);
+                            move.setVisible(false);
                         }
                         for(int r = 0 ; r < 9; ++r){
                             for(int c = 0 ; c < 9 ; ++c){
                                 ImageView imagvw = (ImageView) boardgrid.getChildren().get(k);
-                                switch(grid[r][c].getTile()){
-                                    case BLUE :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case WHITE :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case GREEN :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case LIGHTBLUE :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case PURPLE :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case YELLOW :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case VALID :
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                    case NOTVALID:
-                                        imagvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
-                                        ++k;
-                                        break;
-                                }
+                                imagvw.setImage(selectImageFromTile(grid[r][c].getTile()));
+                                ++k;
                             }
                         }
                     });
@@ -489,6 +444,37 @@ public class ViewHandler {
                         whattodo = (Label) gamelayout.getChildren().get(10);
                         whattodo.setText(texttoshow);
                     });
+
+                    break;
+                case PICKED_TILES:
+                    List<Tiles> tiles = ((ShowPickedTiles)message).getPickedTiles();
+                    Platform.runLater(()->{
+                        int l=0;
+                        for(Tiles tile : tiles){
+                            ImageView imgvw = (ImageView) gamelayout.getChildren().get(13+l);
+                            imgvw.setImage(selectImageFromTile(tile));
+                            ++l;
+                        }
+                        if(tiles.size()==2){
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                        else if(tiles.size()==1){
+                            ImageView pickedtile1 = (ImageView) gamelayout.getChildren().get(14);
+                            pickedtile1.setImage(null);
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                        else if(tiles.size()==0){
+                            ImageView pickedtile0 = (ImageView) gamelayout.getChildren().get(13);
+                            pickedtile0.setImage(null);
+                            ImageView pickedtile1 = (ImageView) gamelayout.getChildren().get(14);
+                            pickedtile1.setImage(null);
+                            ImageView pickedtile2 = (ImageView) gamelayout.getChildren().get(15);
+                            pickedtile2.setImage(null);
+                        }
+                    });
+
 
                     break;
             }
@@ -572,7 +558,7 @@ public class ViewHandler {
         gui.addMessage(message);
     }
     public void endTurn(ActionEvent e){
-        MessageView message = new MessageView(MessageCodeView.END_TURN);
+        MessageView message = new GetCommand("endturn");
         gui.addMessage(message);
     }
     public void send(ActionEvent e){ //to stop choosing from the board
@@ -585,8 +571,100 @@ public class ViewHandler {
             gui.printMessage("it's not your turn.");
         }
     }
-    public void showShelf(ActionEvent e){
-        MessageView message = new GetCommand("shelf");
+
+    public void select(ActionEvent e){
+        Shelf shelf;
+        String username = comboBox.getSelectionModel().getSelectedItem().toString();
+        if(username.equals(glogic.player.getUsername())){
+             shelf = glogic.player.getShelf();
+        }
+        else{
+             shelf = glogic.playerShelves.get(username);
+        }
+        int k = 0;
+        for(int r = 0 ; r < 6; ++r){
+            for(int c = 0 ; c < 5 ; ++c){
+                int m = 25-(5*r)+c;
+                ImageView imgvw = (ImageView) shelfgrid.getChildren().get(m);
+                switch(shelf.getTile(r,c)){
+                        case BLUE :
+                        imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));
+                        ++k;
+                        break;
+                        case WHITE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case GREEN :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case LIGHTBLUE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case PURPLE :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case YELLOW :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case VALID :
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
+                            ++k;
+                            break;
+                        case NOTVALID:
+                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
+                            ++k;
+                            break;
+                }
+            }
+        }
+    }
+    public void insertCommand(ActionEvent e){
+        MessageView message = new GetCommand("insert");
         gui.addMessage(message);
     }
+    public void takeCommand(ActionEvent e){
+        MessageView message = new GetCommand("take");
+        gui.addMessage(message);
+    }
+
+    public Image selectImageFromTile(Tiles tile){
+        Image image;
+        switch(tile){
+            case BLUE :
+                image= new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm());
+                break;
+            case WHITE :
+                image= new Image(getClass().getResource("/assets/item tiles/Libri1.1.png").toExternalForm());
+                break;
+            case GREEN :
+                image= new Image(getClass().getResource("/assets/item tiles/Gatti1.1.png").toExternalForm());
+                break;
+            case LIGHTBLUE :
+                image= new Image(getClass().getResource("/assets/item tiles/Trofei1.1.png").toExternalForm());
+                break;
+            case PURPLE :
+                image= new Image(getClass().getResource("/assets/item tiles/Piante1.1.png").toExternalForm());
+                break;
+            case YELLOW :
+                image= new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm());
+                break;
+            case VALID :
+                image= new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm());
+                break;
+            case NOTVALID:
+                image= new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + tile);
+        }
+        return image;
+    }
+
+
+
 }
