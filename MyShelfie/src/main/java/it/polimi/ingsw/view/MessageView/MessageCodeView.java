@@ -18,4 +18,6 @@ public enum MessageCodeView {
     LABEL_CHANGE,
     COMMAND,
     LOGIN_SCREEN,
+    INIT_COMBOBOX,
+    PICKED_TILES,
 }
