@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.message;
 
 import it.polimi.ingsw.model.Pair;
 import it.polimi.ingsw.model.Shelf;
+import it.polimi.ingsw.model.Tiles;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -32,7 +32,7 @@ public interface UserInterface {
 
     void turnNotification(String nowPlaying);
 
-    String getCommand();
+    String getCommand(String username);
 
     void boardCommand();
 
@@ -42,7 +42,7 @@ public interface UserInterface {
 
     ArrayList<Tiles> takeCommand();
 
-    void insertCommand(ArrayList<Tiles> pickedTiles);
+    boolean insertCommand(ArrayList<Tiles> pickedTiles);
 
     boolean doneCommand();
 

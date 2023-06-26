@@ -32,6 +32,7 @@ public class GameLogic implements Runnable, Logic {
     private ArrayList<String> playerOrder;
     private HashMap<String, Shelf> playerShelves;
     private String nowPlaying;
+    ArrayList<Tiles> playerPickTypes;
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
@@ -40,9 +41,13 @@ public class GameLogic implements Runnable, Logic {
         this.isActive = true;
         this.playerPoints = new HashMap<>();
         this.personalGoals = new HashMap<>();
-        this.playerShelves = new HashMap<>(numPlayers);
         this.fullShelf = false;
         this.board = board;
+
+        //initialize player shelves
+        this.playerShelves = new HashMap<>(numPlayers);
+        for (String player : clientList.keySet())
+            playerShelves.put(player, new Shelf());
 
         // Initialize common goals.
         commonGoals = new Pair<>(new CommonGoalCard(numPlayers), new CommonGoalCard(numPlayers));
@@ -104,7 +109,7 @@ public class GameLogic implements Runnable, Logic {
                 clientList.get(username).sendingWithRetry(new PlayerOrder(playerOrder), ATTEMPTS, WAITING_TIME);
                 clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e){
-                System.out.println(username + "disconnected while sending game start notification");
+                System.out.println(username + " disconnected while sending game start notification");
             }
         }
 
@@ -134,8 +139,8 @@ public class GameLogic implements Runnable, Logic {
         for (String pl : clientList.keySet()) {
             try {
                 clientList.get(pl).sendingWithRetry(new FinalScore(orderedPoints), ATTEMPTS, WAITING_TIME);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+            } catch (ClientDisconnectedException e) {
+                System.out.println(pl + " disconnected while sending final score.");
             }
         }
     }
@@ -185,9 +190,9 @@ public class GameLogic implements Runnable, Logic {
         //System.out.println("\t[GAME " + gameID + "] Sending response");
         try {
             clientHandler.sendingWithRetry(new Reconnect(personalGoals.get(username).getGoalIndex(), new Pair<>(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex()), numPlayers, playerOrder, nowPlaying, playerShelves), ATTEMPTS, WAITING_TIME);
-            System.out.println("\tSent reconnect message");
+            //System.out.println("\tSent reconnect message");
             clientHandler.sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
-            System.out.println("\tSent game start");
+            //System.out.println("\tSent game start");
             clientList.replace(username, clientHandler);
             return true;
         } catch (ClientDisconnectedException e) {
@@ -230,7 +235,7 @@ public class GameLogic implements Runnable, Logic {
             boolean turnOverNotificationReceived = false;
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
-            ArrayList<Tiles> playerPickTypes = new ArrayList<>();
+
 
             // Make client pick tiles from board until turn end.
             // TODO: Player shouldn't be able to pick multiple disconnected tile-rows during the same turn.
@@ -243,14 +248,18 @@ public class GameLogic implements Runnable, Logic {
                             if (pickedTiles > 3)
                                 throw new RuntimeException("Too many tiles (" + pickedTiles + ")");
                             playerPickTypes = (ArrayList<Tiles>) board.takeTiles(((ChosenTiles) message).getPlayerMove());
-                            //board.takeTiles(((ChosenTiles) message).getPlayerMove());
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
                             playerPick.addAll(((ChosenTiles) message).getPlayerMove());
+                            System.out.print("[GAME " + gameID + "] "+ player + " took [");
+                            for (Tiles tile : playerPickTypes)
+                                System.out.print(" " + tile);
+                            System.out.println(" ]");
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
                         }
-                    } else if (message.getMessageType() == MessageCode.TURN_OVER) {
+                    }
+                    else if (message.getMessageType() == MessageCode.TURN_OVER) {
                         for (String username : clientList.keySet()) {
                             if (!username.equals(player))
                                 clientList.get(username).sendingWithRetry(new ChosenTiles(playerPick), ATTEMPTS, WAITING_TIME);
@@ -328,7 +337,6 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-
             // Wait for updated shelf from player (send to other players to update their clients).
             while (message.getMessageType() != MessageCode.SHELF_CHECK) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -338,6 +346,7 @@ public class GameLogic implements Runnable, Logic {
                         if (!pl.equals(player))
                             clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
                     }
+                    playerPickTypes.clear();
                 }
             }
         }

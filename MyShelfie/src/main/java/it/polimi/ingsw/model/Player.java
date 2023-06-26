@@ -23,6 +23,7 @@ public class Player {
     public Shelf getShelf(){
         return this.shelf;
     }
+    public void setShelf(Shelf shelf) {this.shelf = shelf;}
     public PersonalGoal getGoal(){
         return goalCard;
     }

@@ -90,8 +90,10 @@ public class CLIInterface implements UserInterface{
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
                 printErrorMessage("Not enough players to start a new game.");
+                System.exit(1);
             } catch (ClientDisconnectedException e) {
                 printErrorMessage("Disconnected from the server while waiting for other players.");
+                System.exit(13);
             }
 
             if (message.getMessageType() == MessageCode.PLAYER_ORDER)
@@ -110,8 +112,8 @@ public class CLIInterface implements UserInterface{
         System.out.println("The game is now starting");
     }
     @Override
-    public String getCommand(){
-        System.out.print("> ");
+    public String getCommand(String username){
+        System.out.print(username + "> ");
         return sc.nextLine();
     }
     @Override
@@ -182,9 +184,10 @@ public class CLIInterface implements UserInterface{
                     try {
                         Client.clientHandler.sendingWithRetry(new ChosenTiles(totalPick), ATTEMPTS, WAITING_TIME);
                         message = Client.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    } catch (Exception e) {
-                        System.out.println(e);
-                    }
+                    } catch (ClientDisconnectedException e) {
+                        System.out.println("Disconnected while sending move to server");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored){}
                 } while (message == null);
                 if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
                     System.out.println("Move was verified.");
@@ -201,10 +204,11 @@ public class CLIInterface implements UserInterface{
     }
 
     @Override
-    public void insertCommand(ArrayList<Tiles> pickedTiles) {
+    public boolean insertCommand(ArrayList<Tiles> pickedTiles) {
         if (pickedTiles.size() == 0) {
             System.out.println("You have no available tiles to insert.");
-            return;
+            pickedTiles.forEach(System.out::println);
+            return false;
         }
         System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
 
@@ -220,7 +224,7 @@ public class CLIInterface implements UserInterface{
             System.out.print("\t> ");
             String shelfMove = sc.nextLine();
             if (shelfMove.equals("cancel")) {
-                return;
+                return false;
             } else if (tilePattern.matcher(shelfMove).find() && totalPick.size() <= 3) {
                 Scanner pickScanner = new Scanner(shelfMove);
                 int moveIndex = pickScanner.nextInt();
@@ -228,7 +232,7 @@ public class CLIInterface implements UserInterface{
                 finalPositions.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
                 tempTiles.remove(moveIndex);
             } else {
-                System.out.println("\tUnknown command, try again.");
+                System.out.println("\tUnrecognized format, try again.");
                 i--;
             }
         }
@@ -236,8 +240,10 @@ public class CLIInterface implements UserInterface{
             Client.player.getShelf().insertTiles(finalPositions, finalTiles);
             pickedTiles.clear();
             System.out.println("Done.");
+            return true;
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());
+            return false;
         }
     }
     @Override
