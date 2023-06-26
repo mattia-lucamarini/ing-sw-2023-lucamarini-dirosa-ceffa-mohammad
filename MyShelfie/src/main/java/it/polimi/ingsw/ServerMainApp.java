@@ -10,6 +10,11 @@ public class ServerMainApp {
 
     public static void main( String[] args )
     {
+        int numParameters = args.length;
+        /* Default Server ports: */
+        int socketPort = 59090;
+        int rmiPort = 1099;
+
         System.out.println(" _   _      _ _");
         System.out.println("| | | | ___| | | ___");
         System.out.println("| |_| |/ _ \\ | |/ _ \\");
@@ -17,17 +22,18 @@ public class ServerMainApp {
         System.out.println("|_| |_|\\___|_|_|\\___/");
         System.out.println();
         System.out.println("Welcome to the Server Command Line Interface!");
-        int numParameters = args.length;
-        int socketPort;
-        int rmiPort;
-        if(numParameters != 2) {
-            System.out.println("Warning: Bad input parameters. Using default ports.");
-            socketPort = 59090;
-            rmiPort = 1099;
+
+        if(numParameters != 3) {
+            System.out.println("Warning: Bad input parameters. Using default ones.");
         }
         else{
-            socketPort = Integer.parseInt(args[0]);
-            rmiPort = Integer.parseInt(args[1]);
+            if(args[0].equals("--p")) {
+                socketPort = Integer.parseInt(args[1]);
+                rmiPort = Integer.parseInt(args[2]);
+            }
+            else{
+                System.out.println("Warning: Unknown input parameter. Using default ones.");
+            }
         }
         try {
             int[] ports = {socketPort, rmiPort};
