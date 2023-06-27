@@ -39,6 +39,8 @@ public class GUIInterface {
     private ArrayList<Pair<Integer,Integer>> mypicks;
     private List<Tiles> pickedTiles;
     private boolean otherShelf = false;
+    private boolean takeAlreadyDone = false;
+
     Pattern tilePattern;
     @FXML
     TextField text;
@@ -163,6 +165,8 @@ public class GUIInterface {
 
 
     public boolean getCommand() {
+        MessageView commandlabel = new LabelChange("Type help for more");
+        sended.add(commandlabel);
         MessageView message;
         System.out.println("sono nel getCommand e il valore di ismyturn è " +ismyturn);
         boolean canContinue = false;
@@ -170,7 +174,6 @@ public class GUIInterface {
                 message = received.poll();
                 if(message!=null && message.getType()==MessageCodeView.COMMAND){
                     switch (((GetCommand)message).getContent()) {
-
                         case "help":
                             helpCommand();
                             break;
@@ -178,9 +181,7 @@ public class GUIInterface {
                         case "take":
                             try{
                             takeCommand();
-
-                            }
-                            catch(UnsupportedOperationException e ){
+                            } catch(UnsupportedOperationException e ){
                                 break;
                             }
                             break;
@@ -193,6 +194,7 @@ public class GUIInterface {
                             MessageView updatemessage = new UpdateBoard(GraphicLogic.board);
                             sended.add(updatemessage);
                             break;
+
                     }
                 }
             } while (ismyturn);
@@ -217,74 +219,82 @@ public class GUIInterface {
     public void takeCommand() {
         MessageView message;
         tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
-        MessageView labelchange = new LabelChange("<row> blankspace <column>");
-        sended.add(labelchange);
-        do{
-            message = received.poll();
-            if(message!=null){
-                String command = ((GetCommand) message).getContent();
-                if(!command.equals("done")){
-                    if (tilePattern.matcher(command).find()) {
-                        Scanner pickScanner = new Scanner(command);
-                        mypicks.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
+        if(takeAlreadyDone){
+            printMessage("You already made your move.");
+            return;
+        }
+        else {
+            MessageView labelchange = new LabelChange("<row> blankspace <column>");
+            sended.add(labelchange);
+            do {
+                message = received.poll();
+                if (message != null) {
+                    String command = ((GetCommand) message).getContent();
+                    if (!command.equals("done")) {
+                        if (tilePattern.matcher(command).find()) {
+                            Scanner pickScanner = new Scanner(command);
+                            mypicks.add(Pair.of(pickScanner.nextInt(), pickScanner.nextInt()));
 
-                    }
-                    else if(command.equals("cancel")){
-                        mypicks.clear();
-                        pickedTiles.clear();
-                        MessageView showpicks = new ShowPickedTiles(pickedTiles);
-                        sended.add(showpicks);
-                        MessageView label = new LabelChange("Take was cancelled.");
-                        sended.add(label);
-                        return;
-                    }
-                    else{
-                        printMessage("Unknown command.");
-                    }
-                }
-                else{
-                    if(mypicks==null || mypicks.size()==0){
-                        printMessage("You still have to make your move.");
-                    }
-                    else{
-                        break;
+                        } else if (command.equals("cancel")) {
+                            mypicks.clear();
+                            pickedTiles.clear();
+                            MessageView showpicks = new ShowPickedTiles(pickedTiles);
+                            sended.add(showpicks);
+                            MessageView label = new LabelChange("Take was cancelled.");
+                            sended.add(label);
+                            return;
+                        } else {
+                            printMessage("Unknown command.");
+                        }
+                    } else {
+                        if (mypicks == null || mypicks.size() == 0) {
+                            printMessage("You still have to make your move.");
+                        } else {
+                            break;
+                        }
                     }
                 }
-            }
-        }while(mypicks.size()<3);
-        Message generic = new Message(MessageCode.GENERIC_MESSAGE);
-        if (mypicks.size() > 0) {
-            try {
-                pickedTiles.addAll(board.takeTiles(mypicks));
-                MessageView showpicks = new ShowPickedTiles(pickedTiles);
-                sended.add(showpicks);
-                do {
-                    try {
-                        GraphicLogic.clientHandler.sendingWithRetry(new ChosenTiles(mypicks), ATTEMPTS, WAITING_TIME);
-                        generic = GraphicLogic.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    } catch (Exception e) {
-                        printErrorMessage("An error occurred in sending the chosen tiles.");
-                    }
-                } while (generic == null);
-                if (generic.getMessageType() == MessageCode.MOVE_LEGAL) {
-                    MessageView update = new UpdateBoard(GraphicLogic.board);
-                    sended.add(update);
-                    printMessage("Move was verified.");
+            } while (mypicks.size() < 3);
+            MessageView donelabel = new LabelChange("Done.");
+            sended.add(donelabel);
+            Message generic = new Message(MessageCode.GENERIC_MESSAGE);
+            if (mypicks.size() > 0) {
+                try {
+                    pickedTiles.addAll(board.takeTiles(mypicks));
+                    MessageView showpicks = new ShowPickedTiles(pickedTiles);
+                    sended.add(showpicks);
+                    do {
+                        try {
+                            GraphicLogic.clientHandler.sendingWithRetry(new ChosenTiles(mypicks), ATTEMPTS, WAITING_TIME);
+                            generic = GraphicLogic.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } catch (Exception e) {
+                            printErrorMessage("Disconnected while sending move to server");
+                            System.exit(13);
+                        }
+                    } while (generic == null);
+                    if (generic.getMessageType() == MessageCode.MOVE_LEGAL) {
+                        MessageView update = new UpdateBoard(GraphicLogic.board);
+                        sended.add(update);
+                        printMessage("Move was verified.");
 
-                } else{
-                    printMessage("Move was not verified.");
+
+                    } else{
+                        printMessage("Move was not verified.");
+                    }
+                } catch (RuntimeException e) {
+                    System.out.println(e.getMessage());
+                    printMessage("Try another move.");
+                    mypicks.clear();
+                    throw new UnsupportedOperationException();
                 }
-            } catch (RuntimeException e) {
-                System.out.println(e.getMessage());
-                printMessage("Try another move.");
-                mypicks.clear();
-                throw new UnsupportedOperationException();
             }
         }
     }
 
 
     public void insertCommand() {
+        List<Tiles> copyofpicked = new ArrayList<>();
+        copyofpicked.addAll(pickedTiles);
         MessageView labelchange = new LabelChange("type <index> <row> <column>");
         tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");
         sended.add(labelchange);
@@ -330,9 +340,14 @@ public class GUIInterface {
             GraphicLogic.player.getShelf().insertTiles(selectedindexes, temporaryTiles);
             updateShelf();
             pickedTiles.clear();
+            selectedindexes.clear();
             printMessage("Done.");
         } catch (RuntimeException e) {
-            printErrorMessage(e.getMessage());
+            printMessage(e.getMessage());
+            pickedTiles.addAll(copyofpicked);
+            MessageView showpicks = new ShowPickedTiles(copyofpicked);
+            sended.add(showpicks);
+            return;
         }
 
     }
@@ -348,8 +363,10 @@ public class GUIInterface {
             printMessage("You still have to complete your move.");
             return true;
         } else
+            mypicks.clear();
             mex = new ShowTile(GraphicLogic.player.getShelf());
             sended.add(mex);
+
             return false;
     }
 
@@ -371,6 +388,7 @@ public class GUIInterface {
 
     public void turnCompleted() {
         ismyturn=false;
+        takeAlreadyDone=false;
         printMessage("You completed your turn.");
     }
 

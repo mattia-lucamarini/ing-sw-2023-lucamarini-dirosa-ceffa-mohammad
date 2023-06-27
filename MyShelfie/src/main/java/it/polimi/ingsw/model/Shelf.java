@@ -56,30 +56,64 @@ public class Shelf implements Serializable {
     }
 
     public void insertTiles(List<Pair<Integer, Integer>> positions, List<Tiles> colors, boolean testMode) {
+        List<Tiles> oldValues = new ArrayList<>();
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
+        System.out.println("1");
+        if(positions.get(0).getFirst()!=0 && getTile((positions.get(0).getFirst()-1),positions.get(0).getSecond()).equals(Tiles.VALID)){
+            throw new UnsupportedOperationException("Tiles must be adjacent");
+        }
+        System.out.println("2");
 
-        for (int i = 1; i < positions.size(); i++) {    //SAME COLUMN TEST
-            if (positions.get(i).getSecond() != positions.get(i - 1).getSecond()) {
+        if(positions.get(0).getFirst()!=0 && getTile((positions.get(0).getFirst()-1),positions.get(0).getSecond()).equals(Tiles.NOTVALID)){
+            throw new UnsupportedOperationException("Tiles must be adjacent");
+        }
+        System.out.println("3");
+
+        for (int i = 1; i < positions.size(); i++) {//SAME COLUMN TEST
+            if (!(positions.get(i).getSecond().equals(positions.get(i - 1).getSecond()))) {
                 throw new UnsupportedOperationException("All tiles need to be on the same column.");
             }
+
         }
+        System.out.println("4");
+
+        for (int i = 1; i < positions.size(); i++) {//ADJACENT COLUMN TEST
+            if (!(positions.get(i).getFirst().equals(positions.get(i - 1).getFirst()+1))) {
+                throw new UnsupportedOperationException("All tiles in the same column must be adjacent");
+            }
+
+        }
+        System.out.println("5");
+
         for (int i = 0; i < positions.size(); i++) {
             int x = positions.get(i).getFirst();
             int y = positions.get(i).getSecond();
-
             if (!testMode && !isCellValid(x, y)) {
+                System.out.println("putitback");
+                putitback(positions, oldValues);
                 throw new RuntimeException("Invalid position (" + x + ", " + y + ")");
             }
 
+            oldValues.add(getTile(x,y));
             matrix[x][y] = colors.get(i);
             if (!testMode && x < 5)
                 matrix[x + 1][y] = Tiles.VALID;
         }
+        System.out.println("6");
+
     }
 
+    public void putitback(List<Pair<Integer, Integer>> oldpositions,List<Tiles> old){
+        System.out.println("in putitback");
 
+        for(int i=0 ; i<oldpositions.size(); ++i){
+            int x = oldpositions.get(i).getFirst();
+            int y = oldpositions.get(i).getSecond();
+            matrix[x][y] = old.get(i);
+        }
+    }
 
 
     /**
