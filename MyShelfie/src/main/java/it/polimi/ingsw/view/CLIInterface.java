@@ -41,19 +41,19 @@ public class CLIInterface implements UserInterface{
     @Override
     public int askForNumOfPlayers(ClientHandler clientHandler){
         //TODO: Limit number of players
-        Scanner t = new Scanner(System.in);
+
         int num = 0;
         System.out.print("Insert player number: ");
         while (num == 0) {
             try {
+                Scanner t = new Scanner(System.in);
                 num = t.nextInt();
-                while (num < 1 || num > 4) {
-                    System.out.println("The number of players must be between 1-4!");
-                    System.out.print("Insert player number: ");
+                while (num < 2 || num > 4) {
+                    System.out.print("Please insert a number between 2 and 4: ");
                     num = t.nextInt();
                 }
             } catch (InputMismatchException e) {
-                System.out.println("Please insert an actual number.");
+                System.out.print("Please insert an actual number: ");
             }
         }
         boolean flag;
@@ -158,7 +158,7 @@ public class CLIInterface implements UserInterface{
             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                 System.out.print("\t" + (i + 1) + "> ");
                 String tilePick = sc.nextLine();
-                tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
+                tilePattern = Pattern.compile("[0-9]\\s*[0-9]");
                 if (tilePick.equals("cancel")) {
                     totalPick.clear();
                     break;
@@ -212,7 +212,7 @@ public class CLIInterface implements UserInterface{
         }
         System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
 
-        tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");
+        tilePattern = Pattern.compile("[0-2]\\s*[0-5]\\s*[0-4]");
         ArrayList<Pair<Integer, Integer>> finalPositions = new ArrayList<>();
         ArrayList<Tiles> finalTiles = new ArrayList<>();
         ArrayList<Tiles> tempTiles = new ArrayList<>(pickedTiles.size());

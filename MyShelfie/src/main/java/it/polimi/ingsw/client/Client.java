@@ -47,6 +47,8 @@ public class Client {
         //SELECT INTERFACE AND NETWORK TYPE
         System.out.println("Welcome to My Shelfie!\n Type 1 if you'd like to play by using a CLI\n Type 2 if you'd like to play by using a GUI ");
         System.out.print("> ");
+        String address = "127.0.0.1";
+        int port = 59090;
         Scanner sc = new Scanner(System.in);
         Registry registry;
         RmiServerInterface RmiServer;
@@ -55,18 +57,23 @@ public class Client {
         switch (sc.nextLine()){
             case "1":
                 userInterface = new CLIInterface();
+                System.out.print("Type the server address, or nothing for localhost:\n> ");
+                String addressChoice = sc.nextLine();
+                address = (addressChoice == "") ? address : addressChoice;
+
                 System.out.println(" Type 1 if you'd like to play using sockets\n Type 2 if you'd like to play using RMI");
                 System.out.print("> ");
                 try {
                     switch (sc.nextLine()) {
                         case "1":
-                            connectSocket("127.0.0.1", 59090);
+                            connectSocket(address, 59090);
                             break;
                         case "2":
-                            registry = LocateRegistry.getRegistry();
+                            registry = LocateRegistry.getRegistry(address);
                             RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
                             rmiClientService = RmiServer.getRmiClientService();
                             clientHandler = new RmiClientHandler(rmiClientService);
+                            System.out.println("Successfully connected to " + address + ":" + port);
                             break;
                         default:
                             System.out.println("Invalid option. Defaulting to sockets");
@@ -76,6 +83,7 @@ public class Client {
 
                 } catch (Exception e){
                     System.out.println(e);
+                    System.exit(1);
                 }
                 break;
             case "2":
@@ -282,6 +290,7 @@ public class Client {
                             userInterface.printErrorMessage("Stopped receiving turns notifications");
                         } catch (ClientDisconnectedException e) {
                             userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
+                            System.exit(13);
                         }
                     } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
                 }
@@ -436,9 +445,12 @@ public class Client {
                                 System.exit(13);
                             } catch (NoMessageToReadException ignored){}
                         } while (message.getMessageType() != MessageCode.TURN_OVER);
+
                         try {
-                            clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), ATTEMPTS, WAITING_TIME);
-                            //System.out.println("Sent player shelf");
+                            ShelfCheck shelfMessage = new ShelfCheck(player.getShelf());
+                            clientHandler.sendingWithRetry(shelfMessage, ATTEMPTS, WAITING_TIME);
+                            //System.out.println("Sent player shelf: ");
+                            //((ShelfCheck) shelfMessage).getShelf().printShelf();
                         } catch (ClientDisconnectedException e) {
                             System.out.println("Disconnected while sending shelf content");
                             System.exit(1);
@@ -479,8 +491,11 @@ public class Client {
                         do {
                             try {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                                if (message.getMessageType() == MessageCode.SHELF_CHECK)
+                                if (message.getMessageType() == MessageCode.SHELF_CHECK) {
                                     playerShelves.put(nowPlaying, ((ShelfCheck) message).getShelf());
+                                    //System.out.println("Received shelf from " + nowPlaying);
+                                    //((ShelfCheck) message).getShelf().printShelf();
+                                }
                             } catch (ClientDisconnectedException e) {
                                 System.out.println("Client disconnected while waiting for other shelves.");
                                 System.exit(0);
