@@ -1,8 +1,10 @@
 package it.polimi.ingsw.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**Class PersonalGoalCard
  * @author Angelo Di Rosa
@@ -13,12 +15,13 @@ public class PersonalGoalCard extends Card implements Serializable {
     private PersonalGoal goal;
     private int goalIndex;
     static List<PersonalGoal> personalpointer = PersonalGoal.all();
+    static Set<Integer> fishedGoals = new HashSet<>();
 
     /** Method: resetGoalDeck
      * @author Shaffaeet Mohammad
      * This method resets the deck so that the constructor starts fishing from a fresh deck again. */
     public static void resetGoalDeck() {
-        personalpointer = PersonalGoal.all();
+        fishedGoals.clear();
     }
 
     /** Method: getGoal()
@@ -27,15 +30,13 @@ public class PersonalGoalCard extends Card implements Serializable {
      * It is used to choose a random Personal Goal for the game from a personal goal list.*/
     public void generateGoal(){
         Random rand = new Random();
-        int t = rand.nextInt(personalpointer.size());
-        goal = personalpointer.get(t);
-        personalpointer.remove(t);
-        goalIndex = t;
-    }
-    public void generateGoal(int index){
-        goal = personalpointer.get(index);
-        personalpointer.remove(index);
-        goalIndex = index;
+        int t;
+        do {
+            t = rand.nextInt(personalpointer.size());
+            goal = personalpointer.get(t);
+            goalIndex = t;
+        } while (fishedGoals.contains(t));
+        fishedGoals.add(t);
     }
     public PersonalGoalCard(PersonalGoal goal){
         this.goal = goal;
@@ -44,7 +45,8 @@ public class PersonalGoalCard extends Card implements Serializable {
         generateGoal();
     }
     public PersonalGoalCard(int index) {
-        generateGoal(index);
+        goalIndex = index;
+        goal = personalpointer.get(index);
     }
     @Override
     public PersonalGoal getGoal(){

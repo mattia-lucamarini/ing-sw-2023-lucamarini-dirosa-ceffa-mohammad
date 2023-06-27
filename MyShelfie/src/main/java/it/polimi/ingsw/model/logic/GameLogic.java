@@ -32,7 +32,7 @@ public class GameLogic implements Runnable, Logic {
     private ArrayList<String> playerOrder;
     private HashMap<String, Shelf> playerShelves;
     private String nowPlaying;
-    ArrayList<Tiles> playerPickTypes;
+    ArrayList<Tiles> playerPickTypes = new ArrayList<>();
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
@@ -129,7 +129,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("\n[GAME " + gameID + "] FINAL SCORES: ");
         ArrayList<Pair<String, Integer>> orderedPoints = new ArrayList<>();
         for (Map.Entry<String, Integer> score : playerPoints.entrySet())
-            orderedPoints.add(new Pair(score.getKey(), score.getValue()));
+            orderedPoints.add(Pair.of(score.getKey(), score.getValue()));
 
         orderedPoints.sort(Comparator.comparing(Pair::getSecond));
         Collections.reverse(orderedPoints);
@@ -151,10 +151,15 @@ public class GameLogic implements Runnable, Logic {
             try {
                 System.out.println("[GAME " + gameID + "] Sending goals to " + username);
                 // TODO: Why call the constructor again? Shouldn't it be the same from the hashmap?
-                clientList.get(username)
-                        .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
-                clientList.get(username)
-                        .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
+                clientList.get(username).sendingWithRetry(
+                        new SetPersonalGoal(personalGoals.get(username).getGoalIndex()), 100, 1);
+                clientList.get(username).sendingWithRetry(
+                        new SetCommonGoals(
+                                new Pair<>(
+                                        commonGoals.getFirst().getGoalIndex(),
+                                        commonGoals.getSecond().getGoalIndex()),
+                                numPlayers),
+                        100, 1);
                 //System.out.println("[GAME " + gameID + "] Sent Personal goal to " + username);
             }
             catch (ClientDisconnectedException e){
@@ -236,13 +241,12 @@ public class GameLogic implements Runnable, Logic {
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
-
             // Make client pick tiles from board until turn end.
-            // TODO: Player shouldn't be able to pick multiple disconnected tile-rows during the same turn.
             try {
+                boolean tookTiles = false;
                 while (!moveNotificationReceived) {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
+                    if (!tookTiles && message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
                         try {
                             pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
                             if (pickedTiles > 3)
@@ -254,6 +258,7 @@ public class GameLogic implements Runnable, Logic {
                             for (Tiles tile : playerPickTypes)
                                 System.out.print(" " + tile);
                             System.out.println(" ]");
+                            tookTiles = true;
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
@@ -376,7 +381,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         // Calculate points due to same color groups on shelf.
-        var groups =  ((ShelfCheck) message).getShelf().findTileGroups();
+        var groups = ((ShelfCheck) message).getShelf().findTileGroups();
         for (var group : groups) {
             int gainedPoints = Shelf.scoreGroup(group);
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);

@@ -126,8 +126,6 @@ public class Client {
             System.out.println(e);
         }
     }
-
-
     private static void connectSocket(String address, int port){
         boolean connected = false;
         while (!connected) {
