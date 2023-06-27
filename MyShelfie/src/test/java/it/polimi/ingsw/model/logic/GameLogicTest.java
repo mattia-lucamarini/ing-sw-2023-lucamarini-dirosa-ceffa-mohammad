@@ -8,6 +8,7 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +21,10 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 public class GameLogicTest {
-    public static GameLogic gameLogic1() {
-        var players = new ConcurrentHashMap<String, ClientHandler>();
-        players.put("Marco", mock(ClientHandler.class));
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
-
-        return new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
+    public static ClientHandler newClientHMock() {
+        var mck = mock(ClientHandler.class);
+        when(mck.isConnected()).thenReturn(true);
+        return mck;
     }
 
     public static List<Message> getMessagesFromMockClient(ClientHandler clientH, int wantedNumOfInvocations) throws ClientDisconnectedException {
@@ -46,7 +44,7 @@ public class GameLogicTest {
         var players = new ConcurrentHashMap<String, ClientHandler>();
 
         // Define Marco's turn. He takes 2 tiles, the 1 tile, then ends turn.
-        var marco = mock(ClientHandler.class);
+        var marco = newClientHMock();
         var tilesToTake = List.of(Pair.of(6, 5), Pair.of(7, 5), Pair.of(5, 3));
         when(marco.receivingWithRetry(anyInt(), anyInt())).thenReturn(
                 new ChosenTiles(tilesToTake.subList(0, 2)),
@@ -60,8 +58,8 @@ public class GameLogicTest {
         );
         players.put("Marco", marco);
 
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -82,7 +80,7 @@ public class GameLogicTest {
         // Define Marco's turn: He takes 2 tiles, then 1 tile, then ends turn.
         var marco = new Player("Marco");
         // Create mock of client.
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         var tilesToTake = new ArrayList<>(List.of(Pair.of(6, 5), Pair.of(7, 5)));
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
@@ -105,8 +103,8 @@ public class GameLogicTest {
         );
         players.put("Marco", marcoClient);
 
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -138,7 +136,7 @@ public class GameLogicTest {
         // Define Marco's turn: He takes 2 tiles, completes a common goal and ends.
         var marco = new Player("Marco");
         // Create mock of client.
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt())).thenReturn(
                 new Message(MessageCode.TURN_OVER),
@@ -148,8 +146,8 @@ public class GameLogicTest {
                 new ShelfCheck(mock(Shelf.class))
         );
         players.put("Marco", marcoClient);
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var game = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -185,7 +183,7 @@ public class GameLogicTest {
         // Define Marco's turn: He takes 2 tiles, completes a common goal and ends.
         var marco = new Player("Marco");
         // Create mock of client.
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt())).thenReturn(
                 new Message(MessageCode.TURN_OVER),
@@ -195,8 +193,8 @@ public class GameLogicTest {
                 new ShelfCheck(mock(Shelf.class))
         );
         players.put("Marco", marcoClient);
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var game = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -231,14 +229,14 @@ public class GameLogicTest {
         // Define Marco's turn: He takes 2 tiles, completes a common goal and ends.
         var marco = new Player("Marco");
         // Create mock of client.
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
                 .thenReturn(new Message(MessageCode.TURN_OVER))
                 .thenThrow(new ClientDisconnectedException());
         players.put("Marco", marcoClient);
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -263,14 +261,14 @@ public class GameLogicTest {
         // Define Marco's turn: He takes 2 tiles, completes a common goal and ends.
         var marco = new Player("Marco");
         // Create mock of client.
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
                 .thenReturn(new Message(MessageCode.TURN_OVER))
                 .thenThrow(new NoMessageToReadException());
         players.put("Marco", marcoClient);
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
 
         // Build GameLogic with example board from rules.
         var gameLogic = new GameLogic(players, 0, BoardTest.rulesExampleBoard(3));
@@ -294,14 +292,14 @@ public class GameLogicTest {
 
         // Create mock of client.
         var marcoShelf = ShelfTest.stairsShelf();
-        var marcoClient = mock(ClientHandler.class);
+        var marcoClient = newClientHMock();
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
                 .thenReturn(new SetPersonalGoal(), new ShelfCheck(marcoShelf));
         players.put("Marco", marcoClient);
 
-        players.put("Luigi", mock(ClientHandler.class));
-        players.put("Giorgio", mock(ClientHandler.class));
+        players.put("Luigi", newClientHMock());
+        players.put("Giorgio", newClientHMock());
         for (var entry : players.entrySet()) {
             if (entry.getKey().equals("Marco")) continue;
             when(entry.getValue().receivingWithRetry(anyInt(), anyInt()))
@@ -321,10 +319,10 @@ public class GameLogicTest {
         var msg = (SetPersonalGoal) msgs.get(0);
         var personalGoalSent = new PersonalGoalCard(msg.getGoalNumber());
         var pgPoints = personalGoalSent.getGoal().checkGoal(marcoShelf);
-        var tgPoints = marcoShelf.findTileGroups().stream()
-                .map(Shelf::scoreGroup)
-                .mapToInt(Integer::intValue)
-                .sum();
+        int tgPoints = 0;
+        for (var group : marcoShelf.findTileGroups()) {
+            tgPoints += Shelf.scoreGroup(group);
+        }
         Assert.assertEquals(
                 pgPoints + tgPoints,
                 game.getPlayerPoints().get("Marco").intValue()

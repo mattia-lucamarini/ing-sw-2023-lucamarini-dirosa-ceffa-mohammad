@@ -32,7 +32,7 @@ public class GameLogic implements Runnable, Logic {
     private ArrayList<String> playerOrder;
     private HashMap<String, Shelf> playerShelves;
     private String nowPlaying;
-    ArrayList<Tiles> playerPickTypes;
+    ArrayList<Tiles> playerPickTypes = new ArrayList<>();
 
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
@@ -129,7 +129,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("\n[GAME " + gameID + "] FINAL SCORES: ");
         ArrayList<Pair<String, Integer>> orderedPoints = new ArrayList<>();
         for (Map.Entry<String, Integer> score : playerPoints.entrySet())
-            orderedPoints.add(new Pair(score.getKey(), score.getValue()));
+            orderedPoints.add(Pair.of(score.getKey(), score.getValue()));
 
         orderedPoints.sort(Comparator.comparing(Pair::getSecond));
         Collections.reverse(orderedPoints);
