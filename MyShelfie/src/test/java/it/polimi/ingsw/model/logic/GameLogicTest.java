@@ -38,9 +38,6 @@ public class GameLogicTest {
 
     @Test
     public void testMarcoTakes2Then1Tiles() throws NoMessageToReadException, ClientDisconnectedException {
-        // TODO: this shouldn't pass. Wait for client fix.
-        Assert.assertFalse(true);
-
         var players = new ConcurrentHashMap<String, ClientHandler>();
 
         // Define Marco's turn. He takes 2 tiles, the 1 tile, then ends turn.
@@ -48,12 +45,11 @@ public class GameLogicTest {
         var tilesToTake = List.of(Pair.of(6, 5), Pair.of(7, 5), Pair.of(5, 3));
         when(marco.receivingWithRetry(anyInt(), anyInt())).thenReturn(
                 new ChosenTiles(tilesToTake.subList(0, 2)),
-                new ChosenTiles(tilesToTake.subList(2, 3)),
+                new ChosenTiles(tilesToTake.subList(2, 3)), // This should be ignored.
                 new Message(MessageCode.TURN_OVER),
                 new CommonGoalReached("Marco", 2), // 2 means no goal reached.
                 new FullShelf("Marco", false),
                 new Message(MessageCode.TURN_OVER),
-                // TODO: Maybe give real shelf to Marco.
                 new ShelfCheck(mock(Shelf.class))
         );
         players.put("Marco", marco);
@@ -69,7 +65,7 @@ public class GameLogicTest {
 
         // Check that the correct tiles have been removed.
         var expectedBoard = BoardTest.rulesExampleBoard(3);
-        expectedBoard.takeTiles(tilesToTake);
+        expectedBoard.takeTiles(tilesToTake.subList(0, 2));
         Assert.assertEquals(expectedBoard, gameLogic.getBoard());
     }
 

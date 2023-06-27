@@ -236,13 +236,12 @@ public class GameLogic implements Runnable, Logic {
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
 
-
             // Make client pick tiles from board until turn end.
-            // TODO: Player shouldn't be able to pick multiple disconnected tile-rows during the same turn.
             try {
+                boolean tookTiles = false;
                 while (!moveNotificationReceived) {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
+                    if (!tookTiles && message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
                         try {
                             pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
                             if (pickedTiles > 3)
@@ -254,6 +253,7 @@ public class GameLogic implements Runnable, Logic {
                             for (Tiles tile : playerPickTypes)
                                 System.out.print(" " + tile);
                             System.out.println(" ]");
+                            tookTiles = true;
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
