@@ -481,6 +481,7 @@ public class Client {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                                 if (message.getMessageType() == MessageCode.SHELF_CHECK)
                                     playerShelves.put(nowPlaying, ((ShelfCheck) message).getShelf());
+                                    ((ShelfCheck) message).getShelf().printShelf();
                             } catch (ClientDisconnectedException e) {
                                 System.out.println("Client disconnected while waiting for other shelves.");
                                 System.exit(0);
