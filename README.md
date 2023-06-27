@@ -11,8 +11,8 @@ Implementazione in Java del gioco da tavolo [My Shelfie](https://www.craniocreat
 
 Il progetto è realizzato tramite un sistema distribuito composto da un singolo server, capace di gestire partite multiple
 in contemporanea, e multipli client che possono partecipare ad una partita alla volta utilizzando una tecnologia di rete
-a scelta tra RMI e Socket, entrambe supportato in contemporanea dal server.
-Il client può anche decidere di giocare una partita utilizzando a suo piacimento un'interfaccia testuale (TUI) oppure un'
+a scelta tra RMI e Socket, entrambe supportate in contemporanea dal server.
+Il giocatore può decidere di giocare una partita utilizzando a suo piacimento un'interfaccia testuale (TUI) oppure un'
 interfaccia grafica (GUI).
 L'implementazione segue il pattern MVC (Model-View-Controller).
 
@@ -35,9 +35,9 @@ L'implementazione segue il pattern MVC (Model-View-Controller).
 
 ## Documentazione
 ### UML
-Consultare la documentazione UML [qui]().
+Consultare la documentazione UML [qui](deliverables/uml).
 ### JavaDoc
-Consultare la documentazione JavaDoc [qui]().
+Consultare la documentazione JavaDoc [qui](deliverables).
 
 ## Run the Application
 

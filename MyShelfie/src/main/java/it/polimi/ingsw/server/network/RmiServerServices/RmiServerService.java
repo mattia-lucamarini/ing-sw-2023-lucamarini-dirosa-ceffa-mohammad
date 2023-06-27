@@ -9,16 +9,24 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Class: RmiServerService
+ * @author Paolo Ceffa
  * Implementation of RmiServerInterface, which allow a Rmi client to establish a connection with the server
  */
 public class RmiServerService extends UnicastRemoteObject implements RmiServerInterface {
 
     RmiInterface rmiService;
 
+    /**
+     * Default constructor
+     * @throws RemoteException if a network issue occurred
+     */
     public RmiServerService() throws RemoteException {
         this.rmiService = null;
     }
 
+    /**
+     * Implementation of the getRmiClientService of the RmiInterface
+     */
     @Override
     public synchronized RmiInterface getRmiClientService() throws RemoteException {
         RmiInterface clientSideService = new RmiService();
@@ -34,12 +42,20 @@ public class RmiServerService extends UnicastRemoteObject implements RmiServerIn
         return clientSideService;
     }
 
+    /**
+     * Method to allow the server to obtain the RmiInterface object of one connected Rmi client
+     * @return the Rmi service object of the client
+     */
     public RmiInterface getServerService(){
         RmiInterface result = this.rmiService;
         this.rmiService = null;
         return result;
     }
 
+    /**
+     * Method used server-side if there is an RMI waiting client
+     * @return True if there is an RMI waiting client False otherwise
+     */
     public boolean isThereAClient(){
         return (this.rmiService != null);
     }

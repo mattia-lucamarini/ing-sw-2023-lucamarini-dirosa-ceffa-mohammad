@@ -4,7 +4,6 @@ import it.polimi.ingsw.model.logic.GameLogic;
 import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.model.logic.TestGameLogic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
-import it.polimi.ingsw.server.network.ServerNetworkManager;
 import it.polimi.ingsw.server.network.ServerSocketAndRmiNetwork;
 
 
@@ -20,8 +19,6 @@ import java.util.logging.Logger;
  * its players.
  */
 public class WebServer {
-
-    public final static int MAX_PLAYERS = 4; //spostare nella classe GameLogic
     public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
     private final ServerSocketAndRmiNetwork mainNetworkManager;
     private final ConcurrentHashMap<Integer, Logic> activeGames;
@@ -109,7 +106,7 @@ public class WebServer {
      * and all the players
      *
      */
-    private void checkAndFinalizeGame() { //fare code refactoring
+    private void checkAndFinalizeGame() {
         while(true){
             System.out.println("[Web Server] Number of active Games: "+this.activeGames.size());
             for(Integer id: this.activeGames.keySet()){

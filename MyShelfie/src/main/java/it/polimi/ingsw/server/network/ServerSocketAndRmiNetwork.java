@@ -1,5 +1,6 @@
 package it.polimi.ingsw.server.network;
 
+import it.polimi.ingsw.model.logic.GameLogic;
 import it.polimi.ingsw.model.logic.Logic;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.ClientHandler.RmiClientHandler;
@@ -48,8 +49,6 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
         Registry registry = LocateRegistry.createRegistry(rmiPort);
         registry.rebind("RmiServer", this.accepter);
         this.waitingList = new ConcurrentLinkedQueue<>();
-
-        // to do -> manage RMI clients
     }
 
     /**
@@ -66,7 +65,7 @@ public class ServerSocketAndRmiNetwork implements ServerNetworkManager {
                                                            ConcurrentHashMap<String, ClientHandler> clientHandlers,
                                                                      ConcurrentHashMap<Integer, Logic> activeGames) {
             ConcurrentHashMap<String, ClientHandler> clientList = new ConcurrentHashMap<>();
-            int maxNumPlayers = WebServer.MAX_PLAYERS;
+            int maxNumPlayers = GameLogic.MAX_PLAYERS;
             while (clientList.size() < maxNumPlayers) {
                 System.out.println("[Web Server] Wait for a new player.");
                 ClientHandler clientHandler =  null;

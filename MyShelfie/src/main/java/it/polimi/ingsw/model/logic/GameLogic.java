@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * This class implements the game rules and manages the players' turns.
  */
 public class GameLogic implements Runnable, Logic {
+    public final static int MAX_PLAYERS = 4;
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
     private final int TOTAL_GOALS = 12;
