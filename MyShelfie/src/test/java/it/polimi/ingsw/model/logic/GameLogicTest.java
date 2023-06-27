@@ -314,7 +314,7 @@ public class GameLogicTest {
         Assert.assertEquals(MessageCode.SET_PERSONAL_GOAL, msgs.get(0).getMessageType());
         var msg = (SetPersonalGoal) msgs.get(0);
         var personalGoalSent = new PersonalGoalCard(msg.getGoalNumber());
-        var pgPoints = personalGoalSent.getGoal().checkGoal(marcoShelf);
+        int pgPoints = personalGoalSent.getGoal().checkGoal(marcoShelf);
         int tgPoints = 0;
         for (var group : marcoShelf.findTileGroups()) {
             tgPoints += Shelf.scoreGroup(group);

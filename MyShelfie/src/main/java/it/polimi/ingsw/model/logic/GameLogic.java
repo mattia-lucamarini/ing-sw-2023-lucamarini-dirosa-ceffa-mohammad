@@ -151,10 +151,15 @@ public class GameLogic implements Runnable, Logic {
             try {
                 System.out.println("[GAME " + gameID + "] Sending goals to " + username);
                 // TODO: Why call the constructor again? Shouldn't it be the same from the hashmap?
-                clientList.get(username)
-                        .sendingWithRetry(new SetPersonalGoal(new PersonalGoalCard().getGoalIndex()), 100, 1);
-                clientList.get(username)
-                        .sendingWithRetry(new SetCommonGoals(new Pair<>(commonGoals.getFirst().getGoalIndex(),commonGoals.getSecond().getGoalIndex()), numPlayers), 100, 1);
+                clientList.get(username).sendingWithRetry(
+                        new SetPersonalGoal(personalGoals.get(username).getGoalIndex()), 100, 1);
+                clientList.get(username).sendingWithRetry(
+                        new SetCommonGoals(
+                                new Pair<>(
+                                        commonGoals.getFirst().getGoalIndex(),
+                                        commonGoals.getSecond().getGoalIndex()),
+                                numPlayers),
+                        100, 1);
                 //System.out.println("[GAME " + gameID + "] Sent Personal goal to " + username);
             }
             catch (ClientDisconnectedException e){
@@ -376,7 +381,7 @@ public class GameLogic implements Runnable, Logic {
         System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         // Calculate points due to same color groups on shelf.
-        var groups =  ((ShelfCheck) message).getShelf().findTileGroups();
+        var groups = ((ShelfCheck) message).getShelf().findTileGroups();
         for (var group : groups) {
             int gainedPoints = Shelf.scoreGroup(group);
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);
