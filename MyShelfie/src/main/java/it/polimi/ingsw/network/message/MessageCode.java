@@ -27,5 +27,6 @@ public  enum MessageCode {
     MOVE_LEGAL,
     MOVE_ILLEGAL,
     FINAL_SCORE,
+    FORCED_WIN,
     BAD_RESPONSE
 }

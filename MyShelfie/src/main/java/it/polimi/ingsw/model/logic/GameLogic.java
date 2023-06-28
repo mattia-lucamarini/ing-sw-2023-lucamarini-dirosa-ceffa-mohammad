@@ -21,6 +21,7 @@ public class GameLogic implements Runnable, Logic {
     private static final int WAITING_TIME = 5;
     private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
+    private Set<String> disconnectedPlayers;
     private HashMap<String, Integer> playerPoints;
     private final int numPlayers;
     private final int gameID;
@@ -43,6 +44,7 @@ public class GameLogic implements Runnable, Logic {
      */
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
+        this.disconnectedPlayers = new HashSet<>();
         this.numPlayers = clientList.size();
         this.gameID = gameID;
         this.isActive = true;
@@ -117,6 +119,7 @@ public class GameLogic implements Runnable, Logic {
                 clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e){
                 System.out.println(username + " disconnected while sending game start notification");
+                disconnectedPlayers.add(username);
             }
         }
 
@@ -125,7 +128,8 @@ public class GameLogic implements Runnable, Logic {
             System.out.println("[GAME " + gameID + "] Starting round");
             for (String pl : playerOrder) {
                 nowPlaying = pl;
-                playTurn(pl);
+                if (playTurn(pl))
+                    return;
             }
         }
 
@@ -142,14 +146,17 @@ public class GameLogic implements Runnable, Logic {
         Collections.reverse(orderedPoints);
         for (int i = 0; i < orderedPoints.size(); i++)
             System.out.println(i+1+": "+ orderedPoints.get(i).getFirst() + " (" + orderedPoints.get(i).getSecond()+" punti)");
-        System.out.println(orderedPoints.get(0).getFirst() + " wins!");
+        System.out.println("[GAME " + gameID + "] OVER: " + orderedPoints.get(0).getFirst() + " wins!");
         for (String pl : clientList.keySet()) {
             try {
                 clientList.get(pl).sendingWithRetry(new FinalScore(orderedPoints), ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e) {
                 System.out.println(pl + " disconnected while sending final score.");
+                disconnectedPlayers.add(pl);
             }
         }
+        isActive = false;
+        return;
     }
 
     public void sendGoalsToClients() {
@@ -171,6 +178,7 @@ public class GameLogic implements Runnable, Logic {
             }
             catch (ClientDisconnectedException e){
                 System.out.println("[GAME " + gameID + "] Couldn't send Personal Goal to " + username);
+                disconnectedPlayers.add(username);
             }
 
             // Wait for awk from clients.
@@ -182,6 +190,7 @@ public class GameLogic implements Runnable, Logic {
                     System.out.println("[GAME " + gameID + "] " + username + " is ready");
             } catch (ClientDisconnectedException cde){
                 System.out.println("[GAME " + gameID + "] Client Disconnected after receiving Personal Goal");
+                disconnectedPlayers.add(username);
             } catch (NoMessageToReadException nme){
                 System.out.println("[GAME " + gameID + "] No Personal Goal confirmation was received");
             }
@@ -206,23 +215,70 @@ public class GameLogic implements Runnable, Logic {
             clientHandler.sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
             //System.out.println("\tSent game start");
             clientList.replace(username, clientHandler);
+            disconnectedPlayers.remove(username);
             return true;
         } catch (ClientDisconnectedException e) {
             System.out.println("\t[GAME " + gameID + "] " + username + " is still disconnected: ");
+            disconnectedPlayers.add(username);
             return false;
         }
     }
 
-    public void playTurn(String player) {
+    public boolean playTurn(String player) {
         // Broadcast player turn to others
         try {
             if (!clientList.get(player).isConnected())
                 throw new ClientDisconnectedException();
+            else if (disconnectedPlayers.size() == clientList.size() - 1){
+                System.out.println("[GAME " + gameID + "] "+ player + " is the only player left. They will win the game if no one reconnects in 15 seconds.");
+                try {
+                    clientList.get(player).sendingWithRetry(new Message(MessageCode.PLAY_TURN), ATTEMPTS, WAITING_TIME);
+                    clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
+                    System.out.println("[GAME " + gameID + "] Every player disconnected. The game is over.");
+                    isActive = false;
+                    return true;
+                }
+                try {Thread.sleep(15 * 1000);}
+                catch (InterruptedException ignored){}
+                if (disconnectedPlayers.size() == clientList.size() - 1){
+                    try {
+                        clientList.get(player).sendingWithRetry(new ForcedWin(true), ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending final forced win notification.");
+                        System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
+                        isActive = false;
+                        return true;
+                    }
+                    System.out.println("[GAME " + gameID + "] Time's up. " + player + " wins!");
+                    System.out.println("[GAME " + gameID + "] OVER.");
+                    isActive = false;
+                    return true;
+                } else {
+                    System.out.println("[GAME " + gameID + "] Someone reconnected. The games continues.");
+                    try {
+                        clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
+                        System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
+                        isActive = false;
+                        return true;
+                    }
+                }
+            }
         } catch (ClientDisconnectedException e){
             System.out.println("[GAME " + gameID + "] Giving control to next player while " + player + " is out.");
-            try {Thread.sleep(1000);}
-            catch (InterruptedException ignored){}
-            return;
+            disconnectedPlayers.add(player);
+            //disconnectedPlayers.forEach(System.out::println);
+            if (disconnectedPlayers.size() == clientList.size()){
+                System.out.println("Everyone disconnected. Nobody wins.");
+                System.out.println("[GAME " + gameID + "] OVER.");
+                return true;
+            }
+            /*try {Thread.sleep(1000);}
+            catch (InterruptedException ignored){}*/
+            return false;
         }
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);
@@ -234,6 +290,7 @@ public class GameLogic implements Runnable, Logic {
                     //System.out.println("Sent turn notification to " + username);
                 } catch (ClientDisconnectedException e) {
                     System.out.println("[GAME " + gameID + "] " + username + " was disconnected while sending turn start notification");
+                    disconnectedPlayers.add(username);
                 } catch (ClassCastException e) {
                     System.out.println("[GAME " + gameID + "] " + e);
                 }
@@ -294,9 +351,10 @@ public class GameLogic implements Runnable, Logic {
                 }
             } catch (ClientDisconnectedException e) {
                 System.out.println("[GAME " + gameID + "] " + player + " disconnected during their turn.");
+                disconnectedPlayers.add(player);
                 if (!playerPick.isEmpty() && !playerPickTypes.isEmpty())
                     board.putItBack(playerPick, playerPickTypes);
-                return;
+                return false;
             } catch (NoMessageToReadException ignored){}
 
             // Check if player completes common goal.
@@ -317,6 +375,7 @@ public class GameLogic implements Runnable, Logic {
                                 clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
                             } catch (ClientDisconnectedException e) {
                                 System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
+                                disconnectedPlayers.add(username);
                             }
                     } else {
                         System.out.println("[GAME " + gameID + "] " + player + " did not complete any goal");
@@ -338,6 +397,7 @@ public class GameLogic implements Runnable, Logic {
                             clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Full Shelf notification");
+                            disconnectedPlayers.add(username);
                         }
                     }
                 }
@@ -358,6 +418,7 @@ public class GameLogic implements Runnable, Logic {
                             clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
+                            disconnectedPlayers.add(username);
                         }
                     }
                 }
@@ -375,7 +436,9 @@ public class GameLogic implements Runnable, Logic {
         catch (NoMessageToReadException ignored) {}
         catch (ClientDisconnectedException e) {
             System.out.println("[GAME " + gameID + "] " + player + " disconnected.");
+            disconnectedPlayers.add(player);
         }
+        return false;
     }
 
     public void assignPoints(String player) {
@@ -389,6 +452,7 @@ public class GameLogic implements Runnable, Logic {
                 System.out.println("[GAME " + gameID + "] Didn't receive shelf from " + player);
             } catch (ClientDisconnectedException e){
                 System.out.println("[GAME " + gameID + "]" + player + " disconnected during point assignment.");
+                disconnectedPlayers.add(player);
             }
         } while (message.getMessageType() != MessageCode.SHELF_CHECK);
 
