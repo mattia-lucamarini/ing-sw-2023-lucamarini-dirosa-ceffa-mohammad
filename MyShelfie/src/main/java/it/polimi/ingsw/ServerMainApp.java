@@ -12,7 +12,7 @@ public class ServerMainApp {
         int numParameters = args.length;
         int socketPort = 59090; // Default server socket port
         int rmiPort = 1099; // Default RMI port
-        String serverMode = "production"; 
+        String serverMode = "production";
 
         printLogo();
         System.out.println("Welcome to the Server Command Line Interface!");

@@ -1,9 +1,9 @@
 # Prova Finale di Ingegneria del Software - AA 2022-2023
-### Team
-- [**Marini**](https://github.com/mattia-lucamarini)
-- [**Dirosa**](https://github.com/Angelodirosa)
-- [**Ceffa**](https://github.com/poolll98)
-- [**Mohammad**]()
+### Team: 
+- [**Mattia Marini**](https://github.com/mattia-lucamarini)
+- [**Angelo Dirosa**](https://github.com/Angelodirosa)
+- [**Paolo Ceffa**](https://github.com/poolll98)
+- [**Mohammad Shaffaeet**]()
 # My Shelfie
 <img src="MyShelfie/free_resources/my-shelfie.png" alt="Image description" width="350">
 
@@ -68,10 +68,11 @@ E' possibile eseguire il client tramite interfaccia grafica (GUI), oppure tramit
 2. Eseguire il Client (GUI):
 
 ``` ...  [--ip <server_ip>]```
+
 L'argomento ```--ip``` specifica l'indirizzo IP del server che offre il servizio di gioco. Essendo opzionale, se omesso,
 il valore di default è 
   - <server_ip> = 127.0.0.1
-  - 
+
 L'argomento ```--ports``` specifica le porte messe a disposizione dal Server per accettare connessioni dai client utilizzando
 rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default sono i seguenti:
   - <socket_port_number> = 59090
