@@ -62,7 +62,7 @@ L'argomento ```--ports``` specifica le porte dove mettere in ascolto il Server p
 rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default sono i seguenti:
   - <socket_port_number> = 59090
   - <rmi_port_number> = 1099
-2. Utilizzando Docker: seguire l'apposita guida [qui](MyShelfie/README.md).
+2. Utilizzando Docker: seguire l'apposita guida [qui](deliverables/jar/README.md).
 
 ### Run the Client
 E' possibile eseguire il client tramite interfaccia grafica (GUI), oppure tramite interfaccia testuale (TUI),
