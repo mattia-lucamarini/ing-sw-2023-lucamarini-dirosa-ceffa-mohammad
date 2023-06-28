@@ -191,8 +191,8 @@ public class CLIInterface implements UserInterface{
                 } while (message == null);
                 if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
                     System.out.println("Move was verified.");
-                } else
-                    System.out.println("Move was not verified.");
+                } else if (message.getMessageType() == MessageCode.MOVE_ILLEGAL)
+                    throw new RuntimeException(((IllegalMove) message).getReason());
             } catch (RuntimeException e) {
                 System.out.println(e.getMessage());
                 System.out.println("Try another move.");
@@ -254,8 +254,8 @@ public class CLIInterface implements UserInterface{
             } while (message == null);
             if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
                 System.out.println("Move was verified.");
-            } else
-                System.out.println("Move was not verified.");
+            } else if (message.getMessageType() == MessageCode.MOVE_ILLEGAL)
+                throw new RuntimeException(((IllegalMove) message).getReason());
             return true;
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());

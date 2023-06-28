@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Class: GameLogic
  * @author Mattia Lucamarini
- * This class implements the game rules and manages the players' turns.
+ * This class implements the game rules, manages the players' turns, and calculates the ending score.
  */
 public class GameLogic implements Runnable, Logic {
     public final static int MAX_PLAYERS = 4;
@@ -35,6 +35,12 @@ public class GameLogic implements Runnable, Logic {
     private String nowPlaying;
     ArrayList<Tiles> playerPickTypes = new ArrayList<>();
 
+    /**
+     * The constructor is used by the server to instantiate new games.
+     * @param clientList Contains all the players and their clienthandlers.
+     * @param gameID A unique number used by the server to manage multiple games.
+     * @param board The playing board assigned to this game.
+     */
     public GameLogic(ConcurrentHashMap<String, ClientHandler> clientList, int gameID, Board board){
         this.clientList = clientList;
         this.numPlayers = clientList.size();
@@ -264,7 +270,7 @@ public class GameLogic implements Runnable, Logic {
                             tookTiles = true;
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
-                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
+                            clientList.get(player).sendingWithRetry(new IllegalMove(e.getMessage()), ATTEMPTS, WAITING_TIME);
                         }
                     } else if (tookTiles && message.getMessageType() == MessageCode.INSERT){    //INSERT COMMAND
                         try {
@@ -275,7 +281,7 @@ public class GameLogic implements Runnable, Logic {
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
                         } catch (RuntimeException e){
                             System.out.println("[GAME " + gameID + "] "+ player + " made an illegal insert move.");
-                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
+                            clientList.get(player).sendingWithRetry(new IllegalMove(e.getMessage()), ATTEMPTS, WAITING_TIME);
                         }
                     }
                     else if (message.getMessageType() == MessageCode.TURN_OVER) {
