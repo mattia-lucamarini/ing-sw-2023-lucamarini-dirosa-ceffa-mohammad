@@ -241,13 +241,15 @@ public class GameLogic implements Runnable, Logic {
             boolean turnOverNotificationReceived = false;
             int pickedTiles = 0;
             ArrayList<Pair<Integer, Integer>> playerPick = new ArrayList<>();
+            ArrayList<Pair<Integer, Integer>> insertPosition = new ArrayList<>();
+            ArrayList<Tiles> insertedTiles = new ArrayList<>();
 
             // Make client pick tiles from board until turn end.
             try {
                 boolean tookTiles = false;
                 while (!moveNotificationReceived) {
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                    if (!tookTiles && message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {
+                    if (!tookTiles && message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {   //TAKE COMMAND
                         try {
                             pickedTiles += ((ChosenTiles) message).getPlayerMove().size();
                             if (pickedTiles > 3)
@@ -262,6 +264,17 @@ public class GameLogic implements Runnable, Logic {
                             tookTiles = true;
                         } catch (RuntimeException e) {
                             System.out.println(player + " made an illegal move. (" + e.getMessage() + ")");
+                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
+                        }
+                    } else if (tookTiles && message.getMessageType() == MessageCode.INSERT){    //INSERT COMMAND
+                        try {
+                            playerShelves.get(player).insertTiles(((Insert) message).getPositions(), ((Insert) message).getTiles());
+                            insertPosition = (ArrayList<Pair<Integer, Integer>>) ((Insert) message).getPositions();
+                            insertedTiles = (ArrayList<Tiles>) ((Insert) message).getTiles();
+                            System.out.println("[GAME " + gameID + "] "+ player + " made a legal insert move.");
+                            clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_LEGAL), ATTEMPTS, WAITING_TIME);
+                        } catch (RuntimeException e){
+                            System.out.println("[GAME " + gameID + "] "+ player + " made an illegal insert move.");
                             clientList.get(player).sendingWithRetry(new Message(MessageCode.MOVE_ILLEGAL), ATTEMPTS, WAITING_TIME);
                         }
                     }
@@ -343,23 +356,15 @@ public class GameLogic implements Runnable, Logic {
                     }
                 }
             }
-            // Wait for updated shelf from player (send to other players to update their clients).
-            while (message.getMessageType() != MessageCode.SHELF_CHECK) {
-                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                if (message.getMessageType() == MessageCode.SHELF_CHECK) {
-                    playerShelves.replace(player, ((ShelfCheck) message).getShelf());
-                    //System.out.println("[GAME " + gameID + "] Received shelf from " + player);
-                    //((ShelfCheck) message).getShelf().printShelf();
-
-                    for (String pl : clientList.keySet()) {
-                        if (!pl.equals(player)) {
-                            clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
-                            System.out.println("[GAME " + gameID + "] Sent " + player + "'s shelf to " + pl);
-                        }
-                    }
-                    playerPickTypes.clear();
+            // Send insert move to players.
+            for (String pl : clientList.keySet()) {
+                if (!pl.equals(player)) {
+                    System.out.println("Sending move to " + player);
+                    clientList.get(pl).sendingWithRetry(new Insert(insertPosition, insertedTiles), ATTEMPTS, WAITING_TIME);
+                    System.out.println("[GAME " + gameID + "] Sent " + player + "'s shelf to " + pl);
                 }
             }
+            playerPickTypes.clear();
         }
         catch (NoMessageToReadException ignored) {}
         catch (ClientDisconnectedException e) {

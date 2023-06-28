@@ -158,7 +158,7 @@ public class CLIInterface implements UserInterface{
             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                 System.out.print("\t" + (i + 1) + "> ");
                 String tilePick = sc.nextLine();
-                tilePattern = Pattern.compile("[0-9]\\s*[0-9]");
+                tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
                 if (tilePick.equals("cancel")) {
                     totalPick.clear();
                     break;
@@ -185,7 +185,7 @@ public class CLIInterface implements UserInterface{
                         Client.clientHandler.sendingWithRetry(new ChosenTiles(totalPick), ATTEMPTS, WAITING_TIME);
                         message = Client.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e) {
-                        System.out.println("Disconnected while sending move to server");
+                        System.out.println("Disconnected while sending 'take' move to server");
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                 } while (message == null);
@@ -212,7 +212,7 @@ public class CLIInterface implements UserInterface{
         }
         System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
 
-        tilePattern = Pattern.compile("[0-2]\\s*[0-5]\\s*[0-4]");
+        tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");
         ArrayList<Pair<Integer, Integer>> finalPositions = new ArrayList<>();
         ArrayList<Tiles> finalTiles = new ArrayList<>();
         ArrayList<Tiles> tempTiles = new ArrayList<>(pickedTiles.size());
@@ -238,8 +238,24 @@ public class CLIInterface implements UserInterface{
         }
         try {
             Client.player.getShelf().insertTiles(finalPositions, finalTiles);
-            pickedTiles.clear();
-            System.out.println("Done.");
+            Message message = new Message(MessageCode.GENERIC_MESSAGE);
+            do {
+                try {
+                    //System.out.println("Sending shelf move");
+                    Client.clientHandler.sendingWithRetry(new Insert(finalPositions, finalTiles), ATTEMPTS, WAITING_TIME);
+                    //System.out.println("Sent shelf move");
+                    message = Client.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    //System.out.println("Received answer");
+                    pickedTiles.clear();
+                } catch (ClientDisconnectedException e) {
+                    System.out.println("Disconnected while sending 'insert' move to server");
+                    System.exit(13);
+                } catch (NoMessageToReadException ignored){}
+            } while (message == null);
+            if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
+                System.out.println("Move was verified.");
+            } else
+                System.out.println("Move was not verified.");
             return true;
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());

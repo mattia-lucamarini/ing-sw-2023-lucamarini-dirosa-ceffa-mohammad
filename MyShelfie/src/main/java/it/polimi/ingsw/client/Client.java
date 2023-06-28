@@ -446,7 +446,7 @@ public class Client {
                             } catch (NoMessageToReadException ignored){}
                         } while (message.getMessageType() != MessageCode.TURN_OVER);
 
-                        try {
+                        /*try {
                             ShelfCheck shelfMessage = new ShelfCheck(player.getShelf());
                             clientHandler.sendingWithRetry(shelfMessage, ATTEMPTS, WAITING_TIME);
                             //System.out.println("Sent player shelf: ");
@@ -454,7 +454,7 @@ public class Client {
                         } catch (ClientDisconnectedException e) {
                             System.out.println("Disconnected while sending shelf content");
                             System.exit(1);
-                        }
+                        }*/
                         userInterface.turnCompleted();
 
                     } else {    //OTHER PLAYERS TURN
@@ -491,8 +491,12 @@ public class Client {
                         do {
                             try {
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                                if (message.getMessageType() == MessageCode.SHELF_CHECK) {
-                                    playerShelves.put(nowPlaying, ((ShelfCheck) message).getShelf());
+                                if (message.getMessageType() == MessageCode.INSERT) {
+                                    try {
+                                        playerShelves.get(nowPlaying).insertTiles(((Insert) message).getPositions(), ((Insert) message).getTiles());
+                                    } catch (RuntimeException e){
+                                        System.out.println("Error while updating shelf from + " + nowPlaying + ": " + e.getMessage());
+                                    }
                                     //System.out.println("Received shelf from " + nowPlaying);
                                     //((ShelfCheck) message).getShelf().printShelf();
                                 }
@@ -500,7 +504,7 @@ public class Client {
                                 System.out.println("Client disconnected while waiting for other shelves.");
                                 System.exit(0);
                             } catch (NoMessageToReadException ignored){}
-                        } while (message.getMessageType() != MessageCode.SHELF_CHECK);
+                        } while (message.getMessageType() != MessageCode.INSERT);
                    }
                 } else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
                     gameOn = false;

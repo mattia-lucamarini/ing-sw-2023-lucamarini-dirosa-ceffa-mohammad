@@ -23,6 +23,7 @@ public  enum MessageCode {
     SHELF_CHECK,
     END_GAME,
     CHOSEN_TILES,
+    INSERT,
     MOVE_LEGAL,
     MOVE_ILLEGAL,
     FINAL_SCORE,

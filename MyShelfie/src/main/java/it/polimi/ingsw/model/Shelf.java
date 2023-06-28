@@ -60,16 +60,16 @@ public class Shelf implements Serializable {
         if (positions.size() != colors.size()) {
             throw new RuntimeException("Size mismatch.");
         }
-        System.out.println("1");
+        //System.out.println("1");
         if(positions.get(0).getFirst()!=0 && getTile((positions.get(0).getFirst()-1),positions.get(0).getSecond()).equals(Tiles.VALID)){
             throw new UnsupportedOperationException("Tiles must be adjacent");
         }
-        System.out.println("2");
+        //System.out.println("2");
 
         if(positions.get(0).getFirst()!=0 && getTile((positions.get(0).getFirst()-1),positions.get(0).getSecond()).equals(Tiles.NOTVALID)){
             throw new UnsupportedOperationException("Tiles must be adjacent");
         }
-        System.out.println("3");
+        //System.out.println("3");
 
         for (int i = 1; i < positions.size(); i++) {//SAME COLUMN TEST
             if (!(positions.get(i).getSecond().equals(positions.get(i - 1).getSecond()))) {
@@ -77,7 +77,7 @@ public class Shelf implements Serializable {
             }
 
         }
-        System.out.println("4");
+        //System.out.println("4");
 
         for (int i = 1; i < positions.size(); i++) {//ADJACENT COLUMN TEST
             if (!(positions.get(i).getFirst().equals(positions.get(i - 1).getFirst()+1))) {
@@ -85,7 +85,7 @@ public class Shelf implements Serializable {
             }
 
         }
-        System.out.println("5");
+        //System.out.println("5");
 
         for (int i = 0; i < positions.size(); i++) {
             int x = positions.get(i).getFirst();
@@ -101,7 +101,7 @@ public class Shelf implements Serializable {
             if (!testMode && x < 5)
                 matrix[x + 1][y] = Tiles.VALID;
         }
-        System.out.println("6");
+        //System.out.println("6");
 
     }
 
