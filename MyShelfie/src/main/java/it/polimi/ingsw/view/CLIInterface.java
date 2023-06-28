@@ -302,7 +302,8 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void someoneCompletedShelf(String username){
-        System.out.println(username + " completed their shelf, obtaining 1 point! \nRemaining players will play their turns before calculating the score and ending the game.");
+        System.out.println(username + " completed their shelf, obtaining 1 point! " +
+                "\nRemaining players will play their turns before calculating the score and ending the game.");
     }
     @Override
     public void showPersonalGoalAchievement(int points){

@@ -48,32 +48,47 @@ public class Client {
         System.out.println("Welcome to My Shelfie!\n Type 1 if you'd like to play by using a CLI\n Type 2 if you'd like to play by using a GUI ");
         System.out.print("> ");
         String address = "127.0.0.1";
-        int port = 59090;
+        int socketDefaultPort = 59090;
+        int RMIDefaultPort = 1099;
         Scanner sc = new Scanner(System.in);
-        Registry registry;
-        RmiServerInterface RmiServer;
-        RmiInterface rmiClientService;
-
+        String addressChoice;
+        int portChoice;
         switch (sc.nextLine()){
             case "1":
                 userInterface = new CLIInterface();
-                System.out.print(" Type the server address, or nothing for localhost:\n> ");
-                String addressChoice = sc.nextLine();
-                address = (addressChoice == "") ? address : addressChoice;
-
                 System.out.println(" Type 1 if you'd like to play using sockets\n Type 2 if you'd like to play using RMI");
                 System.out.print("> ");
                 try {
                     switch (sc.nextLine()) {
                         case "1":
-                            connectSocket(address, 59090);
+                            System.out.print("Type the server address, or nothing for localhost:\n> ");
+                            addressChoice = sc.nextLine();
+                            address = (addressChoice == "") ? address : addressChoice;
+                            System.out.println(address);
+                            System.out.print("Type the port, or 0 for default port:\n> ");
+                            try{
+                                portChoice= sc.nextInt();
+                            }
+                            catch (Exception e){
+                                portChoice = 0;
+                            }
+                            System.out.println(portChoice);
+                            portChoice = (portChoice == 0) ? socketDefaultPort : portChoice;
+                            connectSocket(address, portChoice);
                             break;
                         case "2":
-                            registry = LocateRegistry.getRegistry(address);
-                            RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
-                            rmiClientService = RmiServer.getRmiClientService();
-                            clientHandler = new RmiClientHandler(rmiClientService);
-                            System.out.println("Successfully connected to " + address + ":" + port);
+                            System.out.print("Type the server address, or nothing for localhost:\n> ");
+                            addressChoice = sc.nextLine();
+                            address = (addressChoice == "") ? address : addressChoice;
+                            System.out.print("Type the port, or 0 for default port:\n> ");
+                            try{
+                                portChoice= sc.nextInt();
+                            }
+                            catch (Exception e){
+                                portChoice = 0;
+                            }
+                            portChoice = (portChoice == 0) ? socketDefaultPort : portChoice;
+                            connectRMI(address, portChoice);
                             break;
                         default:
                             System.out.println("Invalid option. Defaulting to sockets");
@@ -133,6 +148,27 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+    private static void connectRMI(String address, int port){
+        Registry registry;
+        RmiServerInterface RmiServer;
+        RmiInterface rmiClientService;
+        boolean connected = false;
+        while (!connected) {
+            try {
+                registry = LocateRegistry.getRegistry(address);
+                RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
+                rmiClientService = RmiServer.getRmiClientService();
+                clientHandler = new RmiClientHandler(rmiClientService);
+                connected=true;
+            } catch (Exception e) {
+                System.out.println("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored){}
+            }
+        }
+        System.out.println("Successfully connected to " + address + ":" + port);
     }
     private static void connectSocket(String address, int port){
         boolean connected = false;

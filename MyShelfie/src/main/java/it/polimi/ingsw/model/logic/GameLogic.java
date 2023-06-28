@@ -210,7 +210,9 @@ public class GameLogic implements Runnable, Logic {
         }
         //System.out.println("\t[GAME " + gameID + "] Sending response");
         try {
-            clientHandler.sendingWithRetry(new Reconnect(personalGoals.get(username).getGoalIndex(), new Pair<>(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex()), numPlayers, playerOrder, nowPlaying, playerShelves), ATTEMPTS, WAITING_TIME);
+            clientHandler.sendingWithRetry(new Reconnect(personalGoals.get(username).getGoalIndex(),
+                    new Pair<>(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex()),
+                    numPlayers, playerOrder, nowPlaying, playerShelves, board), ATTEMPTS, WAITING_TIME);
             //System.out.println("\tSent reconnect message");
             clientHandler.sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
             //System.out.println("\tSent game start");
