@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TextField fx:id="textaddress" layoutX="219.0" layoutY="129.0" promptText="&quot;Address&quot;" />
+      <TextField fx:id="textport" layoutX="219.0" layoutY="220.0" promptText="&quot;Port&quot;" />
+      <Label layoutX="151.0" layoutY="86.0" text="Type the Server Address or type &quot;default&quot; for localhost" />
+      <Label layoutX="175.0" layoutY="183.0" text="Type the Port or type &quot;default&quot; for default port " />
+      <Button layoutX="271.0" layoutY="291.0" mnemonicParsing="false" onAction="#showAddressPort" text="SEND" />
+   </children>
+</AnchorPane>

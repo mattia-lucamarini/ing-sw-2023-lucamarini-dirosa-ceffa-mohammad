@@ -20,4 +20,6 @@ public enum MessageCodeView {
     LOGIN_SCREEN,
     INIT_COMBOBOX,
     PICKED_TILES,
+    UPDATE_PERSONALSTACK,
+    SHOW_FINALRANKS,
 }

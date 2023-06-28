@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.message;
 
+import it.polimi.ingsw.model.Board;
 import it.polimi.ingsw.model.Pair;
 import it.polimi.ingsw.model.Shelf;
 import it.polimi.ingsw.model.Tiles;
@@ -14,8 +15,11 @@ public class Reconnect extends Message {
     private ArrayList<String> playerOrder;
     private String nowPlaying;
     private HashMap<String, Shelf> playerShelves;
+    private Board board;
 
-    public Reconnect(int personalGoalIndex, Pair<Integer, Integer> commonGoalIndexes, int numPlayers, ArrayList<String> playerOrder, String nowPlaying, HashMap<String, Shelf> playerShelves) {
+    public Reconnect(int personalGoalIndex, Pair<Integer, Integer> commonGoalIndexes,
+                     int numPlayers, ArrayList<String> playerOrder, String nowPlaying,
+                     HashMap<String, Shelf> playerShelves, Board board) {
         super(MessageCode.RECONNECT);
         this.personalGoalIndex = personalGoalIndex;
         this.commonGoalIndexes = commonGoalIndexes;
@@ -23,6 +27,7 @@ public class Reconnect extends Message {
         this.playerOrder = playerOrder;
         this.nowPlaying = nowPlaying;
         this.playerShelves = playerShelves;
+        this.board = board;
     }
     public int getPersonalGoalIndex() {
         return personalGoalIndex;
@@ -46,5 +51,9 @@ public class Reconnect extends Message {
 
     public HashMap<String, Shelf> getPlayerShelves() {
         return playerShelves;
+    }
+
+    public Board getBoard(){
+        return board;
     }
 }

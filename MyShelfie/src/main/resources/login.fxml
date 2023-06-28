@@ -13,12 +13,12 @@
       <Label fx:id="l1" layoutX="175.0" layoutY="50.0" text="Welcome to MyShelfie!" />
       <Label fx:id="l2" layoutX="160.0" layoutY="93.0" text="Please insert your username:" />
       <TextField fx:id="text" layoutX="158.0" layoutY="123.0" opacity="0.5" text="&quot;type your username here&quot;" />
-      <RadioButton fx:id="socket" layoutX="202.0" layoutY="198.0" mnemonicParsing="false" text="SOCKET">
+      <RadioButton fx:id="socket" layoutX="202.0" layoutY="198.0" mnemonicParsing="false" text="SOCKET" >
          <toggleGroup>
             <ToggleGroup fx:id="connection" />
          </toggleGroup>
       </RadioButton>
-      <RadioButton fx:id="rmi" layoutX="216.0" layoutY="230.0" mnemonicParsing="false" text="RMI" toggleGroup="$connection" />
+      <RadioButton fx:id="rmi" layoutX="216.0" layoutY="230.0" mnemonicParsing="false" text="RMI" toggleGroup="$connection"/>
       <Label fx:id="l3" layoutX="175.0" layoutY="169.0" text="Select your connection:" />
       <Button fx:id="loginbutton" layoutX="215.0" layoutY="276.0" mnemonicParsing="false" onAction="#login" text="Send" />
    </children>

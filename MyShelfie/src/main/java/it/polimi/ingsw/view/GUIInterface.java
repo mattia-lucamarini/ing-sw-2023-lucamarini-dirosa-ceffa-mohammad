@@ -57,7 +57,7 @@ public class GUIInterface {
         received = new ConcurrentLinkedQueue<>();
     }
 
-    public Pair<String, String> askForUsername() {
+    public Pair<Pair<String, String>, Pair<String,Integer>> askForUsername() {
         MessageView message;
         do{
              message = received.poll();
@@ -65,7 +65,9 @@ public class GUIInterface {
         }while(message==null);
         username = ((PayloadUsername) message).getUsername();
         String connection = ((PayloadUsername) message).getConnection();
-        return new Pair<>(username,connection);
+        String address = ((PayloadUsername) message).getAddress();
+        Integer port = ((PayloadUsername) message).getPort();
+        return new Pair<>(new Pair<>(username,connection), new Pair<>(address,port));
         //mette il messaggio nella struttura d'uscita e aspetta di riceverlo in entrata.
         //trovato il messaggio e ritorna il valore alla graphic logic.
 
@@ -159,7 +161,7 @@ public class GUIInterface {
     }
 
     public void turnNotification(String nowPlaying) {
-        MessageView message = new NotificationMessage(nowPlaying + "it's your turn..");
+        MessageView message = new NotificationMessage(nowPlaying + " it's your turn.");
         sended.add(message);
     }
 
@@ -268,7 +270,7 @@ public class GUIInterface {
                             GraphicLogic.clientHandler.sendingWithRetry(new ChosenTiles(mypicks), ATTEMPTS, WAITING_TIME);
                             generic = GraphicLogic.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                         } catch (Exception e) {
-                            printErrorMessage("Disconnected while sending move to server");
+                            printErrorMessage("Disconnected while sending 'take' move to server");
                             System.exit(13);
                         }
                     } while (generic == null);
@@ -292,7 +294,7 @@ public class GUIInterface {
     }
 
 
-    public void insertCommand() {
+    public boolean insertCommand() {
         List<Tiles> copyofpicked = new ArrayList<>();
         copyofpicked.addAll(pickedTiles);
         MessageView labelchange = new LabelChange("type <index> <row> <column>");
@@ -303,7 +305,7 @@ public class GUIInterface {
         ArrayList<Pair<Integer, Integer>> selectedindexes = new ArrayList<>();
         if (pickedTiles.size() == 0) {
             printMessage("You have no available tiles to insert.");
-            return;
+            return false;
         }
         do {
             message = received.poll();
@@ -339,17 +341,35 @@ public class GUIInterface {
         try {
             GraphicLogic.player.getShelf().insertTiles(selectedindexes, temporaryTiles);
             updateShelf();
-            pickedTiles.clear();
-            selectedindexes.clear();
-            printMessage("Done.");
+            Message insertmessage = new Message(MessageCode.GENERIC_MESSAGE);
+            do {
+                try {
+                    //System.out.println("Sending shelf move");
+                    GraphicLogic.clientHandler.sendingWithRetry(new Insert(selectedindexes, temporaryTiles),
+                            ATTEMPTS, WAITING_TIME);
+                    //System.out.println("Sent shelf move");
+                    insertmessage = GraphicLogic.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    //System.out.println("Received answer");
+                     pickedTiles.clear();
+                     selectedindexes.clear();
+                } catch (ClientDisconnectedException e) {
+                    System.out.println("Disconnected while sending 'insert' move to server");
+                    System.exit(13);
+                } catch (NoMessageToReadException ignored){}
+            } while (insertmessage == null);
+            if (insertmessage.getMessageType() == MessageCode.MOVE_LEGAL) {
+                System.out.println("Move was verified.");
+            }
+            else
+                System.out.println("Move was not verified.");
+            return true;
         } catch (RuntimeException e) {
             printMessage(e.getMessage());
             pickedTiles.addAll(copyofpicked);
             MessageView showpicks = new ShowPickedTiles(copyofpicked);
             sended.add(showpicks);
-            return;
+            return false;
         }
-
     }
 
     public void updateShelf(){
@@ -377,12 +397,13 @@ public class GUIInterface {
 
 
     public void commonGoalReached(int index, int goalScore) {
-
+        MessageView youreachedcommon = new OwnPoints(goalScore,index);
+        sended.add(youreachedcommon);
     }
 
 
     public void shelfCompleted() {
-
+        printMessage("You completed the shelf and gained 1 point.");
     }
 
 
@@ -406,22 +427,41 @@ public class GUIInterface {
 
 
     public void someoneCompletedShelf(String username) {
-
+        printMessage(" completed their shelf, obtaining 1 point! \nRemaining players will play their turns before " +
+                "calculating the score and ending the game.");
     }
 
 
     public void showPersonalGoalAchievement(int points) {
-
+        printMessage("I gained " + points + " points from my personal goal.");
     }
 
 
     public void finalScore() {
+        printMessage("\nThe game is over. Counting the points\n");
+        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) Client.player.getShelf().findTileGroups();
+        this.showPersonalGoalAchievement(Client.personalGoal.getGoal().checkGoal(Client.player.getShelf()));
+        for (Pair<Tiles, Integer> group : tileGroups) {
+            int gainedPoints = 0;
+            if (group.getSecond() == 3)
+                gainedPoints = 2;
+            else if (group.getSecond() == 4)
+                gainedPoints = 3;
+            else if (group.getSecond() == 5)
+                gainedPoints = 5;
+            else if (group.getSecond() >= 6)
+                gainedPoints = 8;
+        }
 
     }
 
 
     public void finalRank(ArrayList<Pair<String, Integer>> playerPoints) {
-
+        for (int i = 0; i < playerPoints.size(); i++)
+            System.out.println(i + 1 + ": " + playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond() + " points)");
+        System.out.println(playerPoints.get(0).getFirst() + " wins!");
+        MessageView message = new FinalRanking(playerPoints);
+        sended.add(message);
     }
 
     public void addMessage(MessageView message){

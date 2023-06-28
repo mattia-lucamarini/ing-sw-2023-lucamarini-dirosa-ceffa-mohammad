@@ -31,7 +31,7 @@ public class View extends Application{
         loader.setController(new ViewHandler(stage,this));
         viewhandler = loader.getController();
         Parent login = loader.load();
-        Scene scene1 = new Scene(login, 480, 340);
+        Scene scene1 = new Scene(login, 490, 350);
         scene1.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage.setScene(scene1);
         stage.show();
