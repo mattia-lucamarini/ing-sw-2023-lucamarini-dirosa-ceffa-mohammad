@@ -91,3 +91,5 @@ fabric.properties
 # Desktop Services Store files (Mac)
 .DS_Store
 **/.DS_Store
+
+dependency-reduced-pom.xml

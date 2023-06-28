@@ -42,7 +42,6 @@
   </dependencies>
 
   <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
        <!--
        <plugin>
@@ -61,7 +60,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.2.4</version>
           <executions>
             <execution>
               <id>client-jar</id>
@@ -70,6 +69,7 @@
                 <goal>shade</goal>
               </goals>
               <configuration>
+                  <finalName>client</finalName>
                 <transformers>
                   <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                     <manifestEntries>
@@ -79,22 +79,25 @@
                 </transformers>
               </configuration>
             </execution>
+              <execution>
+                  <id>server-jar</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                      <finalName>server</finalName>
+                      <transformers>
+                          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                              <manifestEntries>
+                                  <Main-Class>it.polimi.ingsw.ServerMainApp</Main-Class>
+                              </manifestEntries>
+                          </transformer>
+                      </transformers>
+                  </configuration>
+              </execution>
           </executions>
         </plugin>
-        <!-- Maven JAR Plugin configuration -->
-        <!--
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.4</version>
-          <executions>
-            <execution>
-              <id>default-jar</id>
-              <phase>none</phase>
-            </execution>
-          </executions>
-        </plugin>
-        -->
 
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
@@ -109,10 +112,12 @@
           <artifactId>maven-site-plugin</artifactId>
           <version>4.0.0-M5</version>
         </plugin>
+          <!--
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.4.2</version>
         </plugin>
+        -->
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
@@ -133,6 +138,5 @@
         </plugin>
 
       </plugins>
-    </pluginManagement>
   </build>
 </project>
