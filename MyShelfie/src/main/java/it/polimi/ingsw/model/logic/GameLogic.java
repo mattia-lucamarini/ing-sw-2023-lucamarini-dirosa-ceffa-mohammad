@@ -347,10 +347,15 @@ public class GameLogic implements Runnable, Logic {
             while (message.getMessageType() != MessageCode.SHELF_CHECK) {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.SHELF_CHECK) {
-                    playerShelves.put(player, ((ShelfCheck) message).getShelf());
+                    playerShelves.replace(player, ((ShelfCheck) message).getShelf());
+                    //System.out.println("[GAME " + gameID + "] Received shelf from " + player);
+                    //((ShelfCheck) message).getShelf().printShelf();
+
                     for (String pl : clientList.keySet()) {
-                        if (!pl.equals(player))
+                        if (!pl.equals(player)) {
                             clientList.get(pl).sendingWithRetry(new ShelfCheck(((ShelfCheck) message).getShelf()), ATTEMPTS, WAITING_TIME);
+                            System.out.println("[GAME " + gameID + "] Sent " + player + "'s shelf to " + pl);
+                        }
                     }
                     playerPickTypes.clear();
                 }

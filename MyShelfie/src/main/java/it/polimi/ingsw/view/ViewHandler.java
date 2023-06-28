@@ -582,6 +582,7 @@ public class ViewHandler {
              shelf = glogic.playerShelves.get(username);
         }
         int k = 0;
+        shelf.printShelf();
         for(int r = 0 ; r < 6; ++r){
             for(int c = 0 ; c < 5 ; ++c){
                 int m = 25-(5*r)+c;
