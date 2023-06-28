@@ -39,23 +39,19 @@ public class GraphicLogic {
     }
 
     public void init(){
-        Socket socket;
-        Registry registry;
-        RmiServerInterface RmiServer;
-        RmiInterface rmiClientService;
-        Pair<String, String> credentials;
+        Pair<Pair<String, String>, Pair<String,Integer>> credentials;
+        String addressChoice;
         credentials = userInterface.askForUsername();
-        player = new Player(credentials.getFirst());
-        String connection = credentials.getSecond();
+        player = new Player(credentials.getFirst().getFirst());
+        String connection = credentials.getFirst().getSecond();
+        addressChoice = credentials.getSecond().getFirst();
+        Integer port = credentials.getSecond().getSecond();
         try{
         if(connection.equals("socket")){
-            connectSocket("127.0.0.1", 59090);
+            connectSocket(addressChoice, port);
         }
         else if(connection.equals("rmi")){
-            registry = LocateRegistry.getRegistry();
-            RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
-            rmiClientService = RmiServer.getRmiClientService();
-            clientHandler = new RmiClientHandler(rmiClientService);
+            connectRMI(addressChoice,port);
         }
         else{
             System.out.println("Invalid option. Defaulting to sockets");
@@ -92,7 +88,7 @@ public class GraphicLogic {
             if (message.getMessageType() == MessageCode.GAME_START) {
                 gameOn = true;
                 if(loginResult!=2){
-                    userInterface.showGameStart();
+                    //userInterface.showGameStart();
                 }
 
                 //TURN PROCESSING
@@ -103,6 +99,27 @@ public class GraphicLogic {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+    private static void connectRMI(String address, int port){
+        Registry registry;
+        RmiServerInterface RmiServer;
+        RmiInterface rmiClientService;
+        boolean connected = false;
+        while (!connected) {
+            try {
+                registry = LocateRegistry.getRegistry(address);
+                RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
+                rmiClientService = RmiServer.getRmiClientService();
+                clientHandler = new RmiClientHandler(rmiClientService);
+                connected=true;
+            } catch (Exception e) {
+                System.out.println("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored){}
+            }
+        }
+        System.out.println("Successfully connected to " + address + ":" + port);
     }
     private static void connectSocket(String address, int port){
         boolean connected = false;
@@ -180,25 +197,20 @@ public class GraphicLogic {
                 userInterface.showGameScene();
                 return 1;
             } else {
-                Socket socket;
-                Registry registry;
-                RmiServerInterface RmiServer;
-                RmiInterface rmiClientService;
-                Pair<String, String> credentials;
-                userInterface.printMessage("Client refused: choose another username.");
+                Pair<Pair<String, String>, Pair<String,Integer>> credentials;
+                String addressChoice;
                 userInterface.showLoginScreen();
                 credentials = userInterface.askForUsername();
-                player = new Player(credentials.getFirst());
-                String connection = credentials.getSecond();
+                player = new Player(credentials.getFirst().getFirst());
+                String connection = credentials.getFirst().getSecond();
+                addressChoice = credentials.getSecond().getFirst();
+                Integer port = credentials.getSecond().getSecond();
                 try{
                     if(connection.equals("socket")){
-                        connectSocket("127.0.0.1", 59090);
+                        connectSocket(addressChoice, port);
                     }
                     else if(connection.equals("rmi")){
-                        registry = LocateRegistry.getRegistry();
-                        RmiServer = (RmiServerInterface) registry.lookup("RmiServer");
-                        rmiClientService = RmiServer.getRmiClientService();
-                        clientHandler = new RmiClientHandler(rmiClientService);
+                        connectRMI(addressChoice,port);
                     }
                     else{
                         System.out.println("Invalid option. Defaulting to sockets");
@@ -214,13 +226,14 @@ public class GraphicLogic {
             //RECONNECT PLAYER
         }
         else if (message.getMessageType().equals(MessageCode.RECONNECT)) {
-            userInterface.printMessage("Welcome back!");
             userInterface.showGameScene();
             personalGoal = new PersonalGoalCard(((Reconnect) message).getPersonalGoalIndex());
             commonGoals = new Pair<>(new CommonGoalCard(((Reconnect) message).getNumPlayers(), ((Reconnect) message).getCommonGoalIndexes().getFirst()), new CommonGoalCard(((Reconnect) message).getNumPlayers(), ((Reconnect) message).getCommonGoalIndexes().getSecond()));
             playerOrder = ((Reconnect) message).getPlayerOrder();
             playerShelves = ((Reconnect) message).getPlayerShelves();
+            userInterface.printMessage("Welcome back!");
             player.setShelf(((Reconnect) message).getPlayerShelves().get(player.getUsername()));
+            board = ((Reconnect)message).getBoard();
             System.out.println();
             userInterface.showPersonalGoal(personalGoal.getGoalIndex());
             System.out.println();
@@ -303,6 +316,7 @@ public class GraphicLogic {
             if (!someoneDisconnected)
                 try {
                     board = ((PlayTurn) message).getBoard();
+                    userInterface.boardCommand();
                 } catch (ClassCastException e){
                     System.out.println("ClassCastException: The client expected a PLAY_TURN message, but received a " + message.getMessageType());
                 }
@@ -448,13 +462,14 @@ public class GraphicLogic {
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                 } while (message.getMessageType() != MessageCode.TURN_OVER);
-                try {
+
+                /*try {
                     clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), ATTEMPTS, WAITING_TIME);
                     //System.out.println("Sent player shelf");
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected while sending shelf content");
                     System.exit(1);
-                }
+                }*/
                 userInterface.turnCompleted();
 
             }else {    //OTHER PLAYERS TURN
@@ -491,13 +506,20 @@ public class GraphicLogic {
                 do {
                     try {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        if (message.getMessageType() == MessageCode.SHELF_CHECK)
-                            playerShelves.put(nowPlaying, ((ShelfCheck) message).getShelf());
+                        if (message.getMessageType() == MessageCode.INSERT) {
+                            try {
+                                playerShelves.get(nowPlaying).insertTiles(((Insert) message).getPositions(), ((Insert) message).getTiles());
+                            } catch (RuntimeException e){
+                                System.out.println("Error while updating shelf from + " + nowPlaying + ": " + e.getMessage());
+                            }
+                            //System.out.println("Received shelf from " + nowPlaying);
+                            //((ShelfCheck) message).getShelf().printShelf();
+                        }
                     } catch (ClientDisconnectedException e) {
-                        userInterface.printErrorMessage("Client disconnected while waiting for other shelves.");
+                        System.out.println("Client disconnected while waiting for other shelves.");
                         System.exit(0);
                     } catch (NoMessageToReadException ignored){}
-                } while (message.getMessageType() != MessageCode.SHELF_CHECK);
+                } while (message.getMessageType() != MessageCode.INSERT);
             }
         } else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
             gameOn = false;
@@ -505,7 +527,7 @@ public class GraphicLogic {
             try {
                 clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
             } catch (ClientDisconnectedException e) {
-                userInterface.printErrorMessage("Disconnected while sending shelf content during endgame.");
+                System.out.println("Disconnected while sending shelf content during endgame.");
                 System.exit(13);
             }
             do {

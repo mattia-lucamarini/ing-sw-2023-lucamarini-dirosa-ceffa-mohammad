@@ -20,6 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -50,15 +51,17 @@ public class ViewHandler {
     private Cell[][] grid;
     private int count=0;
     @FXML
-    TextField text,move;
+    TextField text,move, textaddress, textport;
     @FXML
     RadioButton socket, rmi, two, three, four;
     @FXML
-    Button donebutton, endturn, takebutton, insertbutton;
+    Button donebutton, endturn, takebutton, insertbutton, loginbutton;
     @FXML
     ToggleGroup connection, numplayers;
     @FXML
     Pane gamelayout;
+    @FXML
+    AnchorPane finalscene;
     @FXML
     GridPane boardgrid;
     @FXML
@@ -66,7 +69,7 @@ public class ViewHandler {
     @FXML
     ImageView stack1, stack2, playerpoints, commongoal1, commongoal2, takentile0, takentile1,getTakentile2;
     @FXML
-    Label l1, whattodo,playerorder;
+    Label l1, whattodo,playerorder, addresslabel, portlabel, winner, second, third, fourth, ptwo , pthree, pfour;
     @FXML
     ComboBox comboBox;
 
@@ -379,35 +382,27 @@ public class ViewHandler {
                        else{
                            stack = (ImageView) boardgrid.getChildren().get(5);
                        }
-                       if(username.equals(glogic.player.getUsername())){
-                           playerpoints= (ImageView) gamelayout.getChildren().get(7);
-                           playerpoints.setImage(stack.getImage());
-                       }
-                       if(numplayers==2 && points==8){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm()));
-                       }
-                       else if(numplayers==2 && points==4){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm()));
-                       }
-                       else if(numplayers >=3 && points==8){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_6.jpg").toExternalForm()));
-                       }
-                       else if(numplayers >= 3 && points==6){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm()));
-                       }
-                       else if(numplayers==3 && points==4){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm()));
-
-                       }
-                       else if( numplayers==4 && points==4){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_2.jpg").toExternalForm()));
-                       }
-                       else if(numplayers==4 && points==2){
-                           stack.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm()));
-
-                       }
+                       stack.setImage(selectImageFromPointsAndNumberPlayers(points, numplayers));
                     });
                     break;
+                case UPDATE_PERSONALSTACK:
+                    int nump = glogic.getNumPlayers();
+                    int pointsgained = ((OwnPoints)message).getPoints();
+                    int goalnum = ((OwnPoints)message).getIndex();
+                    Platform.runLater(()->{
+                        ImageView stack;
+                        if(goalnum == 0){
+                            stack = (ImageView) boardgrid.getChildren().get(4);
+                        }
+                        else{
+                            stack = (ImageView) boardgrid.getChildren().get(5);
+                        }
+                        stack.setImage(selectImageFromPointsAndNumberPlayers(pointsgained,nump));
+                        playerpoints= (ImageView) gamelayout.getChildren().get(7);
+                        playerpoints.setImage(selectImageFromPoints(pointsgained));
+                    });
+                    break;
+
                 case UPDATE_BOARD:
                     grid = ((UpdateBoard) message).getBoard().getGrid();
                     Platform.runLater(()->{
@@ -474,8 +469,50 @@ public class ViewHandler {
                             pickedtile2.setImage(null);
                         }
                     });
-
-
+                    break;
+                case SHOW_FINALRANKS:
+                    ArrayList<Pair<String, Integer>> rankings = ((FinalRanking) message).getRanks();
+                    Platform.runLater(()->{
+                        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/finalranks.fxml")));
+                        loader.setController(this);
+                        Parent finalranks = null;
+                        try {
+                            finalranks = loader.load();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        ptwo = (Label) finalscene.getChildren().get(6);
+                        pthree = (Label) finalscene.getChildren().get(7);
+                        pfour = (Label) finalscene.getChildren().get(8);
+                        second = (Label) finalscene.getChildren().get(2);
+                        third = (Label) finalscene.getChildren().get(3);
+                        fourth = (Label) finalscene.getChildren().get(4);
+                        if(rankings.size()==1){
+                            ptwo.setVisible(false);
+                            second.setVisible(false);
+                            pthree.setVisible(false);
+                            third.setVisible(false);
+                            pfour.setVisible(false);
+                            fourth.setVisible(false);
+                        }
+                        if(rankings.size()==2){
+                            pthree.setVisible(false);
+                            third.setVisible(false);
+                            pfour.setVisible(false);
+                            fourth.setVisible(false);
+                        }
+                        else if(rankings.size()==3){
+                            pfour.setVisible(false);
+                            fourth.setVisible(false);
+                        }
+                        for (int m = 0; m < rankings.size(); m++){
+                            Label label = (Label) finalscene.getChildren().get(m+1);
+                            label.setText(rankings.get(m).getFirst()+ ":" +rankings.get(m).getSecond()+ "points");
+                        }
+                        Scene ranksscene = new Scene(finalranks, 400, 600);
+                        ranksscene.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
+                        stage.setScene(ranksscene);
+                        stage.show();});
                     break;
             }
             }}while(partitainiziata);
@@ -484,6 +521,7 @@ public class ViewHandler {
     }
 
     public void login(ActionEvent e) throws IOException {
+        int port;
         username = text.getText();
         if(connection.getSelectedToggle()==socket){
             conn = "socket";
@@ -491,23 +529,30 @@ public class ViewHandler {
         else {
             conn = "rmi";
         }
-        MessageView message = new PayloadUsername(username,conn);
-        gui.addMessage(message);
+
         System.out.println("4");
         //System.out.println("Username "+ username + "\nConnection selected: "+ conn);
         //send these info to the user interface when done.
         //if it is the first user to log in, it shows the number of players scene.
         //num of players scene.
         //if it is not the first user to log in, shows the game board etc..
-        Parent waiting = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
+        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/addressport.fxml")));
+        loader.setController(this);
+        Parent addressport = null;
+        try {
+            addressport = loader.load();
+        } catch (IOException exc) {
+            exc.printStackTrace();
+        }
         /*Pane gamelayout = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/")));
         boardgrid = (GridPane) gamelayout.getChildren().get(0);
         shelfgrid = (GridPane) gamelayout.getChildren().get(1);
         iw1 = (ImageView) boardgrid.getChildren().get(0);
         iw1.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));*/
-        Scene waitingScene = new Scene(waiting, 480, 340);
+        Scene addressportscene = new Scene(addressport, 600, 400);
+        addressportscene.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage = (Stage)(((Node)e.getSource()).getScene().getWindow());
-        stage.setScene(waitingScene);
+        stage.setScene(addressportscene);
         stage.show();
     }
 
@@ -525,11 +570,11 @@ public class ViewHandler {
         /*FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/.fxml")));
         loader.setController(this);
         System.out.println("eccomi");
-        Parent gamescene = loader.load();
-        Scene scene5 = new Scene(gamescene, 529, 480);
+        Parent gamescene = loader.load();*/
+        Scene scene5 = new Scene(waiting, 529, 480);
         scene5.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage.setScene(scene5);
-        stage.show();*/
+        stage.show();
         MessageView message = new NumPlayers(nump);
         gui.addMessage(message);
 
@@ -539,22 +584,34 @@ public class ViewHandler {
         gui.addMessage(message);
     }
 
-    public void boardcellselected(ActionEvent e){
-            System.out.println("eccomi nell'event handler");
-            donebutton.setVisible(true);
-            GridPane boardgrid = (GridPane) gamelayout.getChildren().get(0);
-            ImageView node = (ImageView) e.getTarget();
-            int i = GridPane.getRowIndex(node);
-            int j = GridPane.getColumnIndex(node);
-            MessageView message = new SelectedTile(i,j);
-            gui.addMessage(message);
-    }
-    public void shelfcellselected(ActionEvent e){
-        GridPane shelfgrid = (GridPane) gamelayout.getChildren().get(1);
-        Node node = (Node) e.getTarget();
-        int i = boardgrid.getRowIndex(node);
-        int j = boardgrid.getColumnIndex(node);
-        MessageView message = new ShelfSelected(i,j);
+    public void showAddressPort(ActionEvent e){
+        int port;
+        String address = textaddress.getText();
+        if(address.toLowerCase(Locale.ROOT).equals("default")){
+            address = "127.0.0.1";
+        }
+        String portstring = textport.getText();
+        if((portstring.toLowerCase(Locale.ROOT).equals("default")) && conn.equals("socket")){
+            port= 59090;
+        }
+        else if(portstring.toLowerCase(Locale.ROOT).equals("default") && conn.equals("rmi")){
+            port = 1099;
+        }
+        else{
+            Scanner sc = new Scanner(portstring);
+            try{
+                port = sc.nextInt();
+            }
+            catch(Exception exception){
+                if(conn.equals("socket")){
+                    port=59090;
+                }
+                else{
+                    port=1099;
+                }
+            }
+        }
+        MessageView message = new PayloadUsername(username,conn,address,port);
         gui.addMessage(message);
     }
     public void endTurn(ActionEvent e){
@@ -666,6 +723,46 @@ public class ViewHandler {
         return image;
     }
 
+    public Image selectImageFromPoints(int points){
+        Image image;
+        switch(points) {
+            case 2 -> image = new Image(getClass().getResource("/assets/scoring tokens/scoring_2.jpg").toExternalForm());
+            case 4 -> image = new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm());
+            case 6 -> image = new Image(getClass().getResource("/assets/scoring tokens/scoring_6.jpg").toExternalForm());
+            case 8 -> image = new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm());
+            default -> throw new IllegalStateException("Unexpected value: "+points );
+        }
+        return image;
+    }
 
+    public Image selectImageFromPointsAndNumberPlayers(int points, int numplayers){
+        Image image;
+        if(numplayers==2 && points==8){
+            image = new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm());
+        }
+        else if(numplayers==2 && points==4){
+            image = new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm());
+        }
+        else if(numplayers >=3 && points==8){
+            image =new Image(getClass().getResource("/assets/scoring tokens/scoring_6.jpg").toExternalForm());
+        }
+        else if(numplayers >= 3 && points==6){
+            image =new Image(getClass().getResource("/assets/scoring tokens/scoring_4.jpg").toExternalForm());
+        }
+        else if(numplayers==3 && points==4){
+            image =new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm());
 
+        }
+        else if( numplayers==4 && points==4){
+            image =new Image(getClass().getResource("/assets/scoring tokens/scoring_2.jpg").toExternalForm());
+        }
+        else if(numplayers==4 && points==2){
+            image =new Image(getClass().getResource("/assets/scoring tokens/scoring_back_EMPTY.jpg").toExternalForm());
+
+        }
+        else {
+             throw new IllegalStateException("Unexpected values : " +points + numplayers);
+        }
+        return image;
+    }
 }

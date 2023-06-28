@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="finalscene" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label layoutX="261.0" layoutY="47.0" text="FINAL RANKS" />
+      <Label fx:id="winner" layoutX="285.0" layoutY="90.0" text="Label" />
+      <Label fx:id="second" layoutX="285.0" layoutY="137.0" text="Label" />
+      <Label fx:id="third" layoutX="285.0" layoutY="183.0" text="Label" />
+      <Label fx:id="fourth" layoutX="285.0" layoutY="234.0" text="Label" />
+      <Label layoutX="201.0" layoutY="90.0" text="1" />
+      <Label fx:id="ptwo" layoutX="200.0" layoutY="137.0" text="2" />
+      <Label fx:id="pthree" layoutX="200.0" layoutY="183.0" text="3" />
+      <Label fx:id="pfour" layoutX="200.0" layoutY="234.0" text="4" />
+   </children>
+</AnchorPane>
