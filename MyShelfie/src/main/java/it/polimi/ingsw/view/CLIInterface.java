@@ -15,6 +15,10 @@ import java.util.regex.Pattern;
 
 import static it.polimi.ingsw.client.Client.board;
 
+/**
+ * Defines all the interactive commands used by the CLI.
+ * @author Mattia Lucamarini
+ */
 public class CLIInterface implements UserInterface{
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
@@ -40,8 +44,6 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public int askForNumOfPlayers(ClientHandler clientHandler){
-        //TODO: Limit number of players
-
         int num = 0;
         System.out.print("Insert player number: ");
         while (num == 0) {
@@ -56,15 +58,10 @@ public class CLIInterface implements UserInterface{
                 System.out.print("Please insert an actual number: ");
             }
         }
-        boolean flag;
         try {
-            flag = clientHandler.sendingWithRetry(new NumPlayersMessage(num), 2, 1);
+            clientHandler.sendingWithRetry(new NumPlayersMessage(num), 2, 1);
         } catch (ClientDisconnectedException e) { //here if I took much time to send the request
             System.out.println("Disconnected from the server before sending NumPlayer Message.");
-            return 0;
-        }
-        if (!flag) {
-            System.out.println("Can't send the NumPlayer Message.");
             return 0;
         }
         return num;
@@ -150,15 +147,21 @@ public class CLIInterface implements UserInterface{
                                                 \tdone: end your turn""");
     }
 
+    /**
+     * Makes the player choose the wanted tiles and extracts them from the board
+     * @return an ArrayList of the extracted tiles
+     * @throws UnsupportedOperationException if the move is not legal
+     */
     @Override
     public ArrayList<Tiles> takeCommand() throws UnsupportedOperationException {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
+        //checks if the player has already made a move and adds the coordinates to totalPick
         if (totalPick.size() == 0) {
             System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type 'cancel' to redo your move\n Type 'done' if you are done.");
             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                 System.out.print("\t" + (i + 1) + "> ");
                 String tilePick = sc.nextLine();
-                tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
+                tilePattern = Pattern.compile("[0-9]\\s+[0-9]");    //regex used for accepting the coordinates (two numbers between 0 and 9)
                 if (tilePick.equals("cancel")) {
                     totalPick.clear();
                     break;
@@ -178,10 +181,10 @@ public class CLIInterface implements UserInterface{
         }
         if (totalPick.size() > 0) {
             try {
-                pickedTiles.addAll(board.takeTiles(totalPick));
+                pickedTiles.addAll(board.takeTiles(totalPick)); //actually extracts the tiles
                 //System.out.println(pickedTiles);
                 do {
-                    try {
+                    try {   //sends the move to server
                         Client.clientHandler.sendingWithRetry(new ChosenTiles(totalPick), ATTEMPTS, WAITING_TIME);
                         message = Client.clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e) {
@@ -189,6 +192,7 @@ public class CLIInterface implements UserInterface{
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                 } while (message == null);
+                //receives the check result from the server
                 if (message.getMessageType() == MessageCode.MOVE_LEGAL) {
                     System.out.println("Move was verified.");
                 } else if (message.getMessageType() == MessageCode.MOVE_ILLEGAL)
@@ -203,18 +207,25 @@ public class CLIInterface implements UserInterface{
         return pickedTiles;
     }
 
+    /**
+     * Manages the player insertion of tiles into their shelf, and sends the resulting move to the server.
+     * @param pickedTiles an ArrayList of the tiles about to be inserted.
+     * @return a boolean value representing the success of the operation
+     */
     @Override
     public boolean insertCommand(ArrayList<Tiles> pickedTiles) {
         if (pickedTiles.size() == 0) {
             System.out.println("You have no available tiles to insert.");
-            pickedTiles.forEach(System.out::println);
+            //pickedTiles.forEach(System.out::println);
             return false;
         }
         System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
 
-        tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");
+        tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");   //this regex accepts the tile index, followed by the row and column numbers.
+        //these two ArrayList represent the final move which will be checked
         ArrayList<Pair<Integer, Integer>> finalPositions = new ArrayList<>();
         ArrayList<Tiles> finalTiles = new ArrayList<>();
+        //a temporary representation of the tiles to insert which will be resetted if the move is not accepted
         ArrayList<Tiles> tempTiles = new ArrayList<>(pickedTiles.size());
         tempTiles.addAll(pickedTiles);
 
@@ -309,6 +320,10 @@ public class CLIInterface implements UserInterface{
     public void showPersonalGoalAchievement(int points){
         System.out.println("I gained " + points + " points from my personal goal.");
     }
+
+    /**
+     * Calculates and prints the final score.
+     */
     @Override
     public void finalScore(){
         System.out.println("\nThe game is over.\n");
@@ -327,6 +342,11 @@ public class CLIInterface implements UserInterface{
             System.out.println("I gained " + gainedPoints + " points, having made a group of " + group.getSecond() + " tiles.");
         }
     }
+
+    /**
+     * Prints all the player's scores.
+     * @param playerPoints an ArrayList containing the actual scores.
+     */
     @Override
     public void finalRank(ArrayList<Pair<String, Integer>> playerPoints){
         System.out.println("\nFINAL SCORES:");

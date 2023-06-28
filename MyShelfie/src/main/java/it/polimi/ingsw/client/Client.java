@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Class: Client
- * This class manages all the requests between the players and the game server.
+ * Manages all the requests between the players and the game server.
  * @author Mattia Lucamarini
  *
  */
@@ -83,7 +83,7 @@ public class Client {
 
         switch (interfaceChoice) {
             case "1" -> {
-                userInterface = new CLIInterface();
+                userInterface = new CLIInterface(); //All interaction commands of the client will be carried out by the CLI
                 System.out.println("Type 1 if you'd like to play using sockets\nType 2 if you'd like to play using RMI");
                 System.out.print("> ");
                 try {
@@ -105,9 +105,11 @@ public class Client {
                             System.out.print("Type the server address, or nothing for localhost:\n> ");
                             addressChoice = sc.nextLine();
                             addressChoice = (addressChoice.isEmpty()) ? LOCAL_HOST : addressChoice;
+                            System.out.println(addressChoice);
                             System.out.print("Type the port, or nothing for default port:\n> ");
                             portChoice = sc.nextLine();
                             Integer port = (portChoice.isEmpty()) ? RMI_DEFAULT_PORT : Integer.parseInt(portChoice);
+                            System.out.println(portChoice);
                             connectRMI(addressChoice, port);
                         }
                         default -> {
@@ -135,7 +137,7 @@ public class Client {
             do{
                 loginResult = login();
             } while (loginResult == 0);
-            if (loginResult != 2) {
+            if (loginResult != 2) { //2 means the client reconnected to a game, and can skip goal and player order processing
                 while (!goalProcessing());
                 waitForOrder();
             }
@@ -164,6 +166,12 @@ public class Client {
             System.out.println(e.getMessage());
         }
     }
+
+    /**
+     * Used to connect to the game server using RMI
+     * @param address IPv4 address
+     * @param port server port
+     */
     private static void connectRMI(String address, Integer port){
         Registry registry;
         RmiServerInterface RmiServer;
@@ -185,6 +193,12 @@ public class Client {
         }
         System.out.println("Successfully connected to " + address + ":" + port);
     }
+
+    /**
+     * Used to connect to the game server using sockets
+     * @param address IPv4 address
+     * @param port server port
+     */
     private static void connectSocket(String address, Integer port){
         boolean connected = false;
         while (!connected) {
@@ -203,27 +217,27 @@ public class Client {
         }
         System.out.println("Successfully connected to " + address + ":" + port);
     }
+
+    /**
+     * Manages logging on the game server, and receives all the game data structures if the player is reconnecting
+     * to an old game.
+     * @return an integer representing the login success. Returns 2 in case of reconnection
+     */
     private static int login() {
 
-        //LOGIN REQUEST
-        boolean flag = false;
+        //SENDING LOGIN REQUEST
         player = userInterface.askForUsername();
         try {
-            flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
+            clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e) {
             userInterface.printErrorMessage("Disconnected from the server while sending the log in request.");
             return 0;
         }
-        if (!flag) {
-            userInterface.printErrorMessage("Can't send the log in request.");
-            return 0;
-        }
         try {
             TimeUnit.MILLISECONDS.sleep(500);
-        } catch (InterruptedException ignored) {
-        }
+        } catch (InterruptedException ignored) {}
 
-        //RECEIVING NUMREQUEST
+        //RECEIVING NUMREQUEST (IF THE PLAYER IS FIRST CONNECTED)
         Message message = null;
         while (message == null){
             try {
@@ -236,6 +250,7 @@ public class Client {
             }
         }
 
+        //PROCESSING NUMREQUEST
         if (message.getMessageType().equals(MessageCode.NUM_PLAYERS_REQUEST)) {
             try {
                 userInterface.askForNumOfPlayers(clientHandler);
@@ -267,6 +282,7 @@ public class Client {
             //RECONNECT PLAYER
         } else if (message.getMessageType().equals(MessageCode.RECONNECT)) {
             System.out.println("Welcome back!");
+            //Updates all the data structures
             personalGoal = new PersonalGoalCard(((Reconnect) message).getPersonalGoalIndex());
             commonGoals = new Pair<>(new CommonGoalCard(((Reconnect) message).getNumPlayers(),
                                     ((Reconnect) message).getCommonGoalIndexes().getFirst()),
@@ -291,8 +307,12 @@ public class Client {
             return 0;
         }
     }
+
+    /**
+     * Used by the client to receive personal and common goals, only called at the start of the game
+     * @return a boolean value representing the operation success
+     */
     private static boolean goalProcessing() {
-        //PROCESS PERSONAL GOAL
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         while (personalGoal == null || commonGoals == null) {
             try {
@@ -309,8 +329,7 @@ public class Client {
                 int goalNumber = ((SetPersonalGoal) message).getGoalNumber();
                 userInterface.showPersonalGoal(goalNumber);
                 try {
-                    // Send awk.
-                    clientHandler.sendingWithRetry(new SetPersonalGoal(), 1, 1);
+                    clientHandler.sendingWithRetry(new SetPersonalGoal(), 1, 1);    //send ack
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected from the server while sending personal goal ack");
                     System.exit(13);
@@ -328,15 +347,23 @@ public class Client {
         }
         return true;
     }
+
+    /**
+     * Receives player order from the server. Only used at the start of the game.
+     */
     private static void waitForOrder() {
         playerOrder = userInterface.waitForOtherPlayers(clientHandler);
-        playerShelves = new HashMap<>();
+        playerShelves = new HashMap<>();    //also initializes player shelves
         for (String pl : playerOrder) {
             if (!pl.equals(player.getUsername()))
                 playerShelves.put(pl, new Shelf());
         }
         userInterface.showPlayersOrder(playerOrder);
     }
+
+    /**
+     * Starts and manages every player's turn, processing their moves and sending them to the server.
+     */
     private static void playTurn() {
                 Message message = new Message(MessageCode.GENERIC_MESSAGE);
                 do {    //WAIT FOR EITHER PLAY_TURN MESSAGE, END_GAME OR FORCED_WIN
@@ -374,7 +401,9 @@ public class Client {
                         System.out.println("Someone reconnected. The game continues as usual.");
                     }
                 }
-
+                /*If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
+                    so the playTurn message was already received by this player while they were waiting for their turn
+                 */
                 if (message instanceof PlayTurn || someoneDisconnected) {
                    if (!someoneDisconnected)
                        try {
@@ -428,7 +457,7 @@ public class Client {
                             System.out.println("Disconnected while sending turn over notification.");
                             System.exit(13);
                         }
-                        //CHECKING GOALS
+                        //CHECKING IF ANY GOALS WERE REACHED
                         boolean commonReached = false;
                         if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
                             int goalScore = commonGoals.getFirst().getGoal().takePoints();
@@ -533,7 +562,7 @@ public class Client {
                         String nowPlaying = ((PlayTurn) message).getUsername();
                         userInterface.showWhoIsPlaying(nowPlaying);
                         do {
-                            try {
+                            try {   //Waits for the player's actions and updates the data structures accordingly
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                             } catch (ClientDisconnectedException e){
                                 System.out.println("Disconnected while waiting for " + nowPlaying + "'s turn.");
@@ -561,7 +590,7 @@ public class Client {
                             }
                         } while (message.getMessageType() != MessageCode.TURN_OVER);
                         do {
-                            try {
+                            try {   //updates the shelf with the player's move
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                                 if (message.getMessageType() == MessageCode.INSERT) {
                                     try {
@@ -581,13 +610,7 @@ public class Client {
                    }
                 } else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
                     gameOn = false;
-                    userInterface.finalScore();
-                    try {
-                        clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
-                    } catch (ClientDisconnectedException e) {
-                        System.out.println("Disconnected while sending shelf content during endgame.");
-                        System.exit(13);
-                    }
+                    userInterface.finalScore(); //Calculates and prints my own score
                     do {
                         try {
                             message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);

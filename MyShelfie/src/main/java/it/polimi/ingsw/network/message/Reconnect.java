@@ -3,11 +3,14 @@ package it.polimi.ingsw.network.message;
 import it.polimi.ingsw.model.Board;
 import it.polimi.ingsw.model.Pair;
 import it.polimi.ingsw.model.Shelf;
-import it.polimi.ingsw.model.Tiles;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Used to update a reconnecting player with all the data structures representing the current game state.
+ * @author Mattia Lucamarini
+ */
 public class Reconnect extends Message {
     private int personalGoalIndex;
     private Pair<Integer, Integer> commonGoalIndexes;
