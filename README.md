@@ -27,11 +27,12 @@ L'implementazione segue il pattern MVC (Model-View-Controller).
   possono ricollegarsi e continuare la partita. Mentre un giocatore non è collegato, il gioco continua saltando i turni di quel giocatore.
 
 ## Librerie e Plugins
-|Libreria/Plugin| Descrizione                                     |
-|---------------|-------------------------------------------------|
-|__Maven__| Software project management and comprehension tool|
-|__JavaFx__| GUI toolkit for Java                            |
-|__JUnit__| Unit testing framework for Java     |
+| Libreria/Plugin | Descrizione                                    |
+|-----------------|------------------------------------------------|
+| __Maven__       | Software project management and comprehension tool|
+| __JavaFx__      | GUI toolkit for Java                           |
+| __JUnit__       | Unit testing framework for Java     |
+| __Mockito__     | Mocking framework for testing purpose |
 
 ## Documentazione
 ### UML
@@ -44,14 +45,18 @@ Consultare la documentazione JavaDoc [qui](deliverables).
 **Warning**: Assicurati di avere i rispettivi jars nella cartella [jar](deliverables/jar). 
 E' possibile produrre i jars dell'applicazione seguendo i seguenti steps:
 1. Apri il progetto utilizzando IntelliJ.
-2. Click sulla Maven Projects sidebar nella parte destra della finestra, espandi il progetto e identifica la voce ```Lifecycle section```. Double-click su ```package``` goal.
-3. Una volta completata la fase di build, Maven creerà i JAR files nella cartella target del tuo progetto. Rinominali come segue:
+2. Click sulla Maven Projects sidebar nella parte destra della finestra, espandi il progetto e identifica la voce ```Lifecycle section```. 
+3. Double-click su ```package``` goal.
+4. Una volta completata la fase di build, Maven creerà i JAR files nella cartella target del tuo progetto. Spostali nella directory: ```deliverables/jar```.
 
 ### Run the Server
 Il Server può essere lanciato seguendo due procedimenti:
-1. Eseguendo direttamente il jar file [server_jar]():
+1. Eseguendo direttamente il jar file [server.jar](deliverables/jar/server.jar):
 
-``` ...  [--ports <socket_port_number> <rmi_port_number>]```
+```
+cd deliverables/jar 
+java -jar server.jar [--ports <socket_port_number> <rmi_port_number>]
+```
 
 L'argomento ```--ports``` specifica le porte dove mettere in ascolto il Server per accettare connessioni dai client utilizzando
 rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default sono i seguenti:
@@ -60,23 +65,12 @@ rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default
 2. Utilizzando Docker: seguire l'apposita guida [qui](MyShelfie/README.md).
 
 ### Run the Client
-E' possibile eseguire il client tramite interfaccia grafica (GUI), oppure tramite interfaccia testuale (TUI):
-1. Eseguire il Client (TUI):
+E' possibile eseguire il client tramite interfaccia grafica (GUI), oppure tramite interfaccia testuale (TUI),
+la scelta avviene appena lanciato il seguente jar file [client.jar](deliverables/jar/client.jar), così come 
+l'inserimento dell'indirizzo IP del server a cui collegarsi:
 
-``` ...  [--ip <server_ip> ] [--ports <socket_port_number> <rmi_port_number>]```
-
-2. Eseguire il Client (GUI):
-
-``` ...  [--ip <server_ip>]```
-
-L'argomento ```--ip``` specifica l'indirizzo IP del server che offre il servizio di gioco. Essendo opzionale, se omesso,
-il valore di default è 
-  - <server_ip> = 127.0.0.1
-
-L'argomento ```--ports``` specifica le porte messe a disposizione dal Server per accettare connessioni dai client utilizzando
-rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default sono i seguenti:
-  - <socket_port_number> = 59090
-  - <rmi_port_number> = 1099
-
-
+``` 
+cd deliverables/jar 
+java -jar client.jar
+```
 
