@@ -11,7 +11,7 @@ public class ServerMainApp {
     public static void main(String[] args) {
         int numParameters = args.length;
         int socketPort = 59090; // Default server socket port
-        int rmiPort = 1099; // Default RMI port
+        int rmiPort = 1099; // Default server RMI port
         String serverMode = "production";
 
         printLogo();

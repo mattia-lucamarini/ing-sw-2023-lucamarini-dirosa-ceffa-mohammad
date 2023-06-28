@@ -14,18 +14,18 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Abstract class to manage the communication with the client
+ * Abstract class to manage the communication  server-client and client-server
  *
  */
 abstract public class ClientHandler {
 
-    protected Integer pingMessageCounter;
+    protected Integer pingMessageCounter; // number of ping messages to read
 
-    private static final long  PING_FREQUENCY = 500; //millsecs
+    private static final long  PING_FREQUENCY = 500; // time interval beetween a ping message and the next one, in millsecs
 
-    protected ConcurrentLinkedQueue<Message> messageQueue;
+    protected ConcurrentLinkedQueue<Message> messageQueue; // asynchronous message queue
 
-    protected Boolean connectionStatus;
+    protected Boolean connectionStatus; //connection status of the receiver
 
     /**
      * Raw method to receive a message from the client

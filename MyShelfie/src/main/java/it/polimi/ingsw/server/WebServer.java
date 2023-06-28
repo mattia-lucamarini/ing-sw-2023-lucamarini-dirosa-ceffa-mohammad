@@ -110,6 +110,7 @@ public class WebServer {
         while(true){
             System.out.println("[Web Server] Number of active Games: "+this.activeGames.size());
             for(Integer id: this.activeGames.keySet()){
+
                 if(! this.activeGames.get(id).isActive()){
                     this.activeGames.remove(id);
                     System.out.println("[Web Server] removing Game "+ id);
