@@ -5,7 +5,7 @@
 - [**Paolo Ceffa**](https://github.com/poolll98)
 - [**Mohammad Shaffaeet**]()
 # My Shelfie
-<img src="MyShelfie/free_resources/my-shelfie.png" alt="Image description" width="350">
+<img src="MyShelfie/src/main/resources/free_resources/my-shelfie.png" alt="Image description" width="350">
 
 Implementazione in Java del gioco da tavolo [My Shelfie](https://www.craniocreations.it/prodotto/my-shelfie).
 

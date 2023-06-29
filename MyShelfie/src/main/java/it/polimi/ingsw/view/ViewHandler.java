@@ -1,16 +1,12 @@
 package it.polimi.ingsw.view;
 
-import com.sun.javafx.scene.control.skin.FXVK;
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.model.Cell;
-import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.view.MessageView.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -23,17 +19,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
-import javax.management.Notification;
-import javax.swing.*;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Pattern;
 
 
 public class ViewHandler {
@@ -705,11 +696,11 @@ public class ViewHandler {
                             ++k;
                             break;
                         case VALID :
-                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
+                            imgvw.setImage(new Image(getClass().getResource("/free_resources/valid.png").toExternalForm()));
                             ++k;
                             break;
                         case NOTVALID:
-                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
+                            imgvw.setImage(new Image(getClass().getResource("/free_resources/notvalid.png").toExternalForm()));
                             ++k;
                             break;
                 }
@@ -747,10 +738,10 @@ public class ViewHandler {
                 image= new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm());
                 break;
             case VALID :
-                image= new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm());
+                image= new Image(getClass().getResource("/free_resources/valid.png").toExternalForm());
                 break;
             case NOTVALID:
-                image= new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm());
+                image= new Image(getClass().getResource("/free_resources/notvalid.png").toExternalForm());
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + tile);
