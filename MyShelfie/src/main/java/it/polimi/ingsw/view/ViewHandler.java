@@ -60,7 +60,8 @@ public class ViewHandler {
     @FXML
     ImageView stack1, stack2, playerpoints, commongoal1, commongoal2, takentile0, takentile1,getTakentile2;
     @FXML
-    Label l1, whattodo,playerorder, addresslabel, portlabel, winner, second, third, fourth, ptwo , pthree, pfour;
+    Label l1, whattodo,playerorder, addresslabel, portlabel,
+            winner, second, third, fourth, ptwo , pthree, pfour, connectionresult;
     @FXML
     ComboBox comboBox;
 
@@ -611,33 +612,49 @@ public class ViewHandler {
     }
 
     public void showAddressPort(ActionEvent e){
-        int port;
-        String address = textaddress.getText();
-        if(address.toLowerCase(Locale.ROOT).equals("default")){
-            address = "127.0.0.1";
-        }
-        String portstring = textport.getText();
-        if((portstring.toLowerCase(Locale.ROOT).equals("default")) && conn.equals("socket")){
-            port= 59090;
-        }
-        else if(portstring.toLowerCase(Locale.ROOT).equals("default") && conn.equals("rmi")){
-            port = 1099;
-        }
-        else{
-            Scanner sc = new Scanner(portstring);
-            try{
-                port = sc.nextInt();
+        String port=null;
+        String address=null;
+        Scanner sc;
+        Scanner sc1;
+        Integer portchoice = null;
+        try{
+            address = textaddress.getText();
+            sc = new Scanner(address);
+            address = sc.nextLine();
+        }catch(Exception exception){}
+        address = (address.isEmpty()) ? "127.0.0.1" : address;
+        String portstring;
+        try{
+                portstring = textport.getText();
+            sc1 = new Scanner(portstring);
+            port = sc1.nextLine();
+        }catch(Exception exception){}
+        try{
+            if(conn.equals("socket")){
+                  if(port.isEmpty()){
+                    portchoice = 59090;
+                  }
+                 else{
+                     portchoice = Integer.parseInt(port);} 
             }
-            catch(Exception exception){
+            else if(conn.equals("rmi")){
+                  if(port.isEmpty()){
+                      portchoice = 1099;
+                  }
+                  else{
+                      portchoice = Integer.parseInt(port);
+                  }
+            }
+        } catch(Exception exception){
                 if(conn.equals("socket")){
-                    port=59090;
+                     portchoice=59090;
                 }
-                else{
-                    port=1099;
-                }
-            }
+                 else{
+                    portchoice=1099;
+                 }
         }
-        MessageView message = new PayloadUsername(username,conn,address,port);
+        connectionresult.setText("Connection param : " + address +" "+ portchoice);
+        MessageView message = new PayloadUsername(username,conn,address,portchoice);
         gui.addMessage(message);
     }
     public void endTurn(ActionEvent e){

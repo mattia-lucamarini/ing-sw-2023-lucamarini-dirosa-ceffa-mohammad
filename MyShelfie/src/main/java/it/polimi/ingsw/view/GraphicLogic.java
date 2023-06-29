@@ -114,7 +114,8 @@ public class GraphicLogic {
                 clientHandler = new RmiClientHandler(rmiClientService);
                 connected=true;
             } catch (Exception e) {
-                System.out.println("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
+                userInterface.printMessage("Could not connect to "
+                        + address + ":" + port + "\n\tRetrying in 5 seconds..");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ignored){}
@@ -129,10 +130,10 @@ public class GraphicLogic {
                 clientHandler = new SocketClientHandler(new Socket(address, port));
                 connected = true;
             } catch (UnknownHostException e){
-                System.out.println("Could not determine " + address + ":" + port);
+                userInterface.printMessage("Could not determine " + address + ":" + port);
                 System.exit(12);
             } catch (IOException e) {
-                System.out.println("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
+                userInterface.printMessage("Could not connect to " + address + ":" + port + "\n\tRetrying in 5 seconds..");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ignored){}
