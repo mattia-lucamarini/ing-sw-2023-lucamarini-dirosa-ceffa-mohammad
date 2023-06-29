@@ -85,11 +85,9 @@ public class Client {
                             addressChoice = (addressChoice.isEmpty()) ? LOCAL_HOST : addressChoice;
                             System.out.println(addressChoice);
                             System.out.print("Type the port, or nothing for default port:\n> ");
-
                             portChoice = sc.nextLine();
-
-                            System.out.println(portChoice);
                             Integer port = (portChoice.isEmpty()) ? SOCKET_DEFAULT_PORT : Integer.parseInt(portChoice);
+                            System.out.println(port);
                             connectSocket(addressChoice, port);
                         }
                         case "2" -> {
@@ -100,7 +98,7 @@ public class Client {
                             System.out.print("Type the port, or nothing for default port:\n> ");
                             portChoice = sc.nextLine();
                             Integer port = (portChoice.isEmpty()) ? RMI_DEFAULT_PORT : Integer.parseInt(portChoice);
-                            System.out.println(portChoice);
+                            System.out.println(port);
                             connectRMI(addressChoice, port);
                         }
                         default -> {
@@ -129,6 +127,7 @@ public class Client {
                 loginResult = login();
             } while (loginResult == 0);
             if (loginResult != 2) { //2 means the client reconnected to a game, and can skip goal and player order processing
+                userInterface.printErrorMessage("\nWaiting for other players ...");
                 while (!goalProcessing());
                 waitForOrder();
             }
@@ -288,7 +287,7 @@ public class Client {
         //RECEIVING LOGIN REPLY
         if (message.getMessageType().equals(MessageCode.LOGIN_REPLY)) {
             if (((LoginReply) message).getOutcome()) {
-                userInterface.printMessage("\nClient added!");
+                printCustomMessage("Client added ! The game will start soon !", "notable");
                 return 1;
             } else {
                 userInterface.printErrorMessage("Client refused: choose another username.");
@@ -296,7 +295,7 @@ public class Client {
             }
             //RECONNECT PLAYER
         } else if (message.getMessageType().equals(MessageCode.RECONNECT)) {
-            System.out.println("Welcome back!");
+            printCustomMessage("Welcome back !", "notable");
             //Updates all the data structures
             personalGoal = new PersonalGoalCard(((Reconnect) message).getPersonalGoalIndex());
             commonGoals = new Pair<>(new CommonGoalCard(((Reconnect) message).getNumPlayers(),
@@ -331,13 +330,13 @@ public class Client {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         while (personalGoal == null || commonGoals == null) {
             try {
-                message = clientHandler.receivingWithRetry(10, 5);
+                message = clientHandler.receivingWithRetry(3, 3);
             } catch (NoMessageToReadException e) {
-                userInterface.printErrorMessage("No message received after sending the num player message");
+                userInterface.printErrorMessage("\nWaiting for other players ...");
                 return false;
             } catch (ClientDisconnectedException e) {
                 userInterface.printErrorMessage("Disconnected from the server while waiting" +
-                        " for log response after num player mess.");
+                        " for the personal goals message.");
                 System.exit(13);
             }
             if (message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
@@ -367,7 +366,7 @@ public class Client {
      * Receives player order from the server. Only used at the start of the game.
      */
     private static void waitForOrder() {
-        playerOrder = userInterface.waitForOtherPlayers(clientHandler);
+        playerOrder = userInterface.waitForPlayersOrder(clientHandler);
         playerShelves = new HashMap<>();    //also initializes player shelves
         for (String pl : playerOrder) {
             if (!pl.equals(player.getUsername()))
@@ -394,7 +393,7 @@ public class Client {
                         != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
 
                 if (message.getMessageType() == MessageCode.FORCED_WIN){
-                    printCustomMessage("Everyone else disconnected.\n"+
+                    printCustomMessage("Everyone else disconnected. "+
                                           "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
 
                     Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);

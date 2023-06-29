@@ -2,21 +2,13 @@ package it.polimi.ingsw.view;
 
 import it.polimi.ingsw.client.Client;
 import it.polimi.ingsw.model.Pair;
-import it.polimi.ingsw.model.Player;
-import it.polimi.ingsw.model.Shelf;
 import it.polimi.ingsw.model.Tiles;
 import it.polimi.ingsw.network.ClientHandler.ClientHandler;
 import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
 import it.polimi.ingsw.view.MessageView.*;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import java.io.IOException;
@@ -26,7 +18,7 @@ import java.util.regex.Pattern;
 
 import static it.polimi.ingsw.view.GraphicLogic.board;
 
-public class GUIInterface {
+public class GUIInterface{
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
     private Stage stage;
@@ -50,7 +42,7 @@ public class GUIInterface {
         this.viewhandler = viewhandler;
     }*/
 
-    public GUIInterface(){
+    public GUIInterface() {
         mypicks = new ArrayList<>();
         pickedTiles = new ArrayList<>();
         sended = new ConcurrentLinkedQueue<>();
@@ -125,7 +117,7 @@ public class GUIInterface {
         sended.add(message);
     }
 
-    public ArrayList<String> waitForOtherPlayers(ClientHandler cl) {
+    public ArrayList<String> waitForPlayersOrder(ClientHandler cl) {
         ArrayList<String> playerOrder = null;
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         printMessage("Waiting for other players...");
@@ -133,9 +125,9 @@ public class GUIInterface {
             try {
                 message = cl.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
-                printErrorMessage("Not enough players to start a new game.");
+                printErrorMessage("Got an error while waiting for the order of the players.");
             } catch (ClientDisconnectedException e) {
-                printErrorMessage("Disconnected from the server while waiting for other players.");
+                printErrorMessage("Disconnected from the server while waiting for the order of the players.");
             }
 
             if (message.getMessageType() == MessageCode.PLAYER_ORDER)

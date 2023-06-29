@@ -9,7 +9,6 @@ import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
-import it.polimi.ingsw.view.MessageView.MessageCodeView;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +17,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 /**
  * class: GraphicLogic
@@ -224,7 +222,7 @@ public class GraphicLogic {
                         connectSocket("127.0.0.1", 59090);
                     }
                 } catch (Exception e){
-                    System.out.println(e);
+                    System.out.println(e.getMessage());
                 }
                 clientHandler.receivingKernel();
                 clientHandler.pingKernel();
@@ -249,7 +247,7 @@ public class GraphicLogic {
             userInterface.setPlayersInComboBox(playerOrder);
             userInterface.boardCommand();
             userInterface.updateShelf();
-            if (((Reconnect) message).getNowPlaying() != player.getUsername()) {
+            if (!((Reconnect) message).getNowPlaying().equals(player.getUsername())) {
                 System.out.println();
                 userInterface.showWhoIsPlaying(((Reconnect) message).getNowPlaying());
             }
@@ -268,10 +266,11 @@ public class GraphicLogic {
                 //System.out.println("Receiving personal goal..");
                 message = clientHandler.receivingWithRetry(10, 5);
             } catch (NoMessageToReadException e) {
-                userInterface.printMessage("No message received after sending the num player message");
+                userInterface.printMessage("Waiting for other players ...");
                 return false;
             } catch (ClientDisconnectedException e) {
-                userInterface.printErrorMessage("Disconnected from the server while waiting for log response after num player mess.");
+                userInterface.printErrorMessage("Disconnected from the server while waiting" +
+                                                " for the personal goals message.");
                 System.exit(13);
             }
             if (message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
@@ -296,7 +295,7 @@ public class GraphicLogic {
         return true;
     }
     private static void waitForOrder() {
-        playerOrder = userInterface.waitForOtherPlayers(clientHandler);
+        playerOrder = userInterface.waitForPlayersOrder(clientHandler);
         playerShelves = new HashMap<>();
         for (String pl : playerOrder) {
             if (!pl.equals(player.getUsername()))

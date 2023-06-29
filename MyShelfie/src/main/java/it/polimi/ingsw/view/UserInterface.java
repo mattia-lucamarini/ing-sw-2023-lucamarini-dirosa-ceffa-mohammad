@@ -24,7 +24,7 @@ public interface UserInterface {
 
     void showCommonGoals(int goalNumber1, int goalNumber2);
 
-    ArrayList<String> waitForOtherPlayers(ClientHandler cl);
+    ArrayList<String> waitForPlayersOrder(ClientHandler cl);
 
     void showPlayersOrder(ArrayList<String> order);
 
