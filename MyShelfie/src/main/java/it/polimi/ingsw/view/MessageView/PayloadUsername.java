@@ -5,10 +5,10 @@ import it.polimi.ingsw.network.message.MessageCode;
 public class PayloadUsername extends MessageView{
     private String username;
     private String connection;
-    private int port;
+    private Integer port;
     private String address;
 
-    public PayloadUsername(String username, String connection, String address, int port){
+    public PayloadUsername(String username, String connection, String address, Integer port){
         super(MessageCodeView.GENERIC_MESSAGE);
         this.username=username;
         this.connection=connection;
@@ -24,7 +24,7 @@ public class PayloadUsername extends MessageView{
         return connection;
     }
 
-    public int getPort() {
+    public Integer getPort() {
         return port;
     }
 

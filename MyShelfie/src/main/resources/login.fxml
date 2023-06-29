@@ -12,7 +12,7 @@
    <children>
       <Label fx:id="l1" layoutX="175.0" layoutY="50.0" text="Welcome to MyShelfie!" />
       <Label fx:id="l2" layoutX="160.0" layoutY="93.0" text="Please insert your username:" />
-      <TextField fx:id="text" layoutX="158.0" layoutY="123.0" opacity="0.5" text="&quot;type your username here&quot;" />
+      <TextField fx:id="text" layoutX="158.0" layoutY="123.0" opacity="0.5" promptText="&quot;type your username here&quot;" />
       <RadioButton fx:id="socket" layoutX="202.0" layoutY="198.0" mnemonicParsing="false" text="SOCKET" >
          <toggleGroup>
             <ToggleGroup fx:id="connection" />

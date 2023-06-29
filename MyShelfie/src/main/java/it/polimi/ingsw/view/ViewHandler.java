@@ -1,16 +1,12 @@
 package it.polimi.ingsw.view;
 
-import com.sun.javafx.scene.control.skin.FXVK;
 import it.polimi.ingsw.model.*;
 import it.polimi.ingsw.model.Cell;
-import it.polimi.ingsw.network.message.Message;
 import it.polimi.ingsw.view.MessageView.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -23,17 +19,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
-import javax.management.Notification;
-import javax.swing.*;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Pattern;
 
 
 public class ViewHandler {
@@ -69,7 +60,8 @@ public class ViewHandler {
     @FXML
     ImageView stack1, stack2, playerpoints, commongoal1, commongoal2, takentile0, takentile1,getTakentile2;
     @FXML
-    Label l1, whattodo,playerorder, addresslabel, portlabel, winner, second, third, fourth, ptwo , pthree, pfour;
+    Label l1, whattodo,playerorder, addresslabel, portlabel,
+            winner, second, third, fourth, ptwo , pthree, pfour, connectionresult;
     @FXML
     ComboBox comboBox;
 
@@ -620,33 +612,49 @@ public class ViewHandler {
     }
 
     public void showAddressPort(ActionEvent e){
-        int port;
-        String address = textaddress.getText();
-        if(address.toLowerCase(Locale.ROOT).equals("default")){
-            address = "127.0.0.1";
-        }
-        String portstring = textport.getText();
-        if((portstring.toLowerCase(Locale.ROOT).equals("default")) && conn.equals("socket")){
-            port= 59090;
-        }
-        else if(portstring.toLowerCase(Locale.ROOT).equals("default") && conn.equals("rmi")){
-            port = 1099;
-        }
-        else{
-            Scanner sc = new Scanner(portstring);
-            try{
-                port = sc.nextInt();
+        String port=null;
+        String address=null;
+        Scanner sc;
+        Scanner sc1;
+        Integer portchoice = null;
+        try{
+            address = textaddress.getText();
+            sc = new Scanner(address);
+            address = sc.nextLine();
+        }catch(Exception exception){}
+        address = (address.isEmpty()) ? "127.0.0.1" : address;
+        String portstring;
+        try{
+                portstring = textport.getText();
+            sc1 = new Scanner(portstring);
+            port = sc1.nextLine();
+        }catch(Exception exception){}
+        try{
+            if(conn.equals("socket")){
+                  if(port.isEmpty()){
+                    portchoice = 59090;
+                  }
+                 else{
+                     portchoice = Integer.parseInt(port);} 
             }
-            catch(Exception exception){
+            else if(conn.equals("rmi")){
+                  if(port.isEmpty()){
+                      portchoice = 1099;
+                  }
+                  else{
+                      portchoice = Integer.parseInt(port);
+                  }
+            }
+        } catch(Exception exception){
                 if(conn.equals("socket")){
-                    port=59090;
+                     portchoice=59090;
                 }
-                else{
-                    port=1099;
-                }
-            }
+                 else{
+                    portchoice=1099;
+                 }
         }
-        MessageView message = new PayloadUsername(username,conn,address,port);
+        connectionresult.setText("Connection param : " + address +" "+ portchoice);
+        MessageView message = new PayloadUsername(username,conn,address,portchoice);
         gui.addMessage(message);
     }
     public void endTurn(ActionEvent e){
@@ -705,11 +713,11 @@ public class ViewHandler {
                             ++k;
                             break;
                         case VALID :
-                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm()));
+                            imgvw.setImage(new Image(getClass().getResource("/free_resources/valid.png").toExternalForm()));
                             ++k;
                             break;
                         case NOTVALID:
-                            imgvw.setImage(new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm()));
+                            imgvw.setImage(new Image(getClass().getResource("/free_resources/notvalid.png").toExternalForm()));
                             ++k;
                             break;
                 }
@@ -747,10 +755,10 @@ public class ViewHandler {
                 image= new Image(getClass().getResource("/assets/item tiles/Giochi1.1.png").toExternalForm());
                 break;
             case VALID :
-                image= new Image(getClass().getResource("/assets/item tiles/valid.png").toExternalForm());
+                image= new Image(getClass().getResource("/free_resources/valid.png").toExternalForm());
                 break;
             case NOTVALID:
-                image= new Image(getClass().getResource("/assets/item tiles/notvalid.png").toExternalForm());
+                image= new Image(getClass().getResource("/free_resources/notvalid.png").toExternalForm());
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + tile);

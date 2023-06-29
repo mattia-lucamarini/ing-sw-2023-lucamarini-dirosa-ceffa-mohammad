@@ -110,8 +110,8 @@ public class WebServer {
         while(true){
             System.out.println("[Web Server] Number of active Games: "+this.activeGames.size());
             for(Integer id: this.activeGames.keySet()){
-
-                if(! this.activeGames.get(id).isActive()){
+                boolean dead_game = this.checkDeadGame(id);
+                if(! this.activeGames.get(id).isActive() || dead_game){
                     this.activeGames.remove(id);
                     System.out.println("[Web Server] removing Game "+ id);
                     for(String username: this.activePlayers.keySet()){
@@ -128,6 +128,26 @@ public class WebServer {
                 WebServer.LOG.warning(e.getMessage());
             }
         }
+    }
+
+    /**
+     * Method to check if a game is without active players and to classify it as a dead game.
+     *
+     * @param id the unique id of a game
+     * @return true if the game with the input id is without active players, false otherwise
+     */
+    private boolean checkDeadGame(Integer id){
+        boolean dead_game = true;
+        for(String username: this.activePlayers.keySet()){
+           if(this.activePlayers.get(username).equals((id))){
+                if (this.clientHandlers.get(username).isConnected()) {
+                    dead_game = false;
+                    break;
+                }
+            }
+        }
+        if(dead_game) System.out.println("[Web Server] No more players here. Dead Game: "+ id);
+        return dead_game;
     }
 
     /**
