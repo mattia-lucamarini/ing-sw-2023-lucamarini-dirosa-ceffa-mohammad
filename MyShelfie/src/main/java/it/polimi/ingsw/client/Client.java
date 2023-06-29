@@ -380,262 +380,271 @@ public class Client {
      * Starts and manages every player's turn, processing their moves and sending them to the server.
      */
     private static void playTurn() {
-                Message message = new Message(MessageCode.GENERIC_MESSAGE);
-                do {    //WAIT FOR EITHER PLAY_TURN MESSAGE, END_GAME OR FORCED_WIN
-                    try {
-                        message = clientHandler.receivingWithRetry(100, WAITING_TIME);
-                    } catch (NoMessageToReadException e) {
-                        userInterface.printErrorMessage("Stopped receiving turns notifications");
-                    } catch (ClientDisconnectedException e) {
-                        userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
-                        System.exit(13);
-                    }
-                } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType()
-                        != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
+        Message message = new Message(MessageCode.GENERIC_MESSAGE);
+        // WAIT FOR EITHER PLAY_TURN MESSAGE, END_GAME OR FORCED_WIN
+        do {
+            try {
+                message = clientHandler.receivingWithRetry(100, WAITING_TIME);
+            } catch (NoMessageToReadException e) {
+                userInterface.printErrorMessage("Stopped receiving turns notifications");
+            } catch (ClientDisconnectedException e) {
+                userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
+                System.exit(13);
+            }
+        } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType()
+                != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
 
-                if (message.getMessageType() == MessageCode.FORCED_WIN){
-                    printCustomMessage("Everyone else disconnected.\n"+
-                                          "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
+        if (message.getMessageType() == MessageCode.FORCED_WIN) {
+            printCustomMessage("Everyone else disconnected.\n"+
+                                  "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
 
-                    Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
-                    do {
-                        try {
-                            forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            System.out.println("Disconnected while waiting for forced win message.");
-                            System.exit(13);
-                        } catch (NoMessageToReadException ignored) {}
-                    } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
+            // Wait for forced win.
+            // TODO: This loop breaks only if forced win is sent again. Shouldn't it check for reconnections instead?
+            Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
+            do {
+                try {
+                    forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    System.out.println("Disconnected while waiting for forced win message.");
+                    System.exit(13);
+                } catch (NoMessageToReadException ignored) {}
+            } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
 
-                    if (((ForcedWin) forcedWin).getWin()){
-                        printCustomMessage("Everyone is still gone. You won!", "notable");
-                        System.exit(0);
-                    } else {
-                        printCustomMessage("Someone reconnected. The game continues !", "warning");
-                    }
-                }
-                /*If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
-                    so the playTurn message was already received by this player while they were waiting for their turn
-                 */
-                if (message instanceof PlayTurn || someoneDisconnected) {
-                   if (!someoneDisconnected)
-                       try {
-                           board = ((PlayTurn) message).getBoard();
-                       } catch (ClassCastException e){
-                           System.out.println("ClassCastException: " +
-                                   "The client expected a PLAY_TURN message, but received a " + message.getMessageType());
-                       }
-                    if (someoneDisconnected || ((PlayTurn) message).getUsername().equals(player.getUsername())) {//OWN TURN
-                        someoneDisconnected = false;
-                        //TEST ACTIONS
-                        userInterface.turnNotification(player.getUsername());
-                        boolean canContinue = false;
-                        while (!canContinue) {
-                            String command = userInterface.getCommand(player.getUsername()).strip().toLowerCase();
-                            switch (command) {
-                                case "board":
-                                    userInterface.boardCommand();
-                                    break;
-                                case "shelf":
-                                    userInterface.shelfCommand();
-                                    break;
-                                case "help":
-                                    userInterface.helpCommand();
-                                    break;
-                                case "common":
-                                    userInterface.showCommonGoals(commonGoals.getFirst().getGoalIndex(),
-                                            commonGoals.getSecond().getGoalIndex());
-                                    break;
-                                case "personal":
-                                    userInterface.showPersonalGoal(personalGoal.getGoalIndex());
-                                    break;
-                                case "take":
-                                    try {
-                                        pickedTiles = userInterface.takeCommand();
-                                    } catch (UnsupportedOperationException ignored) {}
-                                    break;
-                                case "insert":
-                                    userInterface.insertCommand(pickedTiles);
-                                    break;
-                                case "done":
-                                    canContinue = userInterface.doneCommand();
-                                    break;
-                                default:
-                                    userInterface.unknownCommand();
-                            }
-                        }
-                        try {
-                            clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            System.out.println("Disconnected while sending turn over notification.");
-                            System.exit(13);
-                        }
-                        //CHECKING IF ANY GOALS WERE REACHED
-                        boolean commonReached = false;
-                        if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
-                            int goalScore = commonGoals.getFirst().getGoal().takePoints();
-                            if (goalScore > 0) {
-                                commonReached = true;
-                                userInterface.commonGoalReached(0, goalScore);
-                                try {
-                                    clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
-                                } catch (ClientDisconnectedException e){
-                                    System.out.println("Disconnected while sending common goal 0 reached notification.");
-                                    System.exit(13);
-                                }
-                            }
-                        }
-                        if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1) {
-                            int goalScore = commonGoals.getSecond().getGoal().takePoints();
-                            if (goalScore > 0) {
-                                commonReached = true;
-                                userInterface.commonGoalReached(1, goalScore);
-                                try {
-                                    clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
-                                } catch (ClientDisconnectedException e){
-                                    System.out.println("Disconnected while sending common goal 1 reached notification.");
-                                    System.exit(13);
-                                }
-                            }
-                        }
-                        if (!commonReached)
-                            try {
-                                clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while sending common goal not reached notification.");
-                                System.exit(13);
-                            }
+            if (((ForcedWin) forcedWin).getWin()){
+                printCustomMessage("Everyone is still gone. You won!", "notable");
+                System.exit(0);
+            } else {
+                printCustomMessage("Someone reconnected. The game continues !", "warning");
+            }
+        }
 
-                        do {
-                            try {
-                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while waiting for common goal ack.");
-                                System.exit(13);
-                            } catch (NoMessageToReadException ignored) {}
-                        } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
-
-                        //CHECKING SHELF FULLNESS
-                        boolean isShelfFull = true;
-                        out:
-                        for (int i = 0; i < 6; i++) {
-                            for (int j = 0; j < 5; j++) {
-                                if (player.getShelf().isCellEmpty(i, j)) {
-                                    isShelfFull = false;
-                                    break out;
-                                }
-                            }
-                        }
-                        if (isShelfFull) {
-                            userInterface.shelfCompleted();
-                            try {
-                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true),
-                                        ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while sending full shelf notification.");
-                                System.exit(13);
-                            }
-                        } else {
-                            try {
-                                clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false),
-                                        ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while sending not full shelf notification.");
-                                System.exit(13);
-                            }
-                        }
-                        do {
-                            try {
-                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while waiting for full shelf ack.");
-                                System.exit(13);
-                            } catch (NoMessageToReadException ignored){}
-                        } while (message.getMessageType() != MessageCode.FULL_SHELF);
-
-                        //END OF TURN
-                        try {
-                            clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e) {
-                            System.out.println("Disconnected while sending final turn over notification");
-                            System.exit(1);
-                        }
-                        do {
-                            try {
-                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while waiting for final turn over notification");
-                                System.exit(13);
-                            } catch (NoMessageToReadException ignored){}
-                        } while (message.getMessageType() != MessageCode.TURN_OVER);
-
-                        userInterface.turnCompleted();
-
-                    } else {    //OTHER PLAYERS TURN
-                        String nowPlaying = ((PlayTurn) message).getUsername();
-                        userInterface.showWhoIsPlaying(nowPlaying);
-                        message = new Message(MessageCode.GENERIC_MESSAGE);
-                        do {
-                            try {   //Waits for the player's actions and updates the data structures accordingly
-                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e){
-                                System.out.println("Disconnected while waiting for " + nowPlaying + "'s turn.");
-                                System.exit(13);
-                            } catch (NoMessageToReadException ignored){}
-                            if (message.getMessageType() == MessageCode.CHOSEN_TILES)
-                                try {
-                                    board.takeTiles(((ChosenTiles) message).getPlayerMove());
-                                } catch (RuntimeException e) {
-                                    System.out.println(e.getMessage());
-                                }
-                            if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                                if (((CommonGoalReached) message).getPosition() == 0)
-                                    userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),
-                                            ((CommonGoalReached) message).getPosition(),
-                                            commonGoals.getFirst().getGoal().takePoints());
-                                else if (((CommonGoalReached) message).getPosition() == 1)
-
-                            if (message.getMessageType() == MessageCode.FULL_SHELF)
-                                userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
-                            if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                                System.out.println("sono nell if - tui");
-                                System.out.println(nowPlaying + " disconnected, it's now your turn.");
-                                someoneDisconnected = true;
-                                return;
-                            }
-                        } while (message.getMessageType() != MessageCode.TURN_OVER);
-                        do {
-                            try {   //updates the shelf with the player's move
-                                message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                                if (message.getMessageType() == MessageCode.INSERT) {
-                                    try {
-                                        playerShelves.get(nowPlaying).insertTiles(((Insert) message).getPositions(),
-                                                ((Insert) message).getTiles());
-                                    } catch (RuntimeException e){
-                                        System.out.println("Error while updating shelf from + " + nowPlaying + ": " +
-                                                           e.getMessage());
-                                    }
-
-                                }
-                            } catch (ClientDisconnectedException e) {
-                                System.out.println("Client disconnected while waiting for other shelves.");
-                                System.exit(0);
-                            } catch (NoMessageToReadException ignored){}
-                        } while (message.getMessageType() != MessageCode.INSERT);
-                   }
-                } else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
-                    gameOn = false;
-                    userInterface.finalScore(); //Calculates and prints my own score
-                    do {
-                        try {
-                            message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            System.out.println("Disconnected while waiting for final score.");
-                            System.exit(13);
-                        } catch (NoMessageToReadException ignored){}
-                    } while (message.getMessageType() != MessageCode.FINAL_SCORE);
-                    ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
-                    userInterface.finalRank(playerPoints);
+        // If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
+        // so the playTurn message was already received by this player while they were waiting for their turn
+        if (message instanceof PlayTurn || someoneDisconnected) {
+            if (!someoneDisconnected) {
+                try {
+                    board = ((PlayTurn) message).getBoard();
+                } catch (ClassCastException e) {
+                    System.out.println("ClassCastException: " +
+                            "The client expected a PLAY_TURN message, but received a " + message.getMessageType());
                 }
             }
+            if (someoneDisconnected || ((PlayTurn) message).getUsername().equals(player.getUsername())) { // OWN TURN
+                someoneDisconnected = false;
+
+                // TEST ACTIONS
+                userInterface.turnNotification(player.getUsername());
+                boolean canContinue = false;
+                while (!canContinue) {
+                    String command = userInterface.getCommand(player.getUsername()).strip().toLowerCase();
+                    switch (command) {
+                        case "board":
+                            userInterface.boardCommand();
+                            break;
+                        case "shelf":
+                            userInterface.shelfCommand();
+                            break;
+                        case "help":
+                            userInterface.helpCommand();
+                            break;
+                        case "common":
+                            userInterface.showCommonGoals(commonGoals.getFirst().getGoalIndex(),
+                                    commonGoals.getSecond().getGoalIndex());
+                            break;
+                        case "personal":
+                            userInterface.showPersonalGoal(personalGoal.getGoalIndex());
+                            break;
+                        case "take":
+                            try {
+                                pickedTiles = userInterface.takeCommand();
+                            } catch (UnsupportedOperationException ignored) {}
+                            break;
+                        case "insert":
+                            userInterface.insertCommand(pickedTiles);
+                            break;
+                        case "done":
+                            canContinue = userInterface.doneCommand();
+                            break;
+                        default:
+                            userInterface.unknownCommand();
+                    }
+                }
+
+                // SEND END_OF_TURN AWK
+                try {
+                    clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e) {
+                    System.out.println("Disconnected while sending turn over notification.");
+                    System.exit(13);
+                }
+
+                // CHECKING IF ANY GOALS WERE REACHED
+                boolean commonReached = false;
+                if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
+                    int goalScore = commonGoals.getFirst().getGoal().takePoints();
+                    if (goalScore > 0) {
+                        commonReached = true;
+                        userInterface.commonGoalReached(0, goalScore);
+                        try {
+                            clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e){
+                            System.out.println("Disconnected while sending common goal 0 reached notification.");
+                            System.exit(13);
+                        }
+                    }
+                }
+                if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1) {
+                    int goalScore = commonGoals.getSecond().getGoal().takePoints();
+                    if (goalScore > 0) {
+                        commonReached = true;
+                        userInterface.commonGoalReached(1, goalScore);
+                        try {
+                            clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e){
+                            System.out.println("Disconnected while sending common goal 1 reached notification.");
+                            System.exit(13);
+                        }
+                    }
+                }
+                if (!commonReached) {
+                    try {
+                        clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
+                    } catch (ClientDisconnectedException e) {
+                        System.out.println("Disconnected while sending common goal not reached notification.");
+                        System.exit(13);
+                    }
+                }
+                do {
+                    try {
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for common goal ack.");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored) {}
+                } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
+
+                // CHECKING SHELF FULLNESS
+                boolean isShelfFull = true;
+                out: for (int i = 0; i < 6; i++) {
+                    for (int j = 0; j < 5; j++) {
+                        if (player.getShelf().isCellEmpty(i, j)) {
+                            isShelfFull = false;
+                            break out;
+                        }
+                    }
+                }
+                if (isShelfFull) {
+                    userInterface.shelfCompleted();
+                    try {
+                        clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true),
+                                ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while sending full shelf notification.");
+                        System.exit(13);
+                    }
+                } else {
+                    try {
+                        clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false),
+                                ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while sending not full shelf notification.");
+                        System.exit(13);
+                    }
+                }
+                do {
+                    try {
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for full shelf ack.");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored){}
+                } while (message.getMessageType() != MessageCode.FULL_SHELF);
+
+                // END OF TURN (Send TURN_OVER)
+                try {
+                    clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e) {
+                    System.out.println("Disconnected while sending final turn over notification");
+                    System.exit(1);
+                }
+                do {
+                    try {
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for final turn over notification");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored){}
+                } while (message.getMessageType() != MessageCode.TURN_OVER);
+
+                userInterface.turnCompleted();
+
+            } else {    //OTHER PLAYERS TURN
+                String nowPlaying = ((PlayTurn) message).getUsername();
+                userInterface.showWhoIsPlaying(nowPlaying);
+                message = new Message(MessageCode.GENERIC_MESSAGE);
+                do {
+                    try {   //Waits for the player's actions and updates the data structures accordingly
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for " + nowPlaying + "'s turn.");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored){}
+                    if (message.getMessageType() == MessageCode.CHOSEN_TILES)
+                        try {
+                            board.takeTiles(((ChosenTiles) message).getPlayerMove());
+                        } catch (RuntimeException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
+                        if (((CommonGoalReached) message).getPosition() == 0)
+                            userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),
+                                    ((CommonGoalReached) message).getPosition(),
+                                    commonGoals.getFirst().getGoal().takePoints());
+                        else if (((CommonGoalReached) message).getPosition() == 1)
+
+                    if (message.getMessageType() == MessageCode.FULL_SHELF)
+                        userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
+                    if (message.getMessageType() == MessageCode.PLAY_TURN) {
+                        System.out.println("sono nell if - tui");
+                        System.out.println(nowPlaying + " disconnected, it's now your turn.");
+                        someoneDisconnected = true;
+                        return;
+                    }
+                } while (message.getMessageType() != MessageCode.TURN_OVER);
+                do {
+                    try {   //updates the shelf with the player's move
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        if (message.getMessageType() == MessageCode.INSERT) {
+                            try {
+                                playerShelves.get(nowPlaying).insertTiles(((Insert) message).getPositions(),
+                                        ((Insert) message).getTiles());
+                            } catch (RuntimeException e){
+                                System.out.println("Error while updating shelf from + " + nowPlaying + ": " +
+                                                   e.getMessage());
+                            }
+
+                        }
+                    } catch (ClientDisconnectedException e) {
+                        System.out.println("Client disconnected while waiting for other shelves.");
+                        System.exit(0);
+                    } catch (NoMessageToReadException ignored){}
+                } while (message.getMessageType() != MessageCode.INSERT);
+           }
+        }
+
+        else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
+            gameOn = false;
+            userInterface.finalScore(); //Calculates and prints my own score
+            do {
+                try {
+                    message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    System.out.println("Disconnected while waiting for final score.");
+                    System.exit(13);
+                } catch (NoMessageToReadException ignored){}
+            } while (message.getMessageType() != MessageCode.FINAL_SCORE);
+            ArrayList<Pair<String, Integer>> playerPoints = ((FinalScore) message).getScore();
+            userInterface.finalRank(playerPoints);
+        }
+    }
 }

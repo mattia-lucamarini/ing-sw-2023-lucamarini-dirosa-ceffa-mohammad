@@ -14,9 +14,15 @@ public class PlayTurn extends Message {
      * @param username who's starting the turn
      */
     public PlayTurn(String username){
+        this(username, null);
+    }
+
+    public PlayTurn(String username, Board board){
         super(MessageCode.PLAY_TURN);
         this.username = username;
+        this.board = board;
     }
+
     public String getUsername(){
         return this.username;
     }
