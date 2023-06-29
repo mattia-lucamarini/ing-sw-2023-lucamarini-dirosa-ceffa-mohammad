@@ -39,6 +39,20 @@
       <version>5.2.0</version>
       <scope>test</scope>
     </dependency>
+
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <classifier>win</classifier>
+          <version>11.0.2</version>
+      </dependency>
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <classifier>linux</classifier>
+          <version>11.0.2</version>
+      </dependency>
+
   </dependencies>
 
   <build>
