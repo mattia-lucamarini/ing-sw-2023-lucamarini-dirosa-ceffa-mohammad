@@ -8,15 +8,11 @@ import it.polimi.ingsw.utils.NoMessageToReadException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
@@ -95,7 +91,7 @@ public class GameLogicTest {
                 new CommonGoalReached("Marco", 2), // 2 means no goal reached.
                 new FullShelf("Marco", false),
                 new Message(MessageCode.TURN_OVER),
-                new ShelfCheck(marco.getShelf())
+                new Insert(List.of(Pair.of(0, 0), Pair.of(1, 0)), List.of(Tiles.BLUE, Tiles.BLUE))
         );
         players.put("Marco", marcoClient);
 
@@ -116,7 +112,7 @@ public class GameLogicTest {
             Assert.assertEquals(msgs.get(0).getMessageType(), MessageCode.PLAY_TURN);
             Assert.assertEquals(msgs.get(1).getMessageType(), MessageCode.CHOSEN_TILES);
             Assert.assertEquals(msgs.get(2).getMessageType(), MessageCode.TURN_OVER);
-            Assert.assertEquals(((ShelfCheck) msgs.get(3)).getShelf(), marco.getShelf());
+            Assert.assertEquals(msgs.get(3).getMessageType(), MessageCode.INSERT);
         }
 
         // Check that the correct tiles have been removed.
@@ -168,7 +164,7 @@ public class GameLogicTest {
             var msg = (CommonGoalReached) msgs.get(2);
             Assert.assertEquals(0, msg.getPosition());
             Assert.assertEquals(MessageCode.TURN_OVER,           msgs.get(3).getMessageType());
-            Assert.assertEquals(MessageCode.SHELF_CHECK,         msgs.get(4).getMessageType());
+            Assert.assertEquals(MessageCode.INSERT,         msgs.get(4).getMessageType());
         }
     }
 
@@ -186,7 +182,7 @@ public class GameLogicTest {
                 new CommonGoalReached("Marco", 2), // 2 means no goal reached
                 new FullShelf("Marco", true),
                 new Message(MessageCode.TURN_OVER),
-                new ShelfCheck(mock(Shelf.class))
+                new Message(MessageCode.INSERT)
         );
         players.put("Marco", marcoClient);
         players.put("Luigi", newClientHMock());
@@ -214,7 +210,7 @@ public class GameLogicTest {
             var msg = (FullShelf) msgs.get(2);
             Assert.assertTrue(msg.getOutcome());
             Assert.assertEquals(MessageCode.TURN_OVER,           msgs.get(3).getMessageType());
-            Assert.assertEquals(MessageCode.SHELF_CHECK,         msgs.get(4).getMessageType());
+            Assert.assertEquals(MessageCode.INSERT,         msgs.get(4).getMessageType());
         }
     }
 
@@ -307,7 +303,7 @@ public class GameLogicTest {
 
         // Game end + assign points from groups and personal goals to Marco (he has a stairs shelf).
         game.sendGoalsToClients();
-        game.assignPoints("Marco");
+        game.assignPoints("Marco", true);
 
         // Check that other players receive the correct notifications from Marco's turn.
         var msgs = getMessagesFromMockClient(players.get("Marco"), 3);
