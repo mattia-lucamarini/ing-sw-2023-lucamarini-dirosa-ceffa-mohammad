@@ -259,7 +259,7 @@ public class GameLogic implements Runnable, Logic {
                     isActive = false;
                     return true;
                 }
-                try {Thread.sleep(15 * 1000);}  //START OF TIMER
+                try {Thread.sleep(25 * 1000);}  //START OF TIMER
                 catch (InterruptedException ignored){}
                 if (disconnectedPlayers.size() == clientList.size() - 1){   //checks if the player is still alone
                     try {
@@ -300,11 +300,19 @@ public class GameLogic implements Runnable, Logic {
             catch (InterruptedException ignored){}*/
             return false;
         }
-        if(board.checkStatus()){
+        board.printBoard();
+        Board refilled;
+        if(!board.checkStatus()){
+            refilled = board;
+            System.out.println("false");
+        }
+        else{
+            System.out.println("checkstatus true");
             board.refillBoard();
+            System.out.println(board);
         }
         Message message = new PlayTurn(player);
-        ((PlayTurn) message).setBoard(board);   //every player receives the updated board at the start of every turn
+        ((PlayTurn) message).setBoard(board);//every player receives the updated board at the start of every turn
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");
         for (String username : clientList.keySet()) {
             if (clientList.get(username).isConnected()) {
@@ -336,7 +344,9 @@ public class GameLogic implements Runnable, Logic {
                 boolean tookTiles = false;
                 while (!moveNotificationReceived) { //PLAYER MOVE PROCESSING
                     message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
-
+                    if(message.getMessageType()== MessageCode.REMOVE){
+                        board = new Board(2);
+                    }
                     if (!tookTiles && message.getMessageType() == MessageCode.CHOSEN_TILES && pickedTiles <= 3) {   //TAKE COMMAND
                         try {
                             pickedTiles += ((ChosenTiles) message).getPlayerMove().size();  //checks tiles number

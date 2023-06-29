@@ -145,6 +145,7 @@ public class Board implements Serializable {
                 }
             }
         }
+        return;
     }
     /**
      * Method : checkStatus
@@ -154,6 +155,7 @@ public class Board implements Serializable {
      * checkStatus iterates on the board and for every value other than "VALID" and "NOTVALID", calls anyTilesAround()  */
     public boolean checkStatus() {
         int singletiles=0, remainingtiles=0;
+
         for (int i = 0; i < 9; ++i) {
             for (int j = 0; j < 9; ++j) {
                 if(!grid[i][j].isEmpty() && !grid[i][j].isNotValid()){
@@ -163,6 +165,7 @@ public class Board implements Serializable {
                     }
                 }
             }
+            System.out.println("remaining tiles: " + remainingtiles + "single tiles:" +singletiles);
         }
         return singletiles == remainingtiles; //The board needs to be refilled.
     }
