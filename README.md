@@ -55,10 +55,10 @@ Il Server può essere lanciato seguendo due procedimenti:
 
 ```
 cd deliverables/jar 
-java -jar server.jar [--ports <socket_port_number> <rmi_port_number>]
+java -jar server.jar [--p <socket_port_number> <rmi_port_number>]
 ```
 
-L'argomento ```--ports``` specifica le porte dove mettere in ascolto il Server per accettare connessioni dai client utilizzando
+L'argomento ```--p``` specifica le porte dove mettere in ascolto il Server per accettare connessioni dai client utilizzando
 rispettivamente Socket ed RMI. Essendo opzionale, se omesso, i valori di default sono i seguenti:
   - <socket_port_number> = 59090
   - <rmi_port_number> = 1099
