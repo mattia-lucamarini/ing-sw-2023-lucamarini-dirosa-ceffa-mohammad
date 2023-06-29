@@ -40,8 +40,15 @@ public class CLIInterface implements UserInterface{
 
     @Override
     public Player askForUsername(){
-        System.out.print("Insert your username: ");
-        return new Player(sc.nextLine());
+        String username;
+        do{
+            System.out.print("\nInsert your username: ");
+            username = sc.nextLine();
+            if(username.isEmpty())  System.out.print("Null username inserted!\n");
+        }
+        while(username.isEmpty());
+
+        return new Player(username);
     }
     @Override
     public void printErrorMessage(String error){
@@ -54,7 +61,7 @@ public class CLIInterface implements UserInterface{
     @Override
     public int askForNumOfPlayers(ClientHandler clientHandler){
         int num = 0;
-        System.out.print("Insert player number: ");
+        System.out.print("\nInsert player number: ");
         while (num == 0) {
             try {
                 Scanner t = new Scanner(System.in);
@@ -64,7 +71,7 @@ public class CLIInterface implements UserInterface{
                     num = t.nextInt();
                 }
             } catch (InputMismatchException e) {
-                System.out.print("Please insert an actual number: ");
+                System.out.print("\nPlease insert an actual number: ");
             }
         }
         try {
@@ -77,28 +84,28 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void showPersonalGoal(int goalIndex){
-        System.out.println("Your personal goal is: " + goalIndex);
+        System.out.println("\n##########################");
+        System.out.println("\nYour personal goal is: " + goalIndex);
         for (Map.Entry<Pair<Integer, Integer>, Tiles> entry : personalGoals.get(goalIndex).getConstraint().entrySet()){
             System.out.println("\t" + entry.getValue() + " in (" + entry.getKey().getFirst() + "," + entry.getKey().getSecond() + ")");
         }
     }
     @Override
     public void showCommonGoals(int goal1, int goal2){
-        System.out.println("The common goals are:\n\t" + goalNames.get(goal1) + "\n\t" + goalNames.get(goal2));
+        System.out.println("\nThe common goals are:\n\t" + goalNames.get(goal1) + "\n\t" + goalNames.get(goal2));
     }
     @Override
-    public ArrayList<String> waitForOtherPlayers(ClientHandler clientHandler){
+    public ArrayList<String> waitForPlayersOrder(ClientHandler clientHandler){
         ArrayList<String> playerOrder = null;
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
-        System.out.println("Waiting for other players...");
         while (playerOrder == null) {
             try {
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
-                printErrorMessage("Not enough players to start a new game.");
+                printErrorMessage("Error receiving the order of the players..");
                 System.exit(1);
             } catch (ClientDisconnectedException e) {
-                printErrorMessage("Disconnected from the server while waiting for other players.");
+                printErrorMessage("Disconnected while waiting for the order of the players.");
                 System.exit(13);
             }
 
@@ -109,13 +116,14 @@ public class CLIInterface implements UserInterface{
     }
     @Override
     public void showPlayersOrder(ArrayList<String> order){
-        System.out.println("\nPlayers order:");
+        System.out.println("\nOrder of the players:");
         for (String pl : order)
             System.out.println("\t" + pl);
     }
     @Override
     public void showGameStart(){
-        System.out.println("The game is now starting");
+        System.out.println("\n");
+        Client.printCustomMessage("Game started !", "notable");
     }
     @Override
     public String getCommand(String username){
