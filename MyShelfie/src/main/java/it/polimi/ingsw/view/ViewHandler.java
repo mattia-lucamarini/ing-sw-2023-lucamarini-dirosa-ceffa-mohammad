@@ -26,7 +26,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-
+/**class: ViewHandler
+ * @author Angelo Di Rosa
+ * This is the controller of the gui.
+ * It contains the methods that responds to the action events, showing something or sending a message to the graphic logic*/
 public class ViewHandler {
     private int flag=-1, nump;
     private String username;
@@ -34,7 +37,6 @@ public class ViewHandler {
     private Stage stage;
     private boolean answer = false;
     private static Object lock = new Object();
-    private GUIClient client;
     private GUIInterface gui;
     private GraphicLogic glogic;
     private ConcurrentLinkedQueue<MessageView> sendedfromgui;
@@ -65,7 +67,14 @@ public class ViewHandler {
     @FXML
     ComboBox comboBox;
 
-
+    /**constructor: ViewHandler(Stage stage, View view)
+     * @param stage used to set the scenes on it.
+     * @param view reference of the class that instanciated it
+     *The constructor starts two threads: one thread makes the graphic logic init() method starts,
+     * the other one iterates on the "received" queue always looking for a message. When the message is found,
+     * it gets the type and does things accordingly. Receiving a Message mostly means that this thread needs to update the
+     * GUI by running a Platform.runlater thread. The messages received in fact can ask to show a label, to set a new/old
+     * scene on stage, to show images and so on.*/
     public ViewHandler(Stage stage, View view){
         this.gui = new GUIInterface();
         this.glogic = new GraphicLogic(gui);
@@ -85,7 +94,6 @@ public class ViewHandler {
                 case LOGIN_SCREEN:
                     Platform.runLater(()->{
                         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/login.fxml")));
-                        //GUIClient client = new GUIClient(this);
                         loader.setController(this);
                         Parent login = null;
                         try {
@@ -546,7 +554,9 @@ public class ViewHandler {
         });
         kernel.start();
     }
-
+    /**method: login
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the first login scene(Username/Connection type)*/
     public void login(ActionEvent e) throws IOException {
         int port;
         username = text.getText();
@@ -558,11 +568,6 @@ public class ViewHandler {
         }
 
         System.out.println("4");
-        //System.out.println("Username "+ username + "\nConnection selected: "+ conn);
-        //send these info to the user interface when done.
-        //if it is the first user to log in, it shows the number of players scene.
-        //num of players scene.
-        //if it is not the first user to log in, shows the game board etc..
         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/addressport.fxml")));
         loader.setController(this);
         Parent addressport = null;
@@ -571,18 +576,15 @@ public class ViewHandler {
         } catch (IOException exc) {
             exc.printStackTrace();
         }
-        /*Pane gamelayout = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/")));
-        boardgrid = (GridPane) gamelayout.getChildren().get(0);
-        shelfgrid = (GridPane) gamelayout.getChildren().get(1);
-        iw1 = (ImageView) boardgrid.getChildren().get(0);
-        iw1.setImage(new Image(getClass().getResource("/assets/item tiles/Cornici1.1.png").toExternalForm()));*/
         Scene addressportscene = new Scene(addressport, 600, 400);
         addressportscene.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage = (Stage)(((Node)e.getSource()).getScene().getWindow());
         stage.setScene(addressportscene);
         stage.show();
     }
-
+    /**method: numberOfPlayersController
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the number of players scene*/
     public void numberOfPlayersController(ActionEvent e) throws IOException {
         if(numplayers.getSelectedToggle()==two){
             nump=2;
@@ -594,10 +596,6 @@ public class ViewHandler {
             nump=4;
         }
         Parent waiting = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/mockup.fxml")));
-        /*FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/.fxml")));
-        loader.setController(this);
-        System.out.println("eccomi");
-        Parent gamescene = loader.load();*/
         Scene scene5 = new Scene(waiting, 529, 480);
         scene5.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
         stage.setScene(scene5);
@@ -606,11 +604,13 @@ public class ViewHandler {
         gui.addMessage(message);
 
     }
-    public void done(ActionEvent e){
+    /*public void done(ActionEvent e){
         MessageView message = new Done();
         gui.addMessage(message);
-    }
-
+    }*/
+    /**method: showAddressPort
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the second part of the login screen (Address/Port selection)*/
     public void showAddressPort(ActionEvent e){
         String port=null;
         String address=null;
@@ -657,10 +657,16 @@ public class ViewHandler {
         MessageView message = new PayloadUsername(username,conn,address,portchoice);
         gui.addMessage(message);
     }
+    /**method: endTurn
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the END TURN button in the game scene*/
     public void endTurn(ActionEvent e){
         MessageView message = new GetCommand("endturn");
         gui.addMessage(message);
     }
+    /**method: send
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the SEND button used to send a move*/
     public void send(ActionEvent e){ //to stop choosing from the board
         if(gui.getIsmyturn()){
             String string = move.getText();
@@ -671,7 +677,9 @@ public class ViewHandler {
             gui.printMessage("it's not your turn.");
         }
     }
-
+    /**method: select
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the selection of the player's shelf to show */
     public void select(ActionEvent e){
         Shelf shelf;
         String username = comboBox.getSelectionModel().getSelectedItem().toString();
@@ -724,15 +732,24 @@ public class ViewHandler {
             }
         }
     }
+    /**method: insertCommand
+     * @author Angelo Di Rosa
+     * This is the Action Listener insert button*/
     public void insertCommand(ActionEvent e){
         MessageView message = new GetCommand("insert");
         gui.addMessage(message);
     }
+    /**method: takeCommand
+     * @author Angelo Di Rosa
+     * This is the Action Listener for the take command*/
     public void takeCommand(ActionEvent e){
         MessageView message = new GetCommand("take");
         gui.addMessage(message);
     }
-
+    /**method: selectImageFromTile(Tiles tile)
+     * @param tile
+     * @author Angelo Di Rosa
+     * returns the image corrisponding to the tiles passed as parameter*/
     public Image selectImageFromTile(Tiles tile){
         Image image;
         switch(tile){
@@ -777,7 +794,11 @@ public class ViewHandler {
         }
         return image;
     }
-
+    /**method: selectImageFromPointsAndNumber(int points, int numplayers)
+     * @param points the points a player gained.
+     * @param numplayers  number of players
+     * @author Angelo Di Rosa
+     * returns the image corrisponding to the scoring token to show after a player took one from the game scene*/
     public Image selectImageFromPointsAndNumberPlayers(int points, int numplayers){
         Image image;
         if(numplayers==2 && points==8){
@@ -808,6 +829,9 @@ public class ViewHandler {
         }
         return image;
     }
+    /**method: exit
+     * @author Angelo Di Rosa
+     * action listener for the EXIT button in the final ranking scene*/
     public void exit(ActionEvent e){
         System.exit(13);
     }

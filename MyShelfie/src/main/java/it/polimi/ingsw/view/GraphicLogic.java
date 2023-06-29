@@ -86,8 +86,10 @@ public class GraphicLogic {
                 message = clientHandler.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
                 userInterface.printErrorMessage("Didn't receive start message.");
+                Thread.sleep(10000);
             } catch (ClientDisconnectedException e) {
                 userInterface.printErrorMessage("Disconnected from the server while waiting for other players.");
+                Thread.sleep(10000);
                 System.exit(1);
             }
 
@@ -151,10 +153,18 @@ public class GraphicLogic {
             flag = clientHandler.sendingWithRetry(new LoginRequest(player.getUsername()), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e) {
             userInterface.printErrorMessage("Disconnected from the server before sending log in request.");
+            try {
+                Thread.sleep(10000);
+            }
+            catch(InterruptedException ignored){}
             return 0;
         }
         if (!flag) {
             userInterface.printErrorMessage("Can't send the log in request.");
+            try {
+                Thread.sleep(10000);
+            }
+            catch(InterruptedException ignored){}
             return 0;
         }
         try {
@@ -171,6 +181,10 @@ public class GraphicLogic {
                 userInterface.printMessage("No message received after sending the login request");
             } catch (ClientDisconnectedException e) {
                 userInterface.printErrorMessage("Disconnected from the server after sending the login request.");
+                try {
+                    Thread.sleep(10000);
+                }
+                catch(InterruptedException ignored){}
                 return 0;
             }
         }
@@ -189,6 +203,7 @@ public class GraphicLogic {
                     userInterface.printMessage("No message received after sending the num player message");
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected from the server while waiting for log response after num player mess.");
+
                     return 0;
                 }
             }
@@ -269,6 +284,10 @@ public class GraphicLogic {
             } catch (ClientDisconnectedException e) {
                 userInterface.printErrorMessage("Disconnected from the server while waiting" +
                                                 " for the personal goals message.");
+                try {
+                    Thread.sleep(10000);
+                }
+                catch(InterruptedException ignored){}
                 System.exit(13);
             }
             if (message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
@@ -278,6 +297,10 @@ public class GraphicLogic {
                     clientHandler.sendingWithRetry(new SetPersonalGoal(), 1, 1);
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected from the server while sending personal goal ack");
+                    try {
+                        Thread.sleep(10000);
+                    }
+                    catch(InterruptedException ignored){}
                     System.exit(13);
                 }
                 personalGoal = new PersonalGoalCard(goalNumber);
@@ -312,6 +335,10 @@ public class GraphicLogic {
                 userInterface.printErrorMessage("Stopped receiving turns notifications");
             } catch (ClientDisconnectedException e) {
                 userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
+                try {
+                    Thread.sleep(10000);
+                }
+                catch(InterruptedException ignored){}
                 System.exit(13);
             }
         } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
@@ -324,6 +351,10 @@ public class GraphicLogic {
                     forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 } catch (ClientDisconnectedException e){
                     userInterface.printErrorMessage("Disconnected while waiting for forced win message.");
+                    try {
+                        Thread.sleep(10000);
+                    }
+                    catch(InterruptedException ignored){}
                     System.exit(13);
                 } catch (NoMessageToReadException ignored) {}
             } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
@@ -388,6 +419,7 @@ public class GraphicLogic {
                     clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                 } catch (ClientDisconnectedException e){
                     userInterface.printErrorMessage("Disconnected while sending turn over notification.");
+                    Thread.sleep(10000);
                     System.exit(13);
                 }
                 //CHECKING GOALS
@@ -401,6 +433,7 @@ public class GraphicLogic {
                             clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e){
                             userInterface.printErrorMessage("Disconnected while sending common goal 0 reached notification.");
+                            Thread.sleep(10000);
                             System.exit(13);
                         }                    }
                 }
@@ -413,6 +446,7 @@ public class GraphicLogic {
                             clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e){
                             userInterface.printErrorMessage("Disconnected while sending common goal 1 reached notification.");
+                            Thread.sleep(10000);
                             System.exit(13);
                         }
                     }
@@ -422,6 +456,7 @@ public class GraphicLogic {
                         clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while sending common goal not reached notification.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     }
 
@@ -430,6 +465,7 @@ public class GraphicLogic {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while waiting for common goal ack.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     } catch (NoMessageToReadException ignored) {}
                 } while (message.getMessageType() != MessageCode.COMMON_GOAL_REACHED);
@@ -453,6 +489,7 @@ public class GraphicLogic {
                         clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true), ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while sending full shelf notification.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     }
                 } else {
@@ -461,6 +498,7 @@ public class GraphicLogic {
                         clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), false), ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while sending not full shelf notification.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     }
                 }
@@ -469,6 +507,7 @@ public class GraphicLogic {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while waiting for full shelf ack.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                 } while (message.getMessageType() != MessageCode.FULL_SHELF);
@@ -478,6 +517,7 @@ public class GraphicLogic {
                     clientHandler.sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected while sending final turn over notification");
+                    Thread.sleep(10000);
                     System.exit(1);
                 }
                 do {
@@ -485,6 +525,7 @@ public class GraphicLogic {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while waiting for final turn over notification");
+                        Thread.sleep(10000);
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                 } while (message.getMessageType() != MessageCode.TURN_OVER);
@@ -494,6 +535,7 @@ public class GraphicLogic {
                     //System.out.println("Sent player shelf");
                 } catch (ClientDisconnectedException e) {
                     userInterface.printErrorMessage("Disconnected while sending shelf content");
+                    Thread.sleep(10000)
                     System.exit(1);
                 }*/
                 userInterface.turnCompleted();
@@ -507,6 +549,7 @@ public class GraphicLogic {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                     } catch (ClientDisconnectedException e){
                         userInterface.printErrorMessage("Disconnected while waiting for " + nowPlaying + "'s turn.");
+                        Thread.sleep(10000);
                         System.exit(13);
                     } catch (NoMessageToReadException ignored){}
                     if (message.getMessageType() == MessageCode.CHOSEN_TILES)
@@ -545,6 +588,7 @@ public class GraphicLogic {
                         }
                     } catch (ClientDisconnectedException e) {
                         System.out.println("Client disconnected while waiting for other shelves.");
+                        Thread.sleep(10000);
                         System.exit(0);
                     } catch (NoMessageToReadException ignored){}
                 } while (message.getMessageType() != MessageCode.INSERT);
@@ -556,6 +600,7 @@ public class GraphicLogic {
                 clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
             } catch (ClientDisconnectedException e) {
                 System.out.println("Disconnected while sending shelf content during endgame.");
+                Thread.sleep(10000);
                 System.exit(13);
             }
             do {
@@ -563,6 +608,7 @@ public class GraphicLogic {
                     message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 } catch (ClientDisconnectedException e){
                     userInterface.printErrorMessage("Disconnected while waiting for final score.");
+                    Thread.sleep(10000);
                     System.exit(13);
                 } catch (NoMessageToReadException ignored){}
             } while (message.getMessageType() != MessageCode.FINAL_SCORE);

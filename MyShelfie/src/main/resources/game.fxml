@@ -168,22 +168,54 @@
             <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="5" />
          </children>
       </GridPane>
-      <ImageView fx:id="commongoal1" fitHeight="119.0" fitWidth="117.0" layoutX="32.0" layoutY="337.0" pickOnBounds="true" preserveRatio="true" />
-      <ImageView fx:id="commongoal2" fitHeight="119.0" fitWidth="117.0" layoutX="164.0" layoutY="337.0" pickOnBounds="true" preserveRatio="true" />
-      <ImageView fx:id="stack1" fitHeight="72.0" fitWidth="75.0" layoutX="53.0" layoutY="489.0" pickOnBounds="true" preserveRatio="true" />
-      <ImageView fx:id="stack2" fitHeight="72.0" fitWidth="75.0" layoutX="185.0" layoutY="489.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="commongoal1" fitHeight="119.0" fitWidth="117.0" layoutX="32.0" layoutY="369.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="commongoal2" fitHeight="119.0" fitWidth="117.0" layoutX="170.0" layoutY="363.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="stack1" fitHeight="72.0" fitWidth="75.0" layoutX="53.0" layoutY="504.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="stack2" fitHeight="72.0" fitWidth="75.0" layoutX="189.0" layoutY="504.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="personalgoal" fitHeight="168.0" fitWidth="117.0" layoutX="590.0" layoutY="398.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="playerpoints" fitHeight="65.0" fitWidth="75.0" layoutX="707.0" layoutY="583.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="playerorder" layoutX="53.0" layoutY="589.0" prefHeight="17.0" prefWidth="192.0" />
+      <Label fx:id="playerorder" layoutX="312.0" layoutY="607.0" prefHeight="17.0" prefWidth="192.0" />
       <TextField fx:id="move" layoutX="311.0" layoutY="415.0" opacity="0.5" prefHeight="26.0" prefWidth="181.0" />
       <Label fx:id="whattodo" layoutX="312.0" layoutY="388.0" prefHeight="17.0" prefWidth="239.0" />
       <Button fx:id="donebutton" layoutX="506.0" layoutY="415.0" mnemonicParsing="false" onAction="#send" text="SEND" />
       <Button fx:id="endturn" layoutX="363.0" layoutY="540.0" mnemonicParsing="false" onAction="#endTurn" text="END TURN" />
-      <ImageView fx:id="takentile0" fitHeight="72.0" fitWidth="78.0" layoutX="387.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="takentile0" fitHeight="72.0" fitWidth="78.0" layoutX="387.0" layoutY="38.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="takentile1" fitHeight="72.0" fitWidth="78.0" layoutX="386.0" layoutY="144.0" pickOnBounds="true" preserveRatio="true" />
-      <ImageView fx:id="takentile2" fitHeight="72.0" fitWidth="78.0" layoutX="387.0" layoutY="243.0" pickOnBounds="true" preserveRatio="true" />
-      <ComboBox fx:id="showcombobox" layoutX="522.0" layoutY="337.0" onAction="#select" prefHeight="26.0" prefWidth="217.0" promptText="Select Shelf to show" />
+      <ImageView fx:id="takentile2" fitHeight="72.0" fitWidth="78.0" layoutX="387.0" layoutY="252.0" pickOnBounds="true" preserveRatio="true" />
+      <ComboBox fx:id="showcombobox" layoutX="522.0" layoutY="346.0" onAction="#select" prefHeight="26.0" prefWidth="217.0" promptText="Select Shelf to show" />
       <Button fx:id="insertbutton" layoutX="373.0" layoutY="499.0" mnemonicParsing="false" onAction="#insertCommand" text="INSERT" />
       <Button fx:id="takebutton" layoutX="378.0" layoutY="456.0" mnemonicParsing="false" onAction="#takeCommand" text="TAKE" />
+      <Label layoutX="18.0" layoutY="26.0" text="0" />
+      <Label layoutX="18.0" layoutY="65.0" text="1" />
+      <Label layoutX="18.0" layoutY="101.0" text="2" />
+      <Label layoutX="18.0" layoutY="136.0" text="3" />
+      <Label layoutX="18.0" layoutY="172.0" text="4" />
+      <Label layoutX="18.0" layoutY="208.0" text="5" />
+      <Label layoutX="18.0" layoutY="243.0" text="6" />
+      <Label layoutX="18.0" layoutY="271.0" text="7" />
+      <Label layoutX="18.0" layoutY="307.0" text="8" />
+      <Label layoutX="45.0" layoutY="342.0" text="0" />
+      <Label layoutX="78.0" layoutY="342.0" text="1" />
+      <Label layoutX="114.0" layoutY="342.0" text="2" />
+      <Label layoutX="149.0" layoutY="342.0" text="3" />
+      <Label layoutX="189.0" layoutY="342.0" text="4" />
+      <Label layoutX="226.0" layoutY="342.0" text="5" />
+      <Label layoutX="260.0" layoutY="342.0" text="6" />
+      <Label layoutX="294.0" layoutY="342.0" text="7" />
+      <Label layoutX="332.0" layoutY="342.0" text="8" />
+      <Label layoutX="766.0" layoutY="38.0" text="5" />
+      <Label layoutX="767.0" layoutY="93.0" text="4" />
+      <Label layoutX="767.0" layoutY="136.0" text="3" />
+      <Label layoutX="767.0" layoutY="181.0" text="2" />
+      <Label layoutX="767.0" layoutY="227.0" text="1" />
+      <Label layoutX="767.0" layoutY="271.0" text="0" />
+      <Label layoutX="422.0" layoutY="18.0" text="0" />
+      <Label layoutX="422.0" layoutY="118.0" text="1" />
+      <Label layoutX="422.0" layoutY="227.0" text="1" />
+      <Label layoutX="527.0" layoutY="316.0" text="0" />
+      <Label layoutX="574.0" layoutY="316.0" text="1" />
+      <Label layoutX="627.0" layoutY="316.0" text="2" />
+      <Label layoutX="675.0" layoutY="316.0" text="3" />
+      <Label layoutX="724.0" layoutY="316.0" text="4" />
    </children>
 </Pane>

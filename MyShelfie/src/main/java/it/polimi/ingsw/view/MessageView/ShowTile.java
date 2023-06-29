@@ -8,7 +8,9 @@ import javafx.scene.layout.GridPane;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**class: ShowTile
+ * @author Angelo Di Rosa
+ * Message class used to update the players shelves*/
 public class ShowTile extends MessageView{
     private Shelf shelf;
     public ShowTile(Shelf shelf){

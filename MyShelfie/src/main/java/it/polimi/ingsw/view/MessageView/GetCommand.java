@@ -1,5 +1,7 @@
 package it.polimi.ingsw.view.MessageView;
-
+/**class: GetCommand
+ * @author Angelo Di Rosa
+ * Message class used to communicate the player's command.*/
 public class GetCommand extends MessageView{
     private String command;
 

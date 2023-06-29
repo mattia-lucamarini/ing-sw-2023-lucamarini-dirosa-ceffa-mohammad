@@ -1,5 +1,7 @@
 package it.polimi.ingsw.view.MessageView;
-
+/**class: CommonReached
+ * @author Angelo Di Rosa
+ * Message class used to communicate who reached the commongoal and how many points they gained.*/
 public class CommonReached extends MessageView{
     private int points, numgoal;
     private String username;

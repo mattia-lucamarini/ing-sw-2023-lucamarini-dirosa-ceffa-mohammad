@@ -1,7 +1,9 @@
 package it.polimi.ingsw.view.MessageView;
 
 import java.util.ArrayList;
-
+/**class: PlayerOrderView
+ * @author Angelo Di Rosa
+ * Message class used to communicate the player's order*/
 
 public class PlayerOrderView extends MessageView {
     private ArrayList<String> order;

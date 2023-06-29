@@ -32,7 +32,6 @@ public class GUIInterface {
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
     private Stage stage;
-    private GUIClient client;
     //private ViewHandler viewhandler;
     private ConcurrentLinkedQueue<MessageView> sended;
     private ConcurrentLinkedQueue<MessageView> received;
@@ -144,7 +143,10 @@ public class GUIInterface {
         MessageView message = new ShowCommon(goalNumber1,goalNumber2);
         sended.add(message);
     }
-
+    /**method : waitForPlayersOrder(ClientHandler cl)
+     * @param cl instance of class ClientHandler used for communication between server and client.
+     * @author Angelo Di Rosa
+     * Method used to receive the Player's order from the server.*/
     public ArrayList<String> waitForPlayersOrder(ClientHandler cl) {
         ArrayList<String> playerOrder = null;
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
@@ -164,28 +166,37 @@ public class GUIInterface {
         return playerOrder;
     }
 
+    /** method: showPlayersOrder(ArrayList<String> order)
+     * @param order player's order
+     * @author Angelo Di Rosa
+     * Method used to tell the GUI to show in a label the Player's order.
+     */
     public void showPlayersOrder(ArrayList<String> order) {
         MessageView message = new PlayerOrderView(order);
         sended.add(message);
     }
-
-
-    public void showGameStart() {
-        MessageView message = new NotificationMessage("The game is now starting.");
-        sended.add(message);
-    }
-
+    /**method: setPlayersInComboBox(ArrayList<String> username)
+     * @param username array of players' username.
+     * @author Angelo Di Rosa
+     * Method used to initialise the ComboBox containing the player's name. The comboBox is sued to show other player's shelves*/
     public void setPlayersInComboBox(ArrayList<String> username){
         MessageView message = new SetComboBox(username);
         sended.add(message);
     }
-
+    /**method: turnNotification(String nowPlaying)
+     * @param nowPlaying username of the player who's playing right now
+     * @author Angelo Di Rosa
+     * Method used to tell the GUI to show a popup notification with who's playing*/
     public void turnNotification(String nowPlaying) {
         MessageView message = new NotificationMessage(nowPlaying + " it's your turn.");
         sended.add(message);
     }
 
-
+    /**method: getCommand()
+     * @author Angelo Di Rosa
+     * This method listens for a player's move by popping the "received" queue untill it finds a message != null.
+     * If the message code is a COMMAND then it checks which command is by using the switch.
+     * If the command is not valid, it calls the printMessage() method asking the gui to show a "Unknown command" popup*/
     public boolean getCommand() {
         MessageView commandlabel = new LabelChange("Type help for more");
         sended.add(commandlabel);
@@ -224,12 +235,16 @@ public class GUIInterface {
         return canContinue;
     }
 
-
+    /**method: boardCommand()
+     * @author Angelo Di Rosa
+     * Method used to tell the GUI to update the board and showing it on the screen.*/
     public void boardCommand() {
         MessageView message = new UpdateBoard(GraphicLogic.board);
         sended.add(message);
     }
-
+    /**method: boardCommand()
+     * @author Angelo Di Rosa
+     * This method prints a message on the screen showing the different commands.*/
     public void helpCommand() {
         printMessage("""
                                                 take: extract the tiles specified by your coordinates
@@ -238,7 +253,13 @@ public class GUIInterface {
                                                 end: end your turn.""");
     }
 
-
+    /**method: takeCommand()
+     * @author Angelo Di Rosa
+     * This method is called when the getMethod() receves a "take" command. It asks the player which tile he wants to
+     * take from the board. if the take was already done, it will be shown on the screen a popup saying:
+     * "you already made your move".
+     * If the command is not recognized it will show "Unknown command".
+     * When the input is correct and it receives a "done" command, it calls board.takeTiles(...) picking tiles from the board.*/
     public void takeCommand() {
         MessageView message;
         tilePattern = Pattern.compile("[0-9]\\s+[0-9]");
@@ -252,7 +273,7 @@ public class GUIInterface {
             do {
                 message = received.poll();
                 if (message != null) {
-                    String command = ((GetCommand) message).getContent();
+                    String command = ((GetCommand) message).getContent().toLowerCase();
                     if (!command.equals("done")) {
                         if (tilePattern.matcher(command).find()) {
                             Scanner pickScanner = new Scanner(command);
@@ -317,7 +338,14 @@ public class GUIInterface {
             }
         }
     }
-
+    /**method: insertCommand()
+     * @author Angelo Di Rosa
+     * This method is called when the getMethod() receves a "insert" command. It asks the player which tile he wants to
+     * insert among the selected ones and where to put it in the shelf. if the take was not done beforehand or the insert was already done,
+     * it will be shown on the screen a popup saying: "You have no available tiles to insert".
+     * If the command is not recognized it will show "Unknown command".
+     * When the input is correct and it receives a "done" command or if the tiles where three and the player inserted all of them,
+     * it calls shelf.insertTiles(...) inserting tiles onto the shelf. It also communicates the move to the server.*/
     public void insertCommand() {
         List<Tiles> copyofpicked = new ArrayList<>();
         copyofpicked.addAll(pickedTiles);
@@ -334,8 +362,7 @@ public class GUIInterface {
         do {
             message = received.poll();
             if(message!=null){
-                String command = ((GetCommand) message).getContent();
-                if(!command.equals("done")){
+                String command = ((GetCommand) message).getContent().toLowerCase();
                     if (tilePattern.matcher(command).find()) {
                         Scanner pickScanner = new Scanner(command);
                         int index = pickScanner.nextInt();
@@ -359,15 +386,7 @@ public class GUIInterface {
                         return;
                     }
                 }
-                else{
-                    if(selectedindexes.size()==0){
-                        printMessage("You still have to make your move.");
-                    }
-                    break;
-                }
-
-            }
-        }while(selectedindexes.size()<3);
+        }while(pickedTiles.size()>0);
         try {
             GraphicLogic.player.getShelf().insertTiles(selectedindexes, temporaryTiles);
             updateShelf();
@@ -405,12 +424,16 @@ public class GUIInterface {
             return;
         }
     }
-
+    /**method: updateShelf()
+     * @author Angelo Di Rosa
+     * method used to update every player's shelf in the gui.*/
     public void updateShelf(){
         MessageView msg = new ShowTile(GraphicLogic.player.getShelf());
         sended.add(msg);
     }
-
+    /**method: doneCommand()
+     * @author Angelo Di Rosa
+     * method used to end the player's turn.*/
     public boolean doneCommand() { //END TURN
         MessageView mex;
         if (pickedTiles.size() > 0 || mypicks.size() == 0) {
@@ -423,54 +446,75 @@ public class GUIInterface {
 
             return false;
     }
-
+    /**method: showLoginScreen()
+     * @author Angelo Di Rosa
+     * Method used to show the login screen again in case of "client refused: choose another username."*/
     public void showLoginScreen(){
         MessageView loginscreen = new MessageView(MessageCodeView.LOGIN_SCREEN);
         sended.add(loginscreen);
     }
 
-
+    /**method commonGoalReached(int index, int goalScore)
+     * @param index index of one of the two common goal on the game scene.
+     * @param goalScore point gained from reaching the goal
+     * @author Angelo Di Rosa
+     * This method is used to update the common goals stacks by showing the score token
+     * on the game scene after a player takes it*/
     public void commonGoalReached(int index, int goalScore) {
         MessageView youreachedcommon = new OwnPoints(goalScore,index);
         sended.add(youreachedcommon);
     }
 
-
+    /**method: shelfCompleted()
+     * @author Angelo Di Rosa
+     * This method shows a message saying that the player completed the shelf and gained a point*/
     public void shelfCompleted() {
         printMessage("You completed the shelf and gained 1 point.");
     }
 
-
+    /**method: turnCompleted()
+     * @author Angelo Di Rosa
+     * This method shows a message saying that the player completed their turn*/
     public void turnCompleted() {
         ismyturn=false;
         takeAlreadyDone=false;
         printMessage("You completed your turn.");
     }
 
-
+    /**method: showWhoIsPlaying()
+     * @author Angelo Di Rosa
+     * This method shows a message saying who's playing*/
     public void showWhoIsPlaying(String username) {
         printMessage(username+ "is now playing.");
     }
 
-
+    /**method: someoneReachedCommonGoal()
+     * @author Angelo Di Rosa
+     * This method shows a message saying who reached the commong goal and how many points they gained*/
     public void someoneReachedCommonGoal(String username, Integer position, Integer points) {
         MessageView message = new CommonReached(points , position, username);
         sended.add(message);
         printMessage(username + " reached goal " + position + ", gaining " + points + " points.");
     }
 
-
+    /**method: someoneCompletedShelf()
+     * @author Angelo Di Rosa
+     * This method shows a message saying who completed their shelf, and that the last round is now starting*/
     public void someoneCompletedShelf(String username) {
-        printMessage(" completed their shelf, obtaining 1 point! \nRemaining players will play their turns before " +
+        printMessage(username +" completed their shelf, obtaining 1 point! \nRemaining players will play their turns before " +
                 "calculating the score and ending the game.");
     }
 
-
+    /**method: showPersonalGoalAchievement()
+     * @author Angelo Di Rosa
+     * This method shows a message saying how many points the player reached from the personal goal*/
     public void showPersonalGoalAchievement(int points) {
         printMessage("I gained " + points + " points from my personal goal.");
     }
 
-
+    /**method: finalScore()
+     * @author Angelo Di Rosa
+     * This method shows a message saying that the game is over and counts the point for each player.*/
     public void finalScore() {
         printMessage("\nThe game is over. Counting the points\n");
         ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) Client.player.getShelf().findTileGroups();
@@ -489,21 +533,31 @@ public class GUIInterface {
 
     }
 
-
+    /**method: finalRank()
+     * @param playerPoints  an arraylist containing the player's name and their points already
+     * ordered from the winner to the last
+     * @author Angelo Di Rosa
+     * This method sends the players points to the GUI (ViewHandler) that will be shown onto the ranking scene.*/
     public void finalRank(ArrayList<Pair<String, Integer>> playerPoints) {
         for (int i = 0; i < playerPoints.size(); i++)
-            System.out.println(i + 1 + ": " + playerPoints.get(i).getFirst() + " (" + playerPoints.get(i).getSecond() + " points)");
         System.out.println(playerPoints.get(0).getFirst() + " wins!");
         MessageView message = new FinalRanking(playerPoints);
         sended.add(message);
     }
-
+    /**method: addMessage(MessageView message)
+     * @author Angelo Di Rosa
+     * This method add the messages onto the "sended" queue so the GUI will know what to do*/
     public void addMessage(MessageView message){
         received.add(message);
     }
+
     public ConcurrentLinkedQueue<MessageView> getSendedQueue(){
         return sended;
     }
+    /**method: forceWin(String username)
+     * @param username  username of the only player connected
+     * This method communicates to the gui the only left player in the game after others disconnected so the gui can
+     * show him as the winner*/
     public void forceWin(String username){
         MessageView message = new ForceWin(username);
         sended.add(message);

@@ -1,7 +1,9 @@
 package it.polimi.ingsw.view.MessageView;
 
 import it.polimi.ingsw.network.message.MessageCode;
-
+/**class: PayloadUsername
+ * @author Angelo Di Rosa
+ * Message class used to communicate to the GraphicLogic all the credentials in input. */
 public class PayloadUsername extends MessageView{
     private String username;
     private String connection;

@@ -14,9 +14,10 @@ import javafx.scene.Scene;
 
 import java.io.IOException;
 import java.util.Objects;
-
+/**class: View
+ * This class starts the GUI written in JAVAFX from an FXML file and instantiate the Controller(the Action listener)*/
 public class View extends Application{
-    private GUIClient gui;
+
     private ViewHandler viewhandler;
     private Stage stage1;
 
@@ -27,7 +28,6 @@ public class View extends Application{
         System.out.println("1");
         stage.setTitle("MyShelfie!");
         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/login.fxml")));
-        //GUIClient client = new GUIClient(this);
         loader.setController(new ViewHandler(stage,this));
         viewhandler = loader.getController();
         Parent login = loader.load();
