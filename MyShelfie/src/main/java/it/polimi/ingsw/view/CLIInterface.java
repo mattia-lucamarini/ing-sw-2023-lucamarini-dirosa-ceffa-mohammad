@@ -22,7 +22,16 @@ import static it.polimi.ingsw.client.Client.board;
 public class CLIInterface implements UserInterface{
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
-    private static final List<String> goalNames = List.of("6 groups of 2 equal tiles adjacent to each other", "4 tiles of the same type in each corner of the shelf", "4 groups of 4 equal tiles adjacent to each other", "2 squares of 4 equal tiles each", "3 columns of 6 tiles each having 1,2 or 3 different types", "8 equal tiles in any position on the shelf", "5 equal tiles diagonally placed", "4 rows of 5 tiles each having 1,2 or 3 different types", "2 columns each having 6 different tiles", "2 rows each having 5 different tiles", "5 equal tiles forming a cross", "5 columns in increasing or decreasing height forming a staircase with any type of tile");
+    private static final List<String> goalNames = List.of("6 groups of 2 equal tiles adjacent to each other",
+            "4 tiles of the same type in each corner of the shelf", "4 groups of 4 equal tiles adjacent to each other",
+            "2 squares of 4 equal tiles each", "3 columns of 6 tiles each having 1,2 or 3 different types",
+            "8 equal tiles in any position on the shelf",
+            "5 equal tiles diagonally placed",
+            "4 rows of 5 tiles each having 1,2 or 3 different types",
+            "2 columns each having 6 different tiles",
+            "2 rows each having 5 different tiles",
+            "5 equal tiles forming a cross",
+            "5 columns in increasing or decreasing height forming a staircase with any type of tile");
     private Scanner sc = new Scanner(System.in);
     private ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
     private ArrayList<Tiles> pickedTiles = new ArrayList<>();
@@ -157,7 +166,10 @@ public class CLIInterface implements UserInterface{
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         //checks if the player has already made a move and adds the coordinates to totalPick
         if (totalPick.size() == 0) {
-            System.out.println("Type the coordinates of the tile you want to take (ex. 3 2)\n Type 'cancel' to redo your move\n Type 'done' if you are done.");
+            System.out.println("""
+                    Type the coordinates of the tile you want to take (ex. 3 2)
+                     Type 'cancel' to redo your move
+                     Type 'done' if you are done.""");
             for (int i = totalPick.size(); i < 3 && totalPick.size() < 3; i++) {
                 System.out.print("\t" + (i + 1) + "> ");
                 String tilePick = sc.nextLine();
@@ -219,7 +231,10 @@ public class CLIInterface implements UserInterface{
             //pickedTiles.forEach(System.out::println);
             return false;
         }
-        System.out.println("Type <index> <row> <column> to insert the picked tiles in your shelf.\nType 'cancel' to redo your move.\nYour tiles: ");
+        System.out.println("""
+                Type <index> <row> <column> to insert the picked tiles in your shelf.
+                Type 'cancel' to redo your move.
+                Your tiles:\s""");
 
         tilePattern = Pattern.compile("[0-2]\\s+[0-5]\\s+[0-4]");   //this regex accepts the tile index, followed by the row and column numbers.
         //these two ArrayList represent the final move which will be checked

@@ -51,7 +51,7 @@ public class Client {
 
     public static void main(String[] args) {
         String welcomeMessage = "Welcome to My Shelfie!";
-        printMessage(welcomeMessage, "notable");
+        printCustomMessage(welcomeMessage, "notable");
 
         //SELECT INTERFACE, NETWORK TYPE AND SERVER IP + PORT
         Scanner sc = new Scanner(System.in);
@@ -163,7 +163,7 @@ public class Client {
      * @param message the text to plot
      * @param type specifies the type of message to show
      */
-    private static void printMessage(String message, String type){
+    public static void printCustomMessage(String message, String type){
         int messageLength = message.length();
         String symbol;
         switch(type){
@@ -394,7 +394,7 @@ public class Client {
                         != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
 
                 if (message.getMessageType() == MessageCode.FORCED_WIN){
-                    printMessage("Everyone else disconnected.\n"+
+                    printCustomMessage("Everyone else disconnected.\n"+
                                           "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
 
                     Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
@@ -408,10 +408,10 @@ public class Client {
                     } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
 
                     if (((ForcedWin) forcedWin).getWin()){
-                        printMessage("Everyone is still gone. You won!", "notable");
+                        printCustomMessage("Everyone is still gone. You won!", "notable");
                         System.exit(0);
                     } else {
-                        printMessage("Someone reconnected. The game continues !", "warning");
+                        printCustomMessage("Someone reconnected. The game continues !", "warning");
                     }
                 }
                 /*If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
