@@ -255,7 +255,7 @@ public class Client {
             try {
                 userInterface.askForNumOfPlayers(clientHandler);
             } catch (IOException e) {
-                throw new RuntimeException("To implement");
+                throw new RuntimeException("Error while choosing the number of player.");
             }
             while (message.getMessageType() != MessageCode.LOGIN_REPLY) {
                 try {
