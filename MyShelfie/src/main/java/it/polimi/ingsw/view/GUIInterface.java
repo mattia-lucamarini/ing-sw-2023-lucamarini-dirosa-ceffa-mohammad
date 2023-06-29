@@ -278,10 +278,12 @@ public class GUIInterface {
                         MessageView update = new UpdateBoard(GraphicLogic.board);
                         sended.add(update);
                         printMessage("Move was verified.");
-
+                        takeAlreadyDone=true;
 
                     } else{
                         printMessage("Move was not verified.");
+                        mypicks.clear();
+                        throw new UnsupportedOperationException();
                     }
                 } catch (RuntimeException e) {
                     System.out.println(e.getMessage());
@@ -358,10 +360,14 @@ public class GUIInterface {
                 } catch (NoMessageToReadException ignored){}
             } while (insertmessage == null);
             if (insertmessage.getMessageType() == MessageCode.MOVE_LEGAL) {
-                System.out.println("Move was verified.");
+                printMessage("Move was verified.");
             }
-            else
-                System.out.println("Move was not verified.");
+            else{
+                printMessage("Move was not verified.");
+                pickedTiles.addAll(copyofpicked);
+                MessageView showpicks = new ShowPickedTiles(copyofpicked);
+                sended.add(showpicks);
+            }
             return true;
         } catch (RuntimeException e) {
             printMessage(e.getMessage());
@@ -470,17 +476,14 @@ public class GUIInterface {
     public ConcurrentLinkedQueue<MessageView> getSendedQueue(){
         return sended;
     }
-
+    public void forceWin(String username){
+        MessageView message = new ForceWin(username);
+        sended.add(message);
+    }
     public void setIsmyturn(boolean ismyturn) {
         this.ismyturn = ismyturn;
     }
     public boolean getIsmyturn(){
         return ismyturn;
-    }
-    public void setotherShelf(boolean flag){
-        otherShelf = flag;
-    }
-    public boolean getotherShelf(){
-        return otherShelf;
     }
 }

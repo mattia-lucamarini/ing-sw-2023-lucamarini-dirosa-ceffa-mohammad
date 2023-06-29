@@ -55,7 +55,7 @@ public class ViewHandler {
     @FXML
     RadioButton socket, rmi, two, three, four;
     @FXML
-    Button donebutton, endturn, takebutton, insertbutton, loginbutton;
+    Button donebutton, endturn, takebutton, insertbutton, loginbutton, exit;
     @FXML
     ToggleGroup connection, numplayers;
     @FXML
@@ -249,18 +249,18 @@ public class ViewHandler {
                         ImageView cgoal2 = (ImageView) gamelayout.getChildren().get(3);
                         if(i == 0 || j == 0){
                             if(i==0){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/1.jpg").toExternalForm()));
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/4.jpg").toExternalForm()));
                             }
                             else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/1.jpg").toExternalForm()));
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/4.jpg").toExternalForm()));
                             }
                         }
                         if(i == 1 || j == 1){
                             if(i==1){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/2.jpg").toExternalForm()));
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/8.jpg").toExternalForm()));
                             }
                             else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/2.jpg").toExternalForm()));
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/8.jpg").toExternalForm()));
                             }
                         }
                         if(i == 2|| j == 2){
@@ -273,10 +273,10 @@ public class ViewHandler {
                         }
                         if(i == 3 || j == 3){
                             if(i==3){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/4.jpg").toExternalForm()));
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/1.jpg").toExternalForm()));
                             }
                             else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/4.jpg").toExternalForm()));
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/1.jpg").toExternalForm()));
                             }
                         }
                         if(i == 4 || j == 4){
@@ -289,50 +289,50 @@ public class ViewHandler {
                         }
                         if(i == 5 || j == 5){
                             if(i==5){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/6.jpg").toExternalForm()));
-                            }
-                            else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/6.jpg").toExternalForm()));
-                            }
-                        }
-                        if(i == 6 || j == 6){
-                            if(i==6){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/7.jpg").toExternalForm()));
-                            }
-                            else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/7.jpg").toExternalForm()));
-                            }
-                        }
-                        if(i == 7 || j == 7){
-                            if(i==7){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/8.jpg").toExternalForm()));
-                            }
-                            else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/8.jpg").toExternalForm()));
-                            }
-                        }
-                        if(i == 8 || j == 8){
-                            if(i==8){
                                 cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/9.jpg").toExternalForm()));
                             }
                             else{
                                 cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/9.jpg").toExternalForm()));
                             }
                         }
-                        if(i == 9 || j == 9){
-                            if(i==9){
-                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/10.jpg").toExternalForm()));
-                            }
-                            else{
-                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/10.jpg").toExternalForm()));
-                            }
-                        }
-                        if(i == 10 || j == 10){
-                            if(i==10){
+                        if(i == 6 || j == 6){
+                            if(i==6){
                                 cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/11.jpg").toExternalForm()));
                             }
                             else{
                                 cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/11.jpg").toExternalForm()));
+                            }
+                        }
+                        if(i == 7 || j == 7){
+                            if(i==7){
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/7.jpg").toExternalForm()));
+                            }
+                            else{
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/7.jpg").toExternalForm()));
+                            }
+                        }
+                        if(i == 8 || j == 8){
+                            if(i==8){
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/2.jpg").toExternalForm()));
+                            }
+                            else{
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/2.jpg").toExternalForm()));
+                            }
+                        }
+                        if(i == 9 || j == 9){
+                            if(i==9){
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/6.jpg").toExternalForm()));
+                            }
+                            else{
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/6.jpg").toExternalForm()));
+                            }
+                        }
+                        if(i == 10 || j == 10){
+                            if(i==10){
+                                cgoal1.setImage(new Image(getClass().getResource("/assets/common goal cards/10.jpg").toExternalForm()));
+                            }
+                            else{
+                                cgoal2.setImage(new Image(getClass().getResource("/assets/common goal cards/10.jpg").toExternalForm()));
                             }
                         }
                         if(i == 11 || j == 11){
@@ -487,6 +487,8 @@ public class ViewHandler {
                         second = (Label) finalscene.getChildren().get(2);
                         third = (Label) finalscene.getChildren().get(3);
                         fourth = (Label) finalscene.getChildren().get(4);
+                        exit = (Button) finalscene.getChildren().get(9);
+                        exit.setAlignment(Pos.BOTTOM_CENTER);
                         if(rankings.size()==1){
                             ptwo.setVisible(false);
                             second.setVisible(false);
@@ -509,10 +511,43 @@ public class ViewHandler {
                             Label label = (Label) finalscene.getChildren().get(m+1);
                             label.setText(rankings.get(m).getFirst()+ ":" +rankings.get(m).getSecond()+ "points");
                         }
-                        Scene ranksscene = new Scene(finalranks, 400, 600);
+                        Scene ranksscene = new Scene(finalranks, 600, 400);
                         ranksscene.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(ranksscene);
                         stage.show();});
+                    break;
+                case FORCE_WIN:
+                    String wins = ((ForceWin)message).getUsername();
+                    Platform.runLater(()->{
+                        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/finalranks.fxml")));
+                        loader.setController(this);
+                        Parent forced = null;
+                        try {
+                            forced = loader.load();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        winner=(Label) finalscene.getChildren().get(1);
+                        ptwo = (Label) finalscene.getChildren().get(6);
+                        pthree = (Label) finalscene.getChildren().get(7);
+                        pfour = (Label) finalscene.getChildren().get(8);
+                        second = (Label) finalscene.getChildren().get(2);
+                        third = (Label) finalscene.getChildren().get(3);
+                        fourth = (Label) finalscene.getChildren().get(4);
+                        exit = (Button) finalscene.getChildren().get(9);
+                        exit.setAlignment(Pos.BOTTOM_CENTER);
+                        ptwo.setVisible(false);
+                        second.setVisible(false);
+                        pthree.setVisible(false);
+                        third.setVisible(false);
+                        pfour.setVisible(false);
+                        fourth.setVisible(false);
+                        winner.setText(wins);
+                        Scene forcedwin = new Scene(forced, 600, 400);
+                        forcedwin.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
+                        stage.setScene(forcedwin);
+                        stage.show();
+                    });
                     break;
             }
             }}while(partitainiziata);
@@ -764,5 +799,8 @@ public class ViewHandler {
              throw new IllegalStateException("Unexpected values : " +points + numplayers);
         }
         return image;
+    }
+    public void exit(ActionEvent e){
+        System.exit(0);
     }
 }

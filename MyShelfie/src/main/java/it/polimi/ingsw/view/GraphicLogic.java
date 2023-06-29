@@ -9,6 +9,7 @@ import it.polimi.ingsw.network.message.*;
 import it.polimi.ingsw.server.network.RmiServerServices.RmiServerInterface;
 import it.polimi.ingsw.utils.ClientDisconnectedException;
 import it.polimi.ingsw.utils.NoMessageToReadException;
+import it.polimi.ingsw.view.MessageView.MessageCodeView;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -299,18 +300,40 @@ public class GraphicLogic {
         userInterface.setPlayersInComboBox(playerOrder);
         userInterface.showPlayersOrder(playerOrder);
     }
-    private static void playTurn() throws ClientDisconnectedException, NoMessageToReadException {
+    private static void playTurn() throws ClientDisconnectedException, NoMessageToReadException, InterruptedException {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
-        if (!someoneDisconnected) {
-            do {    //WAIT FOR EITHER PLAY_TURN MESSAGE OR END_GAME
+        do {    //WAIT FOR EITHER PLAY_TURN MESSAGE, END_GAME OR FORCED_WIN
+            try {
+                message = clientHandler.receivingWithRetry(100, WAITING_TIME);
+            } catch (NoMessageToReadException e) {
+                userInterface.printErrorMessage("Stopped receiving turns notifications");
+            } catch (ClientDisconnectedException e) {
+                userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
+                System.exit(13);
+            }
+        } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
+
+        if (message.getMessageType() == MessageCode.FORCED_WIN){
+            userInterface.printMessage("\nEveryone else disconnected.\nIf nobody comes back in 15 seconds, you'll be the winner.");
+            Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
+            do {
                 try {
-                    message = clientHandler.receivingWithRetry(100, WAITING_TIME);
-                } catch (NoMessageToReadException e) {
-                    userInterface.printErrorMessage("Stopped receiving turns notifications");
-                } catch (ClientDisconnectedException e) {
-                    userInterface.printErrorMessage("Disconnected from the server while waiting for the next turn.");
-                }
-            } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
+                    forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    userInterface.printErrorMessage("Disconnected while waiting for forced win message.");
+                    System.exit(13);
+                } catch (NoMessageToReadException ignored) {}
+            } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
+
+            if (((ForcedWin) forcedWin).getWin()){
+                userInterface.forceWin(player.getUsername());
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored){}
+                System.exit(13);
+            } else {
+                userInterface.printMessage("Someone reconnected. The game continues as usual.");
+            }
         }
         if (message instanceof PlayTurn || someoneDisconnected) {
             if (!someoneDisconnected)

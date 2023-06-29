@@ -22,4 +22,5 @@ public enum MessageCodeView {
     PICKED_TILES,
     UPDATE_PERSONALSTACK,
     SHOW_FINALRANKS,
+    FORCE_WIN
 }

@@ -22,7 +22,7 @@ import static it.polimi.ingsw.client.Client.board;
 public class CLIInterface implements UserInterface{
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
-    private static final List<String> goalNames = List.of("6 groups of 2 equal tiles adjacent to each other", "4 tiles of the same type in each corner of the shelf", "6 groups of 4 equal tiles adjacent to each other", "2 squares of 4 equal tiles each", "3 columns of 6 tiles each having 1,2 or 3 different types", "8 equal tiles in any position on the shelf", "5 equal tiles diagonally placed", "4 rows of 5 tiles each having 1,2 or 3 different types", "2 columns each having 6 different tiles", "2 rows each having 5 different tiles", "5 equal tiles forming a cross", "5 columns in increasing or decreasing height forming a staircase with any type of tile");
+    private static final List<String> goalNames = List.of("6 groups of 2 equal tiles adjacent to each other", "4 tiles of the same type in each corner of the shelf", "4 groups of 4 equal tiles adjacent to each other", "2 squares of 4 equal tiles each", "3 columns of 6 tiles each having 1,2 or 3 different types", "8 equal tiles in any position on the shelf", "5 equal tiles diagonally placed", "4 rows of 5 tiles each having 1,2 or 3 different types", "2 columns each having 6 different tiles", "2 rows each having 5 different tiles", "5 equal tiles forming a cross", "5 columns in increasing or decreasing height forming a staircase with any type of tile");
     private Scanner sc = new Scanner(System.in);
     private ArrayList<Pair<Integer, Integer>> totalPick = new ArrayList<>();
     private ArrayList<Tiles> pickedTiles = new ArrayList<>();

@@ -94,7 +94,7 @@ public class PersonalGoal implements Goal, Serializable {
                         Pair.of(2, 2), Tiles.BLUE,  Pair.of(1, 4), Tiles.GREEN, Pair.of(0, 3), Tiles.LIGHTBLUE)),
                 new HashMap<>(Map.of(
                         Pair.of(5, 2), Tiles.WHITE, Pair.of(4, 1), Tiles.PURPLE,   Pair.of(3, 2), Tiles.BLUE,
-                        Pair.of(0, 3), Tiles.LIGHTBLUE,  Pair.of(1, 4), Tiles.YELLOW, Pair.of(0, 0), Tiles.GREEN))
+                        Pair.of(2, 3), Tiles.LIGHTBLUE,  Pair.of(1, 4), Tiles.YELLOW, Pair.of(0, 0), Tiles.GREEN))
         );
 
         var ret = new ArrayList<PersonalGoal>();
