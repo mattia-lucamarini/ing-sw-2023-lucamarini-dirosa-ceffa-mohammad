@@ -62,7 +62,7 @@ public class GraphicLogic {
             connectSocket("127.0.0.1", 59090);
         }
         } catch (Exception e){
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
 
         try {
@@ -74,8 +74,8 @@ public class GraphicLogic {
                 loginResult = login();
             } while (loginResult == 0);
             if (loginResult != 2) {
-                while (!goalProcessing())
-                    ;
+                userInterface.printMessage("Waiting for other players ...");
+                while (!goalProcessing());
                 waitForOrder();
             }
 
@@ -91,9 +91,6 @@ public class GraphicLogic {
 
             if (message.getMessageType() == MessageCode.GAME_START) {
                 gameOn = true;
-                if(loginResult!=2){
-                    //userInterface.showGameStart();
-                }
 
                 //TURN PROCESSING
                 while (gameOn){
@@ -101,7 +98,7 @@ public class GraphicLogic {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
     }
     private static void connectRMI(String address, int port){
@@ -263,8 +260,7 @@ public class GraphicLogic {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         while (personalGoal == null || commonGoals == null) {
             try {
-                //System.out.println("Receiving personal goal..");
-                message = clientHandler.receivingWithRetry(10, 5);
+                message = clientHandler.receivingWithRetry(3, 3);
             } catch (NoMessageToReadException e) {
                 userInterface.printMessage("Waiting for other players ...");
                 return false;
