@@ -300,6 +300,9 @@ public class GameLogic implements Runnable, Logic {
             catch (InterruptedException ignored){}*/
             return false;
         }
+        if(board.checkStatus()){
+            board.refillBoard();
+        }
         Message message = new PlayTurn(player);
         ((PlayTurn) message).setBoard(board);   //every player receives the updated board at the start of every turn
         System.out.println("[GAME " + gameID + "] " + player+", it's your turn.");

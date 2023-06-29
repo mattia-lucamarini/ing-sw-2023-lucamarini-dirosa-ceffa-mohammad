@@ -809,6 +809,6 @@ public class ViewHandler {
         return image;
     }
     public void exit(ActionEvent e){
-        System.exit(0);
+        System.exit(13);
     }
 }

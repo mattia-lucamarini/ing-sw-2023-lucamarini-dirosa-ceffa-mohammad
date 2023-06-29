@@ -561,6 +561,7 @@ public class Client {
                     } else {    //OTHER PLAYERS TURN
                         String nowPlaying = ((PlayTurn) message).getUsername();
                         userInterface.showWhoIsPlaying(nowPlaying);
+                        message = new Message(MessageCode.GENERIC_MESSAGE);
                         do {
                             try {   //Waits for the player's actions and updates the data structures accordingly
                                 message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -584,6 +585,7 @@ public class Client {
                             if (message.getMessageType() == MessageCode.FULL_SHELF)
                                 userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                             if (message.getMessageType() == MessageCode.PLAY_TURN) {
+                                System.out.println("sono nell if - tui");
                                 System.out.println(nowPlaying + " disconnected, it's now your turn.");
                                 someoneDisconnected = true;
                                 return;

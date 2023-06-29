@@ -175,6 +175,7 @@ abstract public class ClientHandler {
                     // time when the pingKernel disconnects the client and at the same time,
                     // we are trying to read a message from the network.
                 }
+                catch(ArrayStoreException e1){}
                 synchronized (this.connectionStatus) {
                     kernelFlag = this.connectionStatus;
                 }

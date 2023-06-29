@@ -20,7 +20,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+/**
+ * class: GraphicLogic
+ * @author Mattia Lucamarini & Angelo Di Rosa
+ * Mostly clone class of Client class for GUI use purposes. It runs the Client logic for the GUI player.
+ *
+ * */
 public class GraphicLogic {
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
@@ -499,6 +504,7 @@ public class GraphicLogic {
             }else {    //OTHER PLAYERS TURN
                 String nowPlaying = ((PlayTurn) message).getUsername();
                 userInterface.showWhoIsPlaying(nowPlaying);
+                message = new Message(MessageCode.GENERIC_MESSAGE);
                 do {
                     try {
                         message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
@@ -520,6 +526,7 @@ public class GraphicLogic {
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                     if (message.getMessageType() == MessageCode.PLAY_TURN) {
+                        System.out.println("sono nell'if - lato gui");
                         userInterface.printMessage(nowPlaying + " disconnected, it's now your turn.");
                         //System.out.println("Received " + message.getMessageType() + " message.");
                         //board = ((PlayTurn) message).getBoard();
