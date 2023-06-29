@@ -301,6 +301,7 @@ public class GameLogic implements Runnable, Logic {
             return false;
         }
         if(board.checkStatus()){
+            System.out.println("Board refilled.");
             board.refillBoard();
         }
         Message message = new PlayTurn(player);
@@ -372,6 +373,9 @@ public class GameLogic implements Runnable, Logic {
                             System.out.println("[GAME " + gameID + "] "+ player + " made an illegal insert move.");
                             clientList.get(player).sendingWithRetry(new IllegalMove(e.getMessage()), ATTEMPTS, WAITING_TIME);
                         }
+                    } else if (message.getMessageType() == MessageCode.EMPTY){
+                        board = new Board(clientList.size());
+                        System.out.println("[GAME " + gameID + "] Board is now empty");
                     }
                     else if (message.getMessageType() == MessageCode.TURN_OVER) {
                         for (String username : clientList.keySet()) {
