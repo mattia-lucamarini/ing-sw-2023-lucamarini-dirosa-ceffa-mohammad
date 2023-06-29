@@ -51,16 +51,7 @@ public class Client {
 
     public static void main(String[] args) {
         String welcomeMessage = "Welcome to My Shelfie!";
-        int messageLength = welcomeMessage.length();
-
-        String border = "*".repeat(messageLength + 8);
-        String spaces = " ".repeat(messageLength + 6);
-
-        System.out.println(border);
-        System.out.println("*" + spaces + "*");
-        System.out.println("*   " + welcomeMessage + "   *");
-        System.out.println("*" + spaces + "*");
-        System.out.println(border);
+        printMessage(welcomeMessage, "notable");
 
         //SELECT INTERFACE, NETWORK TYPE AND SERVER IP + PORT
         Scanner sc = new Scanner(System.in);
@@ -165,6 +156,30 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    /**
+     * Method to print scenographic custom messages
+     * @param message the text to plot
+     * @param type specifies the type of message to show
+     */
+    private static void printMessage(String message, String type){
+        int messageLength = message.length();
+        String symbol;
+        switch(type){
+            case "notable" -> symbol = "*";
+            case "warning" -> symbol = "#";
+            case "error" -> symbol = "!";
+            default -> symbol = " ";
+        }
+        String border = symbol.repeat(messageLength + 8);
+        String spaces = " ".repeat(messageLength + 6);
+
+        System.out.println(border);
+        System.out.println(symbol + spaces + symbol);
+        System.out.println(symbol+"   " + message + "   "+symbol);
+        System.out.println(symbol + spaces + symbol);
+        System.out.println(border);
     }
 
     /**
@@ -379,10 +394,8 @@ public class Client {
                         != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
 
                 if (message.getMessageType() == MessageCode.FORCED_WIN){
-                    System.out.println("""
-                            
-                            Everyone else disconnected.
-                            If nobody comes back in 15 seconds, you'll be the winner.""");
+                    printMessage("Everyone else disconnected.\n"+
+                                          "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
 
                     Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
                     do {
@@ -395,10 +408,10 @@ public class Client {
                     } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
 
                     if (((ForcedWin) forcedWin).getWin()){
-                        System.out.println("Everyone is still gone. You win!");
+                        printMessage("Everyone is still gone. You won!", "notable");
                         System.exit(0);
                     } else {
-                        System.out.println("Someone reconnected. The game continues as usual.");
+                        printMessage("Someone reconnected. The game continues !", "warning");
                     }
                 }
                 /*If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
