@@ -471,6 +471,14 @@ public class Client {
                         case "insert":
                             userInterface.insertCommand(pickedTiles);
                             break;
+                        case "empty":
+                            try{
+                                clientHandler.sendingWithRetry(new Message(MessageCode.EMPTY), ATTEMPTS, WAITING_TIME);
+                                board = new Board(playerOrder.size());
+                            } catch (ClientDisconnectedException e){
+                                System.out.println("Disconnected while sending 'empty' message");
+                            }
+                            break;
                         case "done":
                             canContinue = userInterface.doneCommand();
                             break;

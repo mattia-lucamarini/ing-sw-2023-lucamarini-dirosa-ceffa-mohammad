@@ -21,6 +21,7 @@ public  enum MessageCode {
     FULL_SHELF,
     TURN_OVER,
     SHELF_CHECK,
+    EMPTY,
     END_GAME,
     CHOSEN_TILES,
     INSERT,
