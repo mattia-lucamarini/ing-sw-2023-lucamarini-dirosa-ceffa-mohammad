@@ -1,7 +1,7 @@
 # Prova Finale di Ingegneria del Software - AA 2022-2023
 ### Team: 
 - [**Mattia Lucamarini**](https://github.com/mattia-lucamarini)
-- [**Angelo Dirosa**](https://github.com/Angelodirosa)
+- [**Angelo Di Rosa**](https://github.com/Angelodirosa)
 - [**Paolo Ceffa**](https://github.com/poolll98)
 - [**Mohammad Shaffaeet**]()
 # My Shelfie
