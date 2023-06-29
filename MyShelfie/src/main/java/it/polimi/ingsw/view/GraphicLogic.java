@@ -391,39 +391,29 @@ public class GraphicLogic {
                     System.exit(13);
                 }
                 //CHECKING GOALS
-                boolean commonReached = false;
+                boolean commonReached0 = false;
+                boolean commonReached1 = false;
+                int goalScore;
                 if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
-                    int goalScore = commonGoals.getFirst().getGoal().takePoints();
+                    goalScore = commonGoals.getFirst().getGoal().takePoints();
                     if (goalScore > 0) {
-                        commonReached = true;
+                        commonReached0 = true;
                         userInterface.commonGoalReached(0, goalScore);
-                        try {
-                            clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            userInterface.printErrorMessage("Disconnected while sending common goal 0 reached notification.");
-                            System.exit(13);
-                        }                    }
+                    }
                 }
                 if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1) {
-                    int goalScore = commonGoals.getSecond().getGoal().takePoints();
+                    goalScore = commonGoals.getSecond().getGoal().takePoints();
                     if (goalScore > 0) {
-                        commonReached = true;
+                        commonReached1 = true;
                         userInterface.commonGoalReached(1, goalScore);
-                        try {
-                            clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            userInterface.printErrorMessage("Disconnected while sending common goal 1 reached notification.");
-                            System.exit(13);
-                        }
                     }
                 }
-                if (!commonReached)
-                    try {
-                        clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
-                    } catch (ClientDisconnectedException e){
-                        userInterface.printErrorMessage("Disconnected while sending common goal not reached notification.");
-                        System.exit(13);
-                    }
+                try {
+                    clientHandler.sendingWithRetry(new CommonGoalReached(commonReached0, commonReached1), ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    System.out.println("Disconnected while sending common goal reached notification.");
+                    System.exit(13);
+                }
 
                 do {
                     try {
@@ -515,15 +505,19 @@ public class GraphicLogic {
                         } catch (RuntimeException e) {
                             System.out.println(e.getMessage());
                         }
-                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                        if (((CommonGoalReached) message).getPosition() == 0)
-                            userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),((CommonGoalReached) message).getPosition(), commonGoals.getFirst().getGoal().takePoints());
-                        else if (((CommonGoalReached) message).getPosition() == 1)
+                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
+                        for (Integer index : ((CommonGoalReached) message).getReached().keySet()){
+                            if (((CommonGoalReached) message).getReached().get(index)) {
+                                userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(), index,
+                                        (index == 0) ? commonGoals.getFirst().getGoal().takePoints() : commonGoals.getSecond().getGoal().takePoints());
+                            }
+                        }
+                    }
 
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                     if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                        System.out.println("sono nell'if - lato gui");
+                        //System.out.println("sono nell'if - lato gui");
                         userInterface.printMessage(nowPlaying + " disconnected, it's now your turn.");
                         //System.out.println("Received " + message.getMessageType() + " message.");
                         //board = ((PlayTurn) message).getBoard();

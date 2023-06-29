@@ -91,7 +91,7 @@ public class Shelf implements Serializable {
             int x = positions.get(i).getFirst();
             int y = positions.get(i).getSecond();
             if (!testMode && !isCellValid(x, y)) {
-                System.out.println("putitback");
+                //System.out.println("putitback");
                 putitback(positions, oldValues);
                 throw new RuntimeException("Invalid position (" + x + ", " + y + ")");
             }
@@ -106,7 +106,7 @@ public class Shelf implements Serializable {
     }
 
     public void putitback(List<Pair<Integer, Integer>> oldpositions,List<Tiles> old){
-        System.out.println("in putitback");
+        //System.out.println("in putitback");
 
         for(int i=0 ; i<oldpositions.size(); ++i){
             int x = oldpositions.get(i).getFirst();

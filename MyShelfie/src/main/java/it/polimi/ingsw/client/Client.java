@@ -435,6 +435,10 @@ public class Client {
                 // TEST ACTIONS
                 userInterface.turnNotification(player.getUsername());
                 boolean canContinue = false;
+                boolean goal0Cheat = false; //used for debug commands
+                boolean goal1Cheat = false;
+                boolean shelfCheat = false;
+
                 while (!canContinue) {
                     String command = userInterface.getCommand(player.getUsername()).strip().toLowerCase();
                     switch (command) {
@@ -462,6 +466,13 @@ public class Client {
                         case "insert":
                             userInterface.insertCommand(pickedTiles);
                             break;
+                        case "debug":
+                            System.out.println("""
+                                                \tempty: empties the board
+                                                \tgoal0: achieves first common goal
+                                                \tgoal1: achieves second common goal
+                                                \twin: activates fullShelf condition, ensuring victory""");
+                            break;
                         case "empty":
                             try{
                                 clientHandler.sendingWithRetry(new Message(MessageCode.EMPTY), ATTEMPTS, WAITING_TIME);
@@ -470,9 +481,19 @@ public class Client {
                                 System.out.println("Disconnected while sending 'empty' message");
                             }
                             break;
+                        case "goal0":
+                            goal0Cheat = true;
+                            break;
+                        case "goal1":
+                            goal1Cheat = true;
+                            break;
+                        case "win":
+                            shelfCheat = true;
+                            break;
                         case "done":
                             canContinue = userInterface.doneCommand();
                             break;
+
                         default:
                             userInterface.unknownCommand();
                     }
@@ -487,40 +508,28 @@ public class Client {
                 }
 
                 // CHECKING IF ANY GOALS WERE REACHED
-                boolean commonReached = false;
-                if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1) {
-                    int goalScore = commonGoals.getFirst().getGoal().takePoints();
+                boolean commonReached0 = false;
+                boolean commonReached1 = false;
+                int goalScore;
+                if (commonGoals.getFirst().getGoal().checkGoal(player.getShelf()) == 1 || goal0Cheat) {
+                    goalScore = commonGoals.getFirst().getGoal().takePoints();
                     if (goalScore > 0) {
-                        commonReached = true;
+                        commonReached0 = true;
                         userInterface.commonGoalReached(0, goalScore);
-                        try {
-                            clientHandler.sendingWithRetry(new CommonGoalReached(0), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            System.out.println("Disconnected while sending common goal 0 reached notification.");
-                            System.exit(13);
-                        }
                     }
                 }
-                if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1) {
-                    int goalScore = commonGoals.getSecond().getGoal().takePoints();
+                if (commonGoals.getSecond().getGoal().checkGoal(player.getShelf()) == 1 || goal1Cheat) {
+                    goalScore = commonGoals.getSecond().getGoal().takePoints();
                     if (goalScore > 0) {
-                        commonReached = true;
+                        commonReached1 = true;
                         userInterface.commonGoalReached(1, goalScore);
-                        try {
-                            clientHandler.sendingWithRetry(new CommonGoalReached(1), ATTEMPTS, WAITING_TIME);
-                        } catch (ClientDisconnectedException e){
-                            System.out.println("Disconnected while sending common goal 1 reached notification.");
-                            System.exit(13);
-                        }
                     }
                 }
-                if (!commonReached) {
-                    try {
-                        clientHandler.sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);   //2 = NO GOAL REACHED
-                    } catch (ClientDisconnectedException e) {
-                        System.out.println("Disconnected while sending common goal not reached notification.");
-                        System.exit(13);
-                    }
+                try {
+                    clientHandler.sendingWithRetry(new CommonGoalReached(commonReached0, commonReached1), ATTEMPTS, WAITING_TIME);
+                } catch (ClientDisconnectedException e){
+                    System.out.println("Disconnected while sending common goal reached notification.");
+                    System.exit(13);
                 }
                 do {
                     try {
@@ -541,7 +550,7 @@ public class Client {
                         }
                     }
                 }
-                if (isShelfFull) {
+                if (isShelfFull || shelfCheat) {
                     userInterface.shelfCompleted();
                     try {
                         clientHandler.sendingWithRetry(new FullShelf(player.getUsername(), true),
@@ -603,12 +612,14 @@ public class Client {
                         } catch (RuntimeException e) {
                             System.out.println(e.getMessage());
                         }
-                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED)
-                        if (((CommonGoalReached) message).getPosition() == 0)
-                            userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(),
-                                    ((CommonGoalReached) message).getPosition(),
-                                    commonGoals.getFirst().getGoal().takePoints());
-                        else if (((CommonGoalReached) message).getPosition() == 1)
+                    if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
+                        for (Integer index : ((CommonGoalReached) message).getReached().keySet()){
+                            if (((CommonGoalReached) message).getReached().get(index)) {
+                                userInterface.someoneReachedCommonGoal(((CommonGoalReached) message).getPlayer(), index,
+                                        (index == 0) ? commonGoals.getFirst().getGoal().takePoints() : commonGoals.getSecond().getGoal().takePoints());
+                            }
+                        }
+                    }
 
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
