@@ -25,7 +25,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Pattern;
 
 import static it.polimi.ingsw.view.GraphicLogic.board;
-
+/**class: GUIInterface
+ * @author Angelo Di Rosa
+ * Class containing methods used for communication with the GUI interface.*/
 public class GUIInterface {
     private static final int ATTEMPTS = 25;
     private static final int WAITING_TIME = 5;
@@ -49,14 +51,21 @@ public class GUIInterface {
         this.stage = stage;
         this.viewhandler = viewhandler;
     }*/
-
+    /**method: GUIInterface()
+     * @author Angelo Di Rosa
+     * constructor method for the class. Contains arraylists for the 'take' moves and two concurrent linked queue for
+     * exchanging messages with GUI controllers*/
     public GUIInterface(){
         mypicks = new ArrayList<>();
         pickedTiles = new ArrayList<>();
         sended = new ConcurrentLinkedQueue<>();
         received = new ConcurrentLinkedQueue<>();
     }
-
+    /**method: askForUsername()
+     * @author Angelo Di Rosa
+     * Method used to get username and other login credentials from the GUI. It pops from the queue a message until
+     * message!=null and gets the informations contained inside. Then, it returns it to GraphicLogic.
+     * */
     public Pair<Pair<String, String>, Pair<String,Integer>> askForUsername() {
         MessageView message;
         do{
@@ -73,20 +82,28 @@ public class GUIInterface {
 
     }
 
-
+    /**method: printErrorMessage(String error)
+     * @param error a string describing what error occurred.
+     * This method changes scene from the latest one in a new one containg a label showing the error.*/
     public void printErrorMessage(String error) {
         MessageView message = new ErrorMessage(error);
         sended.add(message);
     }
-
+    /**method: printMessage(String msg)
+     * @param msg a string showing the message.
+     * This method adds a popup on the scene showing a message. When clicked anywhere but the popups, it hides.*/
     public void printMessage(String msg) {
         MessageView message = new NotificationMessage(msg);
         sended.add(message);
     }
-
+    /**method: askForNumOfPlayers(ClientHandler cl)
+     * @oaram cl instance of a class used for the communication with server.
+     * @author Angelo Di Rosa
+     * This method waits for a message in the queue, sended bu the GUI. When received, takes the num of players info and
+     * sends it to the server.
+     * */
     public int askForNumOfPlayers(ClientHandler cl) throws IOException {
         MessageView messageSended = new MessageView(MessageCodeView.NEXT_SCENE);
-        System.out.println("ho inviato il messaggio. Adesso aspetto risposta");
         sended.add(messageSended);
         MessageView message;
         do{
@@ -108,18 +125,24 @@ public class GUIInterface {
         }
         return num;
     }
-
+    /**method : showGameScene()
+     * @author Angelo Di Rosa
+     * sends a message to the GUI (ViewHandler Class) saying it need to show the game scene*/
     public void showGameScene(){
         MessageView message = new MessageView(MessageCodeView.GAME_SCENE);
         sended.add(message);
     }
-
+    /**method : showPersonalGoal()
+     * @author Angelo Di Rosa
+     * sends a message to the GUI (ViewHandler Class) saying it need to show the personal goals on the game scene*/
     public void showPersonalGoal(int goalNumber) {
         MessageView message = new ShowPersonal(goalNumber);
         sended.add(message);
     }
 
-
+    /**method : showCommonGoal()
+     * @author Angelo Di Rosa
+     * sends a message to the GUI (ViewHandler Class) saying it need to show the common goals on the game scene*/
     public void showCommonGoals(int goalNumber1, int goalNumber2) {
         MessageView message = new ShowCommon(goalNumber1,goalNumber2);
         sended.add(message);
@@ -196,14 +219,24 @@ public class GUIInterface {
                             MessageView updatemessage = new UpdateBoard(GraphicLogic.board);
                             sended.add(updatemessage);
                             break;
-
+                        case "empty":
+                            sendRemoveTiles();
+                            break;
+                        default :
+                            printMessage("Unknown Command.");
                     }
                 }
             } while (ismyturn);
         return canContinue;
     }
 
+    public void sendRemoveTiles() {
+        Message message = new Message(MessageCode.REMOVE);
+        try{
+            GraphicLogic.clientHandler.sendingWithRetry(message,ATTEMPTS,WAITING_TIME);}
+        catch(ClientDisconnectedException e){}
 
+    }
     public void boardCommand() {
         MessageView message = new UpdateBoard(GraphicLogic.board);
         sended.add(message);
@@ -246,7 +279,9 @@ public class GUIInterface {
                             sended.add(label);
                             return;
                         } else {
-                            printMessage("Unknown command.");
+                            MessageView unknown = new LabelChange("Unknown command.");
+                            sended.add(unknown);
+                            return;
                         }
                     } else {
                         if (mypicks == null || mypicks.size() == 0) {
@@ -295,8 +330,7 @@ public class GUIInterface {
         }
     }
 
-
-    public boolean insertCommand() {
+    public void insertCommand() {
         List<Tiles> copyofpicked = new ArrayList<>();
         copyofpicked.addAll(pickedTiles);
         MessageView labelchange = new LabelChange("type <index> <row> <column>");
@@ -307,12 +341,13 @@ public class GUIInterface {
         ArrayList<Pair<Integer, Integer>> selectedindexes = new ArrayList<>();
         if (pickedTiles.size() == 0) {
             printMessage("You have no available tiles to insert.");
-            return false;
+            return ;
         }
         do {
             message = received.poll();
             if(message!=null){
                 String command = ((GetCommand) message).getContent();
+                if(!command.equals("done")){
                     if (tilePattern.matcher(command).find()) {
                         Scanner pickScanner = new Scanner(command);
                         int index = pickScanner.nextInt();
@@ -328,16 +363,21 @@ public class GUIInterface {
                         selectedindexes.clear();
                         MessageView label = new LabelChange("Insert was cancelled.");
                         sended.add(label);
-                        break;
+                        return;
                     }
-                    if(command.equals("done")){
-                        if(selectedindexes.size()==0){
-                            printMessage("You still have to make your move.");
-                        }
                     else{
-                        break;
+                        MessageView unknowninsert = new LabelChange("Unknown command");
+                        sended.add(unknowninsert);
+                        return;
                     }
                 }
+                else{
+                    if(selectedindexes.size()==0){
+                        printMessage("You still have to make your move.");
+                    }
+                    break;
+                }
+
             }
         }while(selectedindexes.size()<3);
         try {
@@ -355,7 +395,7 @@ public class GUIInterface {
                      pickedTiles.clear();
                      selectedindexes.clear();
                 } catch (ClientDisconnectedException e) {
-                    System.out.println("Disconnected while sending 'insert' move to server");
+                    printErrorMessage("Disconnected while sending 'insert' move to server");
                     System.exit(13);
                 } catch (NoMessageToReadException ignored){}
             } while (insertmessage == null);
@@ -368,13 +408,13 @@ public class GUIInterface {
                 MessageView showpicks = new ShowPickedTiles(copyofpicked);
                 sended.add(showpicks);
             }
-            return true;
+            return;
         } catch (RuntimeException e) {
             printMessage(e.getMessage());
             pickedTiles.addAll(copyofpicked);
             MessageView showpicks = new ShowPickedTiles(copyofpicked);
             sended.add(showpicks);
-            return false;
+            return;
         }
     }
 

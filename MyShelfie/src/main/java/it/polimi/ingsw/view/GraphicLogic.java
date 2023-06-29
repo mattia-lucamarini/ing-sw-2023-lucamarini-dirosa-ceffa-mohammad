@@ -249,7 +249,7 @@ public class GraphicLogic {
             userInterface.setPlayersInComboBox(playerOrder);
             userInterface.boardCommand();
             userInterface.updateShelf();
-            if (((Reconnect) message).getNowPlaying() != player.getUsername()) {
+            if (((Reconnect) message).getNowPlaying()!=(player.getUsername())) {
                 System.out.println();
                 userInterface.showWhoIsPlaying(((Reconnect) message).getNowPlaying());
             }

@@ -158,7 +158,7 @@ public class ViewHandler {
                         stack1.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
                         stack2.setImage(new Image(getClass().getResource("/assets/scoring tokens/scoring_8.jpg").toExternalForm()));
 
-                        Scene scene5 = new Scene(gamescene, 650, 550);
+                        Scene scene5 = new Scene(gamescene, 804, 666);
                         scene5.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene5);
                         stage.show();
