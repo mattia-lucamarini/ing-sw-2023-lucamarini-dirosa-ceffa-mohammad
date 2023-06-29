@@ -8,10 +8,14 @@ import it.polimi.ingsw.server.WebServer;
  */
 public class ServerMainApp {
 
+    private static final int SOCKET_DEFAULT_PORT = 59090; // Default server socket port
+    private static final int RMI_DEFAULT_PORT = 1099; // Default server RMI port
+
+
     public static void main(String[] args) {
         int numParameters = args.length;
-        int socketPort = 59090; // Default server socket port
-        int rmiPort = 1099; // Default server RMI port
+        int socketPort = SOCKET_DEFAULT_PORT;
+        int rmiPort = RMI_DEFAULT_PORT;
         String serverMode = "production";
 
         printLogo();
