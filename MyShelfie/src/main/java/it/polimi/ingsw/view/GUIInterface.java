@@ -51,10 +51,7 @@ public class GUIInterface {
         this.stage = stage;
         this.viewhandler = viewhandler;
     }*/
-    /**method: GUIInterface()
-     * @author Angelo Di Rosa
-     * constructor method for the class. Contains arraylists for the 'take' moves and two concurrent linked queue for
-     * exchanging messages with GUI controllers*/
+
     public GUIInterface(){
         mypicks = new ArrayList<>();
         pickedTiles = new ArrayList<>();
@@ -148,7 +145,7 @@ public class GUIInterface {
         sended.add(message);
     }
 
-    public ArrayList<String> waitForOtherPlayers(ClientHandler cl) {
+    public ArrayList<String> waitForPlayersOrder(ClientHandler cl) {
         ArrayList<String> playerOrder = null;
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         printMessage("Waiting for other players...");
@@ -156,9 +153,9 @@ public class GUIInterface {
             try {
                 message = cl.receivingWithRetry(100, 2);
             } catch (NoMessageToReadException e) {
-                printErrorMessage("Not enough players to start a new game.");
+                printErrorMessage("Got an error while waiting for the order of the players.");
             } catch (ClientDisconnectedException e) {
-                printErrorMessage("Disconnected from the server while waiting for other players.");
+                printErrorMessage("Disconnected from the server while waiting for the order of the players.");
             }
 
             if (message.getMessageType() == MessageCode.PLAYER_ORDER)
@@ -219,9 +216,6 @@ public class GUIInterface {
                             MessageView updatemessage = new UpdateBoard(GraphicLogic.board);
                             sended.add(updatemessage);
                             break;
-                        case "empty":
-                            sendRemoveTiles();
-                            break;
                         default :
                             printMessage("Unknown Command.");
                     }
@@ -230,13 +224,7 @@ public class GUIInterface {
         return canContinue;
     }
 
-    public void sendRemoveTiles() {
-        Message message = new Message(MessageCode.REMOVE);
-        try{
-            GraphicLogic.clientHandler.sendingWithRetry(message,ATTEMPTS,WAITING_TIME);}
-        catch(ClientDisconnectedException e){}
 
-    }
     public void boardCommand() {
         MessageView message = new UpdateBoard(GraphicLogic.board);
         sended.add(message);

@@ -64,7 +64,7 @@ public class GraphicLogic {
             connectSocket("127.0.0.1", 59090);
         }
         } catch (Exception e){
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
 
         try {
@@ -76,8 +76,8 @@ public class GraphicLogic {
                 loginResult = login();
             } while (loginResult == 0);
             if (loginResult != 2) {
-                while (!goalProcessing())
-                    ;
+                userInterface.printMessage("Waiting for other players ...");
+                while (!goalProcessing());
                 waitForOrder();
             }
 
@@ -93,9 +93,6 @@ public class GraphicLogic {
 
             if (message.getMessageType() == MessageCode.GAME_START) {
                 gameOn = true;
-                if(loginResult!=2){
-                    //userInterface.showGameStart();
-                }
 
                 //TURN PROCESSING
                 while (gameOn){
@@ -103,7 +100,7 @@ public class GraphicLogic {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
     }
     private static void connectRMI(String address, int port){
@@ -224,7 +221,7 @@ public class GraphicLogic {
                         connectSocket("127.0.0.1", 59090);
                     }
                 } catch (Exception e){
-                    System.out.println(e);
+                    System.out.println(e.getMessage());
                 }
                 clientHandler.receivingKernel();
                 clientHandler.pingKernel();
@@ -249,7 +246,7 @@ public class GraphicLogic {
             userInterface.setPlayersInComboBox(playerOrder);
             userInterface.boardCommand();
             userInterface.updateShelf();
-            if (((Reconnect) message).getNowPlaying()!=(player.getUsername())) {
+            if (!((Reconnect) message).getNowPlaying().equals(player.getUsername())) {
                 System.out.println();
                 userInterface.showWhoIsPlaying(((Reconnect) message).getNowPlaying());
             }
@@ -265,13 +262,13 @@ public class GraphicLogic {
         Message message = new Message(MessageCode.GENERIC_MESSAGE);
         while (personalGoal == null || commonGoals == null) {
             try {
-                //System.out.println("Receiving personal goal..");
-                message = clientHandler.receivingWithRetry(10, 5);
+                message = clientHandler.receivingWithRetry(3, 3);
             } catch (NoMessageToReadException e) {
-                userInterface.printMessage("No message received after sending the num player message");
+                userInterface.printMessage("Waiting for other players ...");
                 return false;
             } catch (ClientDisconnectedException e) {
-                userInterface.printErrorMessage("Disconnected from the server while waiting for log response after num player mess.");
+                userInterface.printErrorMessage("Disconnected from the server while waiting" +
+                                                " for the personal goals message.");
                 System.exit(13);
             }
             if (message.getMessageType().equals(MessageCode.SET_PERSONAL_GOAL)) {
@@ -296,7 +293,7 @@ public class GraphicLogic {
         return true;
     }
     private static void waitForOrder() {
-        playerOrder = userInterface.waitForOtherPlayers(clientHandler);
+        playerOrder = userInterface.waitForPlayersOrder(clientHandler);
         playerShelves = new HashMap<>();
         for (String pl : playerOrder) {
             if (!pl.equals(player.getUsername()))
