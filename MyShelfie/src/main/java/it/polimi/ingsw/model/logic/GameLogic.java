@@ -134,7 +134,7 @@ public class GameLogic implements Runnable, Logic {
         //GAME END
         System.out.println("\n[GAME " + gameID + "] All turns are over. Calculating score..");
         for (String pl : playerOrder)
-            assignPoints(pl);
+            assignPoints(pl, false);
         System.out.println("\n[GAME " + gameID + "] FINAL SCORES: ");
 
         //The final scores are transferred from a HashMap to a List, then finally sorted by decreasing order
@@ -460,7 +460,7 @@ public class GameLogic implements Runnable, Logic {
                 if (!pl.equals(player)) {
                     System.out.println("Sending move to " + player);
                     clientList.get(pl).sendingWithRetry(new Insert(insertPosition, insertedTiles), ATTEMPTS, WAITING_TIME);
-                    System.out.println("[GAME " + gameID + "] Sent " + player + "'s shelf to " + pl);
+                    System.out.println("[GAME " + gameID + "] Sent " + player + "'s 'insert' move to " + pl);
                 }
             }
             playerPickTypes.clear();
@@ -473,8 +473,26 @@ public class GameLogic implements Runnable, Logic {
         return false;
     }
 
-    public void assignPoints(String player) {
-        // Send END_GAME msg and wait for SHELF_CHECK msg with Shelf info.
+    /**
+     * Calculates final score
+     * @param player username
+     * @param shelfCheck used for testing mode
+     */
+    public void assignPoints(String player, boolean shelfCheck) {
+        Shelf playerShelf = playerShelves.get(player);
+        if (shelfCheck){
+            Message message = new Message(MessageCode.GENERIC_MESSAGE);
+            try {
+                message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
+            } catch (ClientDisconnectedException e){
+                System.out.println("Client disconnected while sending test shelf check");
+                return;
+            } catch (NoMessageToReadException ignored){}
+            if (message.getMessageType() == MessageCode.SHELF_CHECK){
+                playerShelf = ((ShelfCheck) message).getShelf();
+            }
+        }
+        // Send END_GAME msg
         try {
             clientList.get(player).sendingWithRetry(new Message(MessageCode.END_GAME), ATTEMPTS, WAITING_TIME);
         } catch (ClientDisconnectedException e){
@@ -483,12 +501,12 @@ public class GameLogic implements Runnable, Logic {
         }
 
         // Calculate personal goal scores on shelf.
-        int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(playerShelves.get(player));
+        int personalGoalScore = personalGoals.get(player).getGoal().checkGoal(playerShelf);
         playerPoints.put(player, playerPoints.get(player) + personalGoalScore);
         System.out.println("\n[GAME " + gameID + "] " + player + " has gained " + personalGoalScore + " points from their personal goal.");
 
         // Calculate points due to same color groups on shelf.
-        var tileGroups = playerShelves.get(player).findTileGroups();
+        var tileGroups = playerShelf.findTileGroups();
         for (var tileGroup : tileGroups) {
             int gainedPoints = Shelf.scoreGroup(tileGroup);
             playerPoints.put(player, playerPoints.get(player) + gainedPoints);
