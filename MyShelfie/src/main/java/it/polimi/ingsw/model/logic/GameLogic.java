@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class GameLogic implements Runnable, Logic {
     public final static int MAX_PLAYERS = 4;
-    private static final int ATTEMPTS = 10000;
+    private static final int ATTEMPTS = 100000;
     private static final int WAITING_TIME = 2;
     private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
@@ -245,9 +245,48 @@ public class GameLogic implements Runnable, Logic {
         try {
             if (!clientList.get(player).isConnected())  //passes the turn to next player if this one disconnected
                 throw new ClientDisconnectedException();
-            /*  If the current player is the only one still alive, the server starts a timer of 15 seconds
+            /*  If the current player is the only one still alive, the server starts a timer of 60 seconds
                 and declares the player winner if no one else reconnected at the end of the timer
              */
+            else if (disconnectedPlayers.size() == clientList.size() - 1){
+                System.out.println("[GAME " + gameID + "] "+ player + " is the only player left. They will win the game if no one reconnects in 60 seconds.");
+                try {
+                    clientList.get(player).sendingWithRetry(new Message(MessageCode.PLAY_TURN), ATTEMPTS, WAITING_TIME);
+                    clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);  //used to notify the player of their possible victory
+                } catch (ClientDisconnectedException e){
+                    System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
+                    System.out.println("[GAME " + gameID + "] Every player disconnected. The game is over.");
+                    isActive = false;
+                    return true;
+                }
+                try {Thread.sleep(60 * 1000);}  //START OF TIMER
+                catch (InterruptedException ignored){}
+                if (disconnectedPlayers.size() == clientList.size() - 1){   //checks if the player is still alone
+                    try {
+                        //the boolean passed to the message indicates if the player is the winner
+                        clientList.get(player).sendingWithRetry(new ForcedWin(true), ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending final forced win notification.");
+                        System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
+                        isActive = false;
+                        return true;
+                    }
+                    System.out.println("[GAME " + gameID + "] Time's up. " + player + " wins!");
+                    System.out.println("[GAME " + gameID + "] OVER.");
+                    isActive = false;
+                    return true;
+                } else {
+                    System.out.println("[GAME " + gameID + "] Someone reconnected. The games continues.");
+                    try {
+                        clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
+                        System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
+                        isActive = false;
+                        return true;
+                    }
+                }
+            }
         } catch (ClientDisconnectedException e){    //gets thrown if the current player is disconnected at the start of this turn
             System.out.println("[GAME " + gameID + "] Giving control to next player while " + player + " is out.");
             disconnectedPlayers.add(player);
@@ -279,61 +318,6 @@ public class GameLogic implements Runnable, Logic {
                 } catch (ClassCastException e) {
                     System.out.println("[GAME " + gameID + "] " + e);
                 }
-            }
-        }
-
-        /* The ForcedWin message is used by the server to signal to the player if he is the last one connected.
-           The server always sends one after the PLAY_TURN message, with its attribute set to true if the player
-           is the last one, false otherwise.
-           In the first case the server starts a 15 seconds timer after which it verifies if anyone reconnected.
-           If that's true, the server sends to the player a ForcedWin message set to true, false otherwise.
-        */
-        if (disconnectedPlayers.size() == clientList.size() - 1){
-            System.out.println("[GAME " + gameID + "] "+ player + " is the only player left. They will win the game if no one reconnects in 15 seconds.");
-            try {
-                //System.out.println("[GAME " + gameID + "] Sending true forced win.");
-                clientList.get(player).sendingWithRetry(new ForcedWin(true), ATTEMPTS, WAITING_TIME);  //used to notify the player of their possible victory
-                //System.out.println("[GAME " + gameID + "] Sent true forced win.");
-            } catch (ClientDisconnectedException e){
-                System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
-                System.out.println("[GAME " + gameID + "] Every player disconnected. The game is over.");
-                isActive = false;
-                return true;
-            }
-            try {Thread.sleep(15 * 1000);}  //START OF TIMER
-            catch (InterruptedException ignored){}
-            if (disconnectedPlayers.size() == clientList.size() - 1){   //checks if the player is still alone
-                try {
-                    //the boolean passed to the message indicates if the player is the winner
-                    clientList.get(player).sendingWithRetry(new ForcedWin(true), ATTEMPTS, WAITING_TIME);
-                } catch (ClientDisconnectedException e){
-                    System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending final forced win notification.");
-                    System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
-                    isActive = false;
-                    return true;
-                }
-                System.out.println("[GAME " + gameID + "] Time's up. " + player + " wins!");
-                System.out.println("[GAME " + gameID + "] OVER.");
-                isActive = false;
-                return true;
-            } else {
-                System.out.println("[GAME " + gameID + "] Someone reconnected. The games continues.");
-                try {
-                    clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);
-                } catch (ClientDisconnectedException e){
-                    System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
-                    System.out.println("[GAME " + gameID + "] Every player disconnected. GAME OVER.");
-                    isActive = false;
-                    return true;
-                }
-            }
-        } else {
-            try {
-                //System.out.println("[GAME " + gameID + "] Sending false forced win.");
-                clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);
-                //System.out.println("[GAME " + gameID + "] Sent false forced win.");
-            } catch(ClientDisconnectedException e){
-                System.out.println("[GAME " + gameID + "] " + player + " disconnected while sending first forced win notification.");
             }
         }
 
@@ -405,14 +389,6 @@ public class GameLogic implements Runnable, Logic {
             } catch (ClientDisconnectedException e) {
                 System.out.println("[GAME " + gameID + "] " + player + " disconnected during their turn.");
                 disconnectedPlayers.add(player);
-                for (String user : clientList.keySet())
-                    if (clientList.get(user).isConnected())
-                        clientList.get(user).sendingWithRetry(new Message(MessageCode.RECONNECT), ATTEMPTS, WAITING_TIME);
-                /*int currentPlayerNumber = playerOrder.indexOf(player);
-                if (currentPlayerNumber < playerOrder.size()-1)
-                    clientList.get(playerOrder.get(currentPlayerNumber+1)).sendingWithRetry(new Message(MessageCode.RECONNECT), ATTEMPTS, WAITING_TIME);
-                else
-                    clientList.get(playerOrder.get(0)).sendingWithRetry(new Message(MessageCode.RECONNECT), ATTEMPTS, WAITING_TIME);*/
                 if (!playerPick.isEmpty() && !playerPickTypes.isEmpty())    //reverts the player take move if they disconnected
                     board.putItBack(playerPick, playerPickTypes);
                 return false;
@@ -425,8 +401,6 @@ public class GameLogic implements Runnable, Logic {
 
                     // CommonGoalReached has a hashmap with the goal indexes as keys and their reach condition as values.
                     for (Integer index : ((CommonGoalReached) message).getReached().keySet()){
-                        //System.out.println(0 + " : " + ((CommonGoalReached) message).getReached().get(0));
-                        //System.out.println(1 + " : " + ((CommonGoalReached) message).getReached().get(1));
                         if (((CommonGoalReached) message).getReached().get(index)){
                             System.out.println("[GAME " + gameID + "] " + player + " completed goal " + index);
                             switch (index) {
