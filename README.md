@@ -37,8 +37,6 @@ L'implementazione segue il pattern MVC (Model-View-Controller).
 ## Documentazione
 ### UML
 Consultare la documentazione UML [qui](deliverables/uml).
-### JavaDoc
-Consultare la documentazione JavaDoc [qui](deliverables).
 
 ## Run the Application
 
@@ -127,7 +125,8 @@ Di default ci si aspetta di di selezionare 3 tiles, per prendere solo 1 o 2 tile
 Altrimenti, automaticamente verranno inviate le scelte al server per essere validate. Dopo aver ricevuto la conferma
 dal server si può procedere ad inserire le tiles nella propria shelf.
 - **Insert**: Permette di inserire le tiles precedentemente selezionate nella propria shelf. Digitare nella textbox le 
-coordinate di dove si vuole inserire la tile corrente secondo il formato: ```<riga> blankspace <colonna>``` e premere "Send".
+coordinate di dove si vuole inserire la tile (segnata da un certo <indice>) corrente secondo il formato:
+```<indice> blankspace <riga> blankspace <colonna>``` e premere "Send". 
 Una volta inserita l'ultima tile nella shelf aspettare il messaggio di verifica da parte del server. 
 Dopodichè è possibile concludere il turno.
 - **End Turn**: Permette di concludere  il proprio turno. Una volta premuto il pannello comandi scomparirà e verrà passato
