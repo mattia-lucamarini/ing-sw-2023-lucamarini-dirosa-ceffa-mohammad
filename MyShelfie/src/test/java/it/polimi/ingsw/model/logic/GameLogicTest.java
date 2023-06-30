@@ -43,7 +43,7 @@ public class GameLogicTest {
                 new ChosenTiles(tilesToTake.subList(0, 2)),
                 new ChosenTiles(tilesToTake.subList(2, 3)), // This should be ignored.
                 new Message(MessageCode.TURN_OVER),
-                new CommonGoalReached("Marco", 2), // 2 means no goal reached.
+                new CommonGoalReached("Marco", false, false), // 2 means no goal reached.
                 new FullShelf("Marco", false),
                 new Message(MessageCode.TURN_OVER),
                 new ShelfCheck(mock(Shelf.class))
@@ -78,21 +78,21 @@ public class GameLogicTest {
         when(marcoClient.receivingWithRetry(anyInt(), anyInt()))
                 // Special message that adds tiles to Marco's shelf.
                 .thenAnswer(
-                    _invOnMock -> {
-                        marco.getShelf().insertTiles(
-                                List.of(Pair.of(0, 0), Pair.of(1, 0)),
-                                List.of(Tiles.BLUE, Tiles.BLUE)
-                        );
-                        return new ChosenTiles(tilesToTake);
-                    }
-                // Other normal messages.
+                        _invOnMock -> {
+                            marco.getShelf().insertTiles(
+                                    List.of(Pair.of(0, 0), Pair.of(1, 0)),
+                                    List.of(Tiles.BLUE, Tiles.BLUE)
+                            );
+                            return new ChosenTiles(tilesToTake);
+                        }
+                        // Other normal messages.
                 ).thenReturn(
-                new Message(MessageCode.TURN_OVER),
-                new CommonGoalReached("Marco", 2), // 2 means no goal reached.
-                new FullShelf("Marco", false),
-                new Message(MessageCode.TURN_OVER),
-                new Insert(List.of(Pair.of(0, 0), Pair.of(1, 0)), List.of(Tiles.BLUE, Tiles.BLUE))
-        );
+                        new Message(MessageCode.TURN_OVER),
+                        new CommonGoalReached("Marco", false, false), // 2 means no goal reached.
+                        new FullShelf("Marco", false),
+                        new Message(MessageCode.TURN_OVER),
+                        new Insert(List.of(Pair.of(0, 0), Pair.of(1, 0)), List.of(Tiles.BLUE, Tiles.BLUE))
+                );
         players.put("Marco", marcoClient);
 
         players.put("Luigi", newClientHMock());
@@ -108,11 +108,12 @@ public class GameLogicTest {
         for (var entry : players.entrySet()) {
             if (entry.getKey().equals("Marco")) continue;
 
-            var msgs = getMessagesFromMockClient(entry.getValue(), 4);
+            var msgs = getMessagesFromMockClient(entry.getValue(), 5);
             Assert.assertEquals(msgs.get(0).getMessageType(), MessageCode.PLAY_TURN);
             Assert.assertEquals(msgs.get(1).getMessageType(), MessageCode.CHOSEN_TILES);
-            Assert.assertEquals(msgs.get(2).getMessageType(), MessageCode.TURN_OVER);
-            Assert.assertEquals(msgs.get(3).getMessageType(), MessageCode.INSERT);
+            Assert.assertEquals(msgs.get(2).getMessageType(), MessageCode.COMMON_GOAL_REACHED);
+            Assert.assertEquals(msgs.get(3).getMessageType(), MessageCode.TURN_OVER);
+            Assert.assertEquals(msgs.get(4).getMessageType(), MessageCode.INSERT);
         }
 
         // Check that the correct tiles have been removed.
@@ -162,7 +163,7 @@ public class GameLogicTest {
             Assert.assertEquals(MessageCode.CHOSEN_TILES,        msgs.get(1).getMessageType());
             Assert.assertEquals(MessageCode.COMMON_GOAL_REACHED, msgs.get(2).getMessageType());
             var msg = (CommonGoalReached) msgs.get(2);
-            Assert.assertEquals(0, msg.getPosition());
+            Assert.assertEquals(true, msg.getReached().get(0));
             Assert.assertEquals(MessageCode.TURN_OVER,           msgs.get(3).getMessageType());
             Assert.assertEquals(MessageCode.INSERT,         msgs.get(4).getMessageType());
         }
@@ -179,7 +180,7 @@ public class GameLogicTest {
         // Messages to send to server in order.
         when(marcoClient.receivingWithRetry(anyInt(), anyInt())).thenReturn(
                 new Message(MessageCode.TURN_OVER),
-                new CommonGoalReached("Marco", 2), // 2 means no goal reached
+                new CommonGoalReached("Marco", false, false), // 2 means no goal reached
                 new FullShelf("Marco", true),
                 new Message(MessageCode.TURN_OVER),
                 new Message(MessageCode.INSERT)
@@ -203,14 +204,15 @@ public class GameLogicTest {
 
             Assert.assertEquals(0, game.getPlayerPoints().get(entry.getKey()).intValue());
 
-            var msgs = getMessagesFromMockClient(entry.getValue(), 5);
+            var msgs = getMessagesFromMockClient(entry.getValue(), 6);
             Assert.assertEquals(MessageCode.PLAY_TURN,           msgs.get(0).getMessageType());
             Assert.assertEquals(MessageCode.CHOSEN_TILES,        msgs.get(1).getMessageType());
-            Assert.assertEquals(MessageCode.FULL_SHELF, msgs.get(2).getMessageType());
-            var msg = (FullShelf) msgs.get(2);
+            Assert.assertEquals(MessageCode.COMMON_GOAL_REACHED, msgs.get(2).getMessageType());
+            Assert.assertEquals(MessageCode.FULL_SHELF, msgs.get(3).getMessageType());
+            var msg = (FullShelf) msgs.get(3);
             Assert.assertTrue(msg.getOutcome());
-            Assert.assertEquals(MessageCode.TURN_OVER,           msgs.get(3).getMessageType());
-            Assert.assertEquals(MessageCode.INSERT,         msgs.get(4).getMessageType());
+            Assert.assertEquals(MessageCode.TURN_OVER,           msgs.get(4).getMessageType());
+            Assert.assertEquals(MessageCode.INSERT,         msgs.get(5).getMessageType());
         }
     }
 
