@@ -31,7 +31,7 @@ public class CommonGoalReached extends Message {
         super(MessageCode.COMMON_GOAL_REACHED);
         this.reached = new HashMap<>();
         reached.put(0, first);
-        reached.put(1, first);
+        reached.put(1, second);
         this.player = player;
     }
 

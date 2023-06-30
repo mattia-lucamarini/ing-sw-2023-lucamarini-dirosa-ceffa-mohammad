@@ -393,31 +393,7 @@ public class Client {
                 System.exit(13);
             }
         } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType()
-                != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
-
-        if (message.getMessageType() == MessageCode.FORCED_WIN) {
-            printCustomMessage("Everyone else disconnected. "+
-                                  "If nobody comes back in 60 seconds, you'll be the winner.", "warning");
-
-            // Wait for forced win.
-            // TODO: This loop breaks only if forced win is sent again. Shouldn't it check for reconnections instead?
-            Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
-            do {
-                try {
-                    forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                } catch (ClientDisconnectedException e){
-                    System.out.println("Disconnected while waiting for forced win message.");
-                    System.exit(13);
-                } catch (NoMessageToReadException ignored) {}
-            } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
-
-            if (((ForcedWin) forcedWin).getWin()){
-                printCustomMessage("Nobody came back. You won!", "notable");
-                System.exit(0);
-            } else {
-                printCustomMessage("Someone reconnected. The game continues !", "warning");
-            }
-        }
+                != MessageCode.END_GAME);
 
         // If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
         // so the playTurn message was already received by this player while they were waiting for their turn
@@ -430,8 +406,48 @@ public class Client {
                             "The client expected a PLAY_TURN message, but received a " + message.getMessageType());
                 }
             }
-            if (someoneDisconnected || ((PlayTurn) message).getUsername().equals(player.getUsername())) { // OWN TURN
+            if (((PlayTurn) message).getUsername().equals(player.getUsername())) { // OWN TURN
                 someoneDisconnected = false;
+
+                /* The ForcedWin message is used by the server to signal to the player if he is the last one connected.
+                   The server always sends one after the PLAY_TURN message, with its attribute set to true if the player
+                   is the last one, false otherwise.
+                   In the first case the server starts a 15 seconds timer after which it verifies if anyone reconnected.
+                   If that's true, the server sends to the player a ForcedWin message set to true, false otherwise.
+                 */
+                do {
+                    try {
+                        //System.out.println("Waiting for forced win notification");
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for first forced win message.");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored) {}
+                } while (message.getMessageType() != MessageCode.FORCED_WIN);
+
+                //System.out.println("Received forced win notification (" + ((ForcedWin) message).getWin() + ")");
+                if (message.getMessageType() == MessageCode.FORCED_WIN && ((ForcedWin) message).getWin()) {
+                    printCustomMessage("Everyone else disconnected.\n"+
+                            "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
+
+                    // Wait for forced win.
+                    Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
+                    do {
+                        try {
+                            forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e){
+                            System.out.println("Disconnected while waiting for forced win message.");
+                            System.exit(13);
+                        } catch (NoMessageToReadException ignored) {}
+                    } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
+
+                    if (((ForcedWin) forcedWin).getWin()){
+                        printCustomMessage("Everyone is still gone. You won!", "notable");
+                        System.exit(0);
+                    } else {
+                        printCustomMessage("Someone reconnected. The game continues !", "warning");
+                    }
+                }
 
                 // TEST ACTIONS
                 userInterface.turnNotification(player.getUsername());
@@ -529,6 +545,7 @@ public class Client {
                     }
                 }
                 try {
+                    //System.out.println(commonReached0 + " : " + commonReached1);
                     clientHandler.sendingWithRetry(new CommonGoalReached(commonReached0, commonReached1), ATTEMPTS, WAITING_TIME);
                 } catch (ClientDisconnectedException e){
                     System.out.println("Disconnected while sending common goal reached notification.");
@@ -626,8 +643,8 @@ public class Client {
 
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
-                    if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                        System.out.println(nowPlaying + " disconnected, it's now your turn.");
+                    if (message.getMessageType() == MessageCode.RECONNECT) {
+                        System.out.println(nowPlaying + " disconnected.");
                         someoneDisconnected = true;
                         return;
                     }

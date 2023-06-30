@@ -559,8 +559,8 @@ public class GraphicLogic {
 
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
-                    if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                        //System.out.println("sono nell'if - lato gui");
+                    if (message.getMessageType() == MessageCode.RECONNECT) {
+                        System.out.println("sono nell'if - lato gui");
                         userInterface.printMessage(nowPlaying + " disconnected, it's now your turn.");
                         //System.out.println("Received " + message.getMessageType() + " message.");
                         //board = ((PlayTurn) message).getBoard();
