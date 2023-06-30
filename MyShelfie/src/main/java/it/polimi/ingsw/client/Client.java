@@ -396,8 +396,8 @@ public class Client {
                 != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
 
         if (message.getMessageType() == MessageCode.FORCED_WIN) {
-            printCustomMessage("Everyone else disconnected.\n"+
-                                  "If nobody comes back in 15 seconds, you'll be the winner.", "warning");
+            printCustomMessage("Everyone else disconnected. "+
+                                  "If nobody comes back in 60 seconds, you'll be the winner.", "warning");
 
             // Wait for forced win.
             // TODO: This loop breaks only if forced win is sent again. Shouldn't it check for reconnections instead?
@@ -412,7 +412,7 @@ public class Client {
             } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
 
             if (((ForcedWin) forcedWin).getWin()){
-                printCustomMessage("Everyone is still gone. You won!", "notable");
+                printCustomMessage("Nobody came back. You won!", "notable");
                 System.exit(0);
             } else {
                 printCustomMessage("Someone reconnected. The game continues !", "warning");
@@ -625,7 +625,6 @@ public class Client {
                     if (message.getMessageType() == MessageCode.FULL_SHELF)
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                     if (message.getMessageType() == MessageCode.PLAY_TURN) {
-                        System.out.println("sono nell if - tui");
                         System.out.println(nowPlaying + " disconnected, it's now your turn.");
                         someoneDisconnected = true;
                         return;
