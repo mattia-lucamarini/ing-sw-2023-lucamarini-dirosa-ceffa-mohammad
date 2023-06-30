@@ -169,7 +169,7 @@
          </children>
       </GridPane>
       <ImageView fx:id="commongoal1" fitHeight="119.0" fitWidth="117.0" layoutX="32.0" layoutY="369.0" pickOnBounds="true" preserveRatio="true" />
-      <ImageView fx:id="commongoal2" fitHeight="119.0" fitWidth="117.0" layoutX="170.0" layoutY="363.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="commongoal2" fitHeight="119.0" fitWidth="117.0" layoutX="170.0" layoutY="369.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="stack1" fitHeight="72.0" fitWidth="75.0" layoutX="53.0" layoutY="504.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="stack2" fitHeight="72.0" fitWidth="75.0" layoutX="189.0" layoutY="504.0" pickOnBounds="true" preserveRatio="true" />
       <ImageView fx:id="personalgoal" fitHeight="168.0" fitWidth="117.0" layoutX="590.0" layoutY="398.0" pickOnBounds="true" preserveRatio="true" />
@@ -211,7 +211,7 @@
       <Label layoutX="767.0" layoutY="271.0" text="0" />
       <Label layoutX="422.0" layoutY="18.0" text="0" />
       <Label layoutX="422.0" layoutY="118.0" text="1" />
-      <Label layoutX="422.0" layoutY="227.0" text="1" />
+      <Label layoutX="422.0" layoutY="227.0" text="2" />
       <Label layoutX="527.0" layoutY="316.0" text="0" />
       <Label layoutX="574.0" layoutY="316.0" text="1" />
       <Label layoutX="627.0" layoutY="316.0" text="2" />

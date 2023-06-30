@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class GameLogic implements Runnable, Logic {
     public final static int MAX_PLAYERS = 4;
-    private static final int ATTEMPTS = 25;
-    private static final int WAITING_TIME = 5;
+    private static final int ATTEMPTS = 100000;
+    private static final int WAITING_TIME = 2;
     private final int TOTAL_GOALS = 12;
     private final ConcurrentHashMap<String, ClientHandler> clientList;
     private Set<String> disconnectedPlayers;
@@ -245,11 +245,11 @@ public class GameLogic implements Runnable, Logic {
         try {
             if (!clientList.get(player).isConnected())  //passes the turn to next player if this one disconnected
                 throw new ClientDisconnectedException();
-            /*  If the current player is the only one still alive, the server starts a timer of 15 seconds
+            /*  If the current player is the only one still alive, the server starts a timer of 60 seconds
                 and declares the player winner if no one else reconnected at the end of the timer
              */
             else if (disconnectedPlayers.size() == clientList.size() - 1){
-                System.out.println("[GAME " + gameID + "] "+ player + " is the only player left. They will win the game if no one reconnects in 15 seconds.");
+                System.out.println("[GAME " + gameID + "] "+ player + " is the only player left. They will win the game if no one reconnects in 60 seconds.");
                 try {
                     clientList.get(player).sendingWithRetry(new Message(MessageCode.PLAY_TURN), ATTEMPTS, WAITING_TIME);
                     clientList.get(player).sendingWithRetry(new ForcedWin(false), ATTEMPTS, WAITING_TIME);  //used to notify the player of their possible victory
@@ -259,7 +259,7 @@ public class GameLogic implements Runnable, Logic {
                     isActive = false;
                     return true;
                 }
-                try {Thread.sleep(15 * 1000);}  //START OF TIMER
+                try {Thread.sleep(60 * 1000);}  //START OF TIMER
                 catch (InterruptedException ignored){}
                 if (disconnectedPlayers.size() == clientList.size() - 1){   //checks if the player is still alone
                     try {
@@ -398,25 +398,25 @@ public class GameLogic implements Runnable, Logic {
                 message = clientList.get(player).receivingWithRetry(ATTEMPTS, WAITING_TIME);
                 if (message.getMessageType() == MessageCode.COMMON_GOAL_REACHED) {
                     goalNotificationReceived = true;
-                    // CommonGoalReached has a position attribute which is used as the goal index. 2 means no goal reached.
-                    if (((CommonGoalReached) message).getPosition() != 2) {
-                        System.out.println("[GAME " + gameID + "] " + player + " completed goal " + ((CommonGoalReached) message).getPosition());
-                        switch (((CommonGoalReached) message).getPosition()) {
-                            case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
-                            case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
-                            default -> throw new UnsupportedOperationException();
-                        }
-                        for (String username : clientList.keySet()) //notifies every other player of the reached goal
-                            try {
-                                clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getPosition()), ATTEMPTS, WAITING_TIME);
-                            } catch (ClientDisconnectedException e) {
-                                System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
-                                disconnectedPlayers.add(username);
+
+                    // CommonGoalReached has a hashmap with the goal indexes as keys and their reach condition as values.
+                    for (Integer index : ((CommonGoalReached) message).getReached().keySet()){
+                        if (((CommonGoalReached) message).getReached().get(index)){
+                            System.out.println("[GAME " + gameID + "] " + player + " completed goal " + index);
+                            switch (index) {
+                                case 0 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getFirst().getGoal().takePoints());
+                                case 1 -> playerPoints.put(player, playerPoints.get(player) + commonGoals.getSecond().getGoal().takePoints());
+                                default -> throw new UnsupportedOperationException();
                             }
-                    } else {
-                        System.out.println("[GAME " + gameID + "] " + player + " did not complete any goal");
-                        clientList.get(player).sendingWithRetry(new CommonGoalReached(2), ATTEMPTS, WAITING_TIME);  //notifies every other player of the unreached goal
+                        }
                     }
+                    for (String username : clientList.keySet()) //notifies every other player of the reached goal
+                        try {
+                            clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getReached()), ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e) {
+                            System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
+                            disconnectedPlayers.add(username);
+                        }
                 }
             }
 
@@ -462,9 +462,9 @@ public class GameLogic implements Runnable, Logic {
             // Send insert move to players.
             for (String pl : clientList.keySet()) {
                 if (!pl.equals(player)) {
-                    System.out.println("Sending move to " + player);
+                    //System.out.println("Sending move to " + player);
                     clientList.get(pl).sendingWithRetry(new Insert(insertPosition, insertedTiles), ATTEMPTS, WAITING_TIME);
-                    System.out.println("[GAME " + gameID + "] Sent " + player + "'s 'insert' move to " + pl);
+                    //System.out.println("[GAME " + gameID + "] Sent " + player + "'s 'insert' move to " + pl);
                 }
             }
             playerPickTypes.clear();

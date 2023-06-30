@@ -383,7 +383,8 @@ public class GUIInterface {
                     else{
                         MessageView unknowninsert = new LabelChange("Unknown command");
                         sended.add(unknowninsert);
-                        return;
+                        MessageView showpicks = new ShowPickedTiles(pickedTiles);
+                        sended.add(showpicks);
                     }
                 }
         }while(pickedTiles.size()>0);

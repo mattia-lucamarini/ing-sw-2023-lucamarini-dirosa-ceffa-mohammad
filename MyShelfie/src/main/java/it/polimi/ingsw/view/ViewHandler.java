@@ -371,18 +371,20 @@ public class ViewHandler {
                 case COMMON_REACHED:
                     int numplayers = glogic.getNumPlayers();
                     int numgoal = ((CommonReached) message).getNumgoal();
+                    System.out.println(numgoal);
                     int points = ((CommonReached)message).getPoints();
                     String username =((CommonReached)message).getUsername();
 
                    Platform.runLater(()->{
-                       ImageView stack;
-                       if(numgoal == 0){
-                            stack = (ImageView) boardgrid.getChildren().get(4);
+                       if(numgoal == 1){
+                           stack2 = (ImageView) gamelayout.getChildren().get(5);
+                           stack2.setImage(selectImageFromPointsAndNumberPlayers(points, numplayers));
                        }
                        else{
-                           stack = (ImageView) boardgrid.getChildren().get(5);
+                           stack1 = (ImageView) gamelayout.getChildren().get(4);
+                           stack1.setImage(selectImageFromPointsAndNumberPlayers(points, numplayers));
                        }
-                       stack.setImage(selectImageFromPointsAndNumberPlayers(points, numplayers));
+
                     });
                     break;
                 case UPDATE_PERSONALSTACK:
