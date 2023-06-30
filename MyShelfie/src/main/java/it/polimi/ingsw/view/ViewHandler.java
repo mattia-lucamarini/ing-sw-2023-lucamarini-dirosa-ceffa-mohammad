@@ -134,8 +134,8 @@ public class ViewHandler {
                             e.printStackTrace();
                         }
                         l1.setText(error);
-                        l1.setAlignment(Pos.TOP_LEFT);
-                        Scene scene4 = new Scene(errorscene, 480, 400);
+                        l1.setAlignment(Pos.TOP_CENTER);
+                        Scene scene4 = new Scene(errorscene,700 , 370);
                         scene4.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());
                         stage.setScene(scene4);
                         stage.show();});
