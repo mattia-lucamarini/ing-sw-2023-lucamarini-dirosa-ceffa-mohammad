@@ -96,6 +96,10 @@ public class GraphicLogic {
             }
 
             if (message.getMessageType() == MessageCode.GAME_START) {
+                try {
+                    board = ((GameStart) message).getBoard();
+                } catch (Exception ignored){}
+
                 gameOn = true;
 
                 //TURN PROCESSING
@@ -245,7 +249,7 @@ public class GraphicLogic {
             playerShelves = ((Reconnect) message).getPlayerShelves();
             userInterface.printMessage("Welcome back!");
             player.setShelf(((Reconnect) message).getPlayerShelves().get(player.getUsername()));
-            board = ((Reconnect)message).getBoard();
+            board = ((Reconnect) message).getBoard();
             System.out.println();
             userInterface.showPersonalGoal(personalGoal.getGoalIndex());
             System.out.println();
@@ -333,14 +337,8 @@ public class GraphicLogic {
             }
         } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
 
-        if (message instanceof PlayTurn || someoneDisconnected) {
-            if (!someoneDisconnected)
-                try {
-                    board = ((PlayTurn) message).getBoard();
-                    userInterface.boardCommand();
-                } catch (ClassCastException e){
-                    System.out.println("ClassCastException: The client expected a PLAY_TURN message, but received a " + message.getMessageType());
-                }
+        if (message instanceof PlayTurn) {
+
             userInterface.boardCommand();
             userInterface.updateShelf();
             if (((PlayTurn) message).getUsername().equals(player.getUsername())) {  //OWN TURN

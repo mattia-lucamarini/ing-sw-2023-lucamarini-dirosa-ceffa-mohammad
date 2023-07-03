@@ -113,7 +113,8 @@ public class GameLogic implements Runnable, Logic {
         for (String username : clientList.keySet()){
             try {
                 clientList.get(username).sendingWithRetry(new PlayerOrder(playerOrder), ATTEMPTS, WAITING_TIME);
-                clientList.get(username).sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
+                GameStart gs = new GameStart(board);
+                clientList.get(username).sendingWithRetry(gs, ATTEMPTS, WAITING_TIME);
             } catch (ClientDisconnectedException e){
                 System.out.println(username + " disconnected while sending game start notification");
                 disconnectedPlayers.add(username);
@@ -222,6 +223,8 @@ public class GameLogic implements Runnable, Logic {
                     numPlayers, playerOrder, nowPlaying, playerShelves, board), ATTEMPTS, WAITING_TIME);
             //The GAME_START message reinserts the client into the game loop
             clientHandler.sendingWithRetry(new Message(MessageCode.GAME_START), ATTEMPTS, WAITING_TIME);
+            clientHandler.sendingWithRetry(new PlayTurn(nowPlaying), ATTEMPTS, WAITING_TIME);
+            System.out.println("SENT PLAYTURN TO RECONNECTING PLAYER");
 
             //Updates the clientHandler and removes the player from the disconnected list.
             clientList.replace(username, clientHandler);
@@ -408,6 +411,10 @@ public class GameLogic implements Runnable, Logic {
                         clientList.get(user).sendingWithRetry(new Message(MessageCode.RECONNECT), ATTEMPTS, WAITING_TIME);
                 if (!playerPick.isEmpty() && !playerPickTypes.isEmpty())    //reverts the player take move if they disconnected
                     board.putItBack(playerPick, playerPickTypes);
+                if (insertPosition.size() != 0){
+                    //System.out.println("[GAME " + gameID + "] Removing " + insertPosition.size() + " tiles in column " + insertPosition.get(0).getSecond());
+                    playerShelves.get(player).removeTiles(insertPosition.get(0).getSecond(), insertPosition.size());
+                }
                 return false;
             } catch (NoMessageToReadException ignored){}
 

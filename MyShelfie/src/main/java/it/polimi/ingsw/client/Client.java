@@ -145,6 +145,10 @@ public class Client {
             }
 
             if (message.getMessageType() == MessageCode.GAME_START) {
+                try {
+                    board = ((GameStart) message).getBoard();
+                } catch (Exception ignored){}
+
                 gameOn = true;
                 if (loginResult != 2)
                     userInterface.showGameStart();
@@ -308,16 +312,13 @@ public class Client {
             playerOrder = ((Reconnect) message).getPlayerOrder();
             playerShelves = ((Reconnect) message).getPlayerShelves();
             player.setShelf(((Reconnect) message).getPlayerShelves().get(player.getUsername()));
+            board = ((Reconnect) message).getBoard();
+            //board.printBoard();
             System.out.println();
-            board = ((Reconnect)message).getBoard();
             userInterface.showPersonalGoal(personalGoal.getGoalIndex());
             System.out.println();
             userInterface.showCommonGoals(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex());
             userInterface.showPlayersOrder(playerOrder);
-            if (!((Reconnect) message).getNowPlaying().equals(player.getUsername())) {
-                System.out.println();
-                userInterface.showWhoIsPlaying(((Reconnect) message).getNowPlaying());
-            }
             return 2;
         } else {
             userInterface.printErrorMessage("Unknown message code received. ("+message.getMessageType()+")");
@@ -395,20 +396,12 @@ public class Client {
             }
         } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType()
                 != MessageCode.END_GAME);
-
+        //System.out.println("Received " + message.getMessageType());
 
 
         // If someoneDisconnected is true the player was forced to start their turn after the previous one disconnected,
         // so the playTurn message was already received by this player while they were waiting for their turn
-        if (message instanceof PlayTurn || someoneDisconnected) {
-            if (!someoneDisconnected) {
-                try {
-                    board = ((PlayTurn) message).getBoard();
-                } catch (ClassCastException e) {
-                    System.out.println("ClassCastException: " +
-                            "The client expected a PLAY_TURN message, but received a " + message.getMessageType());
-                }
-            }
+        if (message instanceof PlayTurn) {
             if (((PlayTurn) message).getUsername().equals(player.getUsername())) { // OWN TURN
                 someoneDisconnected = false;
 

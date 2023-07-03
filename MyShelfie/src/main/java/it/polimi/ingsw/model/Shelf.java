@@ -105,16 +105,6 @@ public class Shelf implements Serializable {
 
     }
 
-    public void putitback(List<Pair<Integer, Integer>> oldpositions,List<Tiles> old){
-        //System.out.println("in putitback");
-
-        for(int i=0 ; i<oldpositions.size(); ++i){
-            int x = oldpositions.get(i).getFirst();
-            int y = oldpositions.get(i).getSecond();
-            matrix[x][y] = old.get(i);
-        }
-    }
-
 
     /**
      * Method: removeTiles

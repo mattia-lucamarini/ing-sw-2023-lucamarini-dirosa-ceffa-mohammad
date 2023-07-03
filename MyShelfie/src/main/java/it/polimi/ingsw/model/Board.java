@@ -165,7 +165,7 @@ public class Board implements Serializable {
                     }
                 }
             }
-            System.out.println("remaining tiles: " + remainingtiles + "single tiles:" +singletiles);
+            //System.out.println("remaining tiles: " + remainingtiles + "single tiles:" +singletiles);
         }
         return singletiles == remainingtiles; //The board needs to be refilled.
     }
