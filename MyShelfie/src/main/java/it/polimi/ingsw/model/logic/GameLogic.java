@@ -397,7 +397,7 @@ public class GameLogic implements Runnable, Logic {
                     else if (message.getMessageType() == MessageCode.TURN_OVER) {
                         for (String username : clientList.keySet()) {
                             //sends the take move to every other player
-                            if (!username.equals(player))
+                            if (!username.equals(player) && clientList.get(username).isConnected())
                                 clientList.get(username).sendingWithRetry(new ChosenTiles(playerPick), ATTEMPTS, WAITING_TIME);
                         }
                         moveNotificationReceived = true;
@@ -436,7 +436,8 @@ public class GameLogic implements Runnable, Logic {
                     }
                     for (String username : clientList.keySet()) //notifies every other player of the reached goal
                         try {
-                            clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getReached()), ATTEMPTS, WAITING_TIME);
+                            if (clientList.get(username).isConnected())
+                                clientList.get(username).sendingWithRetry(new CommonGoalReached(player, ((CommonGoalReached) message).getReached()), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Common Goal notification");
                             disconnectedPlayers.add(username);
@@ -454,7 +455,8 @@ public class GameLogic implements Runnable, Logic {
                     playerPoints.put(player, playerPoints.get(player) + 1);
                     for (String username : clientList.keySet()) {
                         try {
-                            clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
+                            if (clientList.get(username).isConnected())
+                                clientList.get(username).sendingWithRetry(new FullShelf(player, true), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending Full Shelf notification");
                             disconnectedPlayers.add(username);
@@ -475,7 +477,8 @@ public class GameLogic implements Runnable, Logic {
                     turnOverNotificationReceived = true;
                     for (String username : clientList.keySet()) {
                         try {
-                            clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
+                            if (clientList.get(username).isConnected())
+                                clientList.get(username).sendingWithRetry(new Message(MessageCode.TURN_OVER), ATTEMPTS, WAITING_TIME);
                         } catch (ClientDisconnectedException e) {
                             System.out.println("[GAME " + gameID + "] " + username + " disconnected while sending End Turn notification");
                             disconnectedPlayers.add(username);
@@ -484,10 +487,10 @@ public class GameLogic implements Runnable, Logic {
                 }
             }
             // Send insert move to players.
-            for (String pl : clientList.keySet()) {
-                if (!pl.equals(player)) {
+            for (String username : clientList.keySet()) {
+                if (!username.equals(player) && clientList.get(username).isConnected()) {
                     //System.out.println("Sending move to " + player);
-                    clientList.get(pl).sendingWithRetry(new Insert(insertPosition, insertedTiles), ATTEMPTS, WAITING_TIME);
+                    clientList.get(username).sendingWithRetry(new Insert(insertPosition, insertedTiles), ATTEMPTS, WAITING_TIME);
                     //System.out.println("[GAME " + gameID + "] Sent " + player + "'s 'insert' move to " + pl);
                 }
             }

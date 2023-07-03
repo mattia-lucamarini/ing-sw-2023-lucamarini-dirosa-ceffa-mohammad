@@ -511,7 +511,7 @@ public class ViewHandler {
                         }
                         for (int m = 0; m < rankings.size(); m++){
                             Label label = (Label) finalscene.getChildren().get(m+1);
-                            label.setText(rankings.get(m).getFirst()+ ": " +rankings.get(m).getSecond()+ "points.");
+                            label.setText(rankings.get(m).getFirst()+ ": " +rankings.get(m).getSecond()+ " points.");
                         }
                         Scene ranksscene = new Scene(finalranks, 600, 400);
                         ranksscene.getStylesheets().add(getClass().getResource("/test_styles.css").toExternalForm());

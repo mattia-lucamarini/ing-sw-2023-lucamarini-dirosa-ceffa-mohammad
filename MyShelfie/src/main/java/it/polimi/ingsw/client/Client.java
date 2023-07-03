@@ -423,7 +423,7 @@ public class Client {
 
                 //System.out.println("Received forced win notification (" + ((ForcedWin) message).getWin() + ")");
                 if (message.getMessageType() == MessageCode.FORCED_WIN && ((ForcedWin) message).getWin()) {
-                    printCustomMessage("Everyone else disconnected.\n"+
+                    printCustomMessage("Everyone else disconnected."+
                             "If nobody comes back in 60 seconds, you'll be the winner.", "warning");
 
                     // Wait for forced win.
@@ -438,7 +438,7 @@ public class Client {
                     } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
 
                     if (((ForcedWin) forcedWin).getWin()){
-                        printCustomMessage("Everyone is still gone. You won!", "notable");
+                        printCustomMessage("Nobody came back. You won!", "notable");
                         System.exit(0);
                     } else {
                         printCustomMessage("Someone reconnected. The game continues !", "warning");

@@ -486,7 +486,7 @@ public class GUIInterface {
      * @author Angelo Di Rosa
      * This method shows a message saying who's playing*/
     public void showWhoIsPlaying(String username) {
-        printMessage(username+ "is now playing.");
+        printMessage(username+ " is now playing.");
     }
 
     /**method: someoneReachedCommonGoal()
