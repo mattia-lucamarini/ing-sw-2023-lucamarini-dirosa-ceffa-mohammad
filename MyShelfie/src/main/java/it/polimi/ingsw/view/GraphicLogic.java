@@ -374,8 +374,9 @@ public class GraphicLogic {
 
                     if (((ForcedWin) forcedWin).getWin()){
                         userInterface.printMessage("Everyone is still gone. You won!");
-                        /*try {Thread.sleep(5);}
-                        catch (InterruptedException ignored){}*/
+                        userInterface.forceWin(player.getUsername());
+                        try {Thread.sleep(15000);}
+                        catch (InterruptedException ignored){}
                         gameOn = false;
                         return;
                     } else {
@@ -386,6 +387,7 @@ public class GraphicLogic {
                 //TEST ACTIONS
                 userInterface.setIsmyturn(true);
                 userInterface.turnNotification(player.getUsername());
+                userInterface.boardCommand();
                 boolean canContinue = false;
                 if (!canContinue) {
                     canContinue = userInterface.getCommand();

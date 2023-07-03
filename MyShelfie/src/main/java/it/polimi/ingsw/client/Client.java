@@ -309,6 +309,7 @@ public class Client {
             playerShelves = ((Reconnect) message).getPlayerShelves();
             player.setShelf(((Reconnect) message).getPlayerShelves().get(player.getUsername()));
             System.out.println();
+            board = ((Reconnect)message).getBoard();
             userInterface.showPersonalGoal(personalGoal.getGoalIndex());
             System.out.println();
             userInterface.showCommonGoals(commonGoals.getFirst().getGoalIndex(), commonGoals.getSecond().getGoalIndex());
