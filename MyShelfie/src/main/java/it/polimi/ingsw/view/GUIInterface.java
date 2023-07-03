@@ -518,8 +518,8 @@ public class GUIInterface {
      * This method shows a message saying that the game is over and counts the point for each player.*/
     public void finalScore() {
         printMessage("\nThe game is over. Counting the points\n");
-        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) Client.player.getShelf().findTileGroups();
-        this.showPersonalGoalAchievement(Client.personalGoal.getGoal().checkGoal(Client.player.getShelf()));
+        ArrayList<Pair<Tiles, Integer>> tileGroups = (ArrayList<Pair<Tiles, Integer>>) GraphicLogic.player.getShelf().findTileGroups();
+        this.showPersonalGoalAchievement(GraphicLogic.personalGoal.getGoal().checkGoal(GraphicLogic.player.getShelf()));
         for (Pair<Tiles, Integer> group : tileGroups) {
             int gainedPoints = 0;
             if (group.getSecond() == 3)
