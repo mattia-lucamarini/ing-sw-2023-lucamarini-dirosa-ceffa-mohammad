@@ -331,29 +331,8 @@ public class GraphicLogic {
                 }catch(InterruptedException ignored){}
                 System.exit(13);
             }
-        } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME && message.getMessageType() != MessageCode.FORCED_WIN);
+        } while (message.getMessageType() != MessageCode.PLAY_TURN && message.getMessageType() != MessageCode.END_GAME);
 
-        if (message.getMessageType() == MessageCode.FORCED_WIN){
-            userInterface.printMessage("\nEveryone else disconnected.\nIf nobody comes back in 60 seconds, you'll be the winner.");
-            Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
-            do {
-                try {
-                    forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
-                } catch (ClientDisconnectedException e){
-                    userInterface.printErrorMessage("Disconnected while waiting for forced win message.");
-                    try{
-                        Thread.sleep(15000);
-                    }catch(InterruptedException ignored){}
-                    System.exit(13);
-                } catch (NoMessageToReadException ignored) {}
-            } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
-
-            if (((ForcedWin) forcedWin).getWin()){
-                userInterface.forceWin(player.getUsername());
-            } else {
-                userInterface.printMessage("Someone reconnected. The game continues as usual.");
-            }
-        }
         if (message instanceof PlayTurn || someoneDisconnected) {
             if (!someoneDisconnected)
                 try {
@@ -364,8 +343,46 @@ public class GraphicLogic {
                 }
             userInterface.boardCommand();
             userInterface.updateShelf();
-            if (someoneDisconnected || ((PlayTurn) message).getUsername().equals(player.getUsername())) {  //OWN TURN
+            if (((PlayTurn) message).getUsername().equals(player.getUsername())) {  //OWN TURN
                 someoneDisconnected = false;
+
+                do {
+                    try {
+                        //System.out.println("Waiting for forced win notification");
+                        message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                    } catch (ClientDisconnectedException e){
+                        System.out.println("Disconnected while waiting for first forced win message.");
+                        System.exit(13);
+                    } catch (NoMessageToReadException ignored) {}
+                } while (message.getMessageType() != MessageCode.FORCED_WIN);
+
+                //System.out.println("Received forced win notification (" + ((ForcedWin) message).getWin() + ")");
+                if (message.getMessageType() == MessageCode.FORCED_WIN && ((ForcedWin) message).getWin()) {
+                    userInterface.printMessage("Everyone else disconnected.\n"+
+                            "If nobody comes back in 60 seconds, you'll be the winner.");
+
+                    // Wait for forced win.
+                    Message forcedWin = new Message(MessageCode.GENERIC_MESSAGE);
+                    do {
+                        try {
+                            forcedWin = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
+                        } catch (ClientDisconnectedException e){
+                            System.out.println("Disconnected while waiting for forced win message.");
+                            System.exit(13);
+                        } catch (NoMessageToReadException ignored) {}
+                    } while (forcedWin.getMessageType() != MessageCode.FORCED_WIN);
+
+                    if (((ForcedWin) forcedWin).getWin()){
+                        userInterface.printMessage("Everyone is still gone. You won!");
+                        /*try {Thread.sleep(5);}
+                        catch (InterruptedException ignored){}*/
+                        gameOn = false;
+                        return;
+                    } else {
+                        userInterface.printMessage("Someone reconnected. The game continues !");
+                    }
+                }
+
                 //TEST ACTIONS
                 userInterface.setIsmyturn(true);
                 userInterface.turnNotification(player.getUsername());
@@ -561,7 +578,7 @@ public class GraphicLogic {
                         userInterface.someoneCompletedShelf(((FullShelf) message).getPlayer());
                     if (message.getMessageType() == MessageCode.RECONNECT) {
                         System.out.println("sono nell'if - lato gui");
-                        userInterface.printMessage(nowPlaying + " disconnected, it's now your turn.");
+                        userInterface.printMessage(nowPlaying + " disconnected.");
                         //System.out.println("Received " + message.getMessageType() + " message.");
                         //board = ((PlayTurn) message).getBoard();
                         someoneDisconnected = true;
@@ -592,15 +609,6 @@ public class GraphicLogic {
         } else if (message.getMessageType() == MessageCode.END_GAME) {  //END OF GAME
             gameOn = false;
             userInterface.finalScore();
-            try {
-                clientHandler.sendingWithRetry(new ShelfCheck(player.getShelf()), 50, 10);
-            } catch (ClientDisconnectedException e) {
-                System.out.println("Disconnected while sending shelf content during endgame.");
-                try{
-                    Thread.sleep(15000);
-                }catch(InterruptedException ignored){}
-                System.exit(13);
-            }
             do {
                 try {
                     message = clientHandler.receivingWithRetry(ATTEMPTS, WAITING_TIME);
